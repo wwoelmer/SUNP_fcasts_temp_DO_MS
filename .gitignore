@@ -39,5 +39,7 @@ vignettes/*.pdf
 .Renviron
 
 # large files in the hist_data folder
-data_raw/hist-data/
+data_raw/hist-data/hist_buoy_do.csv
+data_raw/hist-data/hist_buoy_temp.csv
+
 
