@@ -37,3 +37,7 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# large files in the hist_data folder
+data_raw/hist-data/
+
