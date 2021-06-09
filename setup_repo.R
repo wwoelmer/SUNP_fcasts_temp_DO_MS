@@ -1,12 +1,4 @@
-# script to set up and run FLARE for SUNP
-
-#remotes::install_github("FLARE-forecast/FLAREr")
-library(FLAREr)
-
-############## set up config directories
-lake_directory <- getwd()
-config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
-config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration", "observation_processing", "observation_processing.yml"))
+# script to set up repository to run FLARE for SUNP
 
 ############## clone github repositories
 setwd(config$file_path$data_directory)
