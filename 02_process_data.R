@@ -1,12 +1,12 @@
-config <- yaml::read_yaml(file.path(lake_directory,"data_processing","observation_processing.yml"))
 
-config$data_location <- data_location
-config$qaqc_data_location <- qaqc_data_location
+config$data_location 
+config$qaqc_data_location
 #config$obs_config <- readr::read_csv(file.path(run_config$forecast_location, config$obs_config_file), col_types = readr::cols())
 
 library(tidyverse)
 library(lubridate)
 
+# these scripts are designed to process the raw data from github
 source(file.path(lake_directory, "data_processing/R/extract_CTD.R"))
 source(file.path(lake_directory, "data_processing/R/extract_nutrients.R"))
 source(file.path(lake_directory, "data_processing/R/temp_oxy_chla_qaqc.R"))
