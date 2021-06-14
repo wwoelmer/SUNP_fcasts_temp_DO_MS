@@ -1,5 +1,12 @@
 # script to set up repository to run FLARE for SUNP
 
+#remotes::install_github("FLARE-forecast/GLM3r")
+#remotes::install_github('eco4cast/EFIstandards')
+#remotes::install_github("FLARE-forecast/FLAREr")
+#install.packages(aws.s3)
+#install.packages(tidyverse)
+
+
 ############## clone github repositories
 setwd(config$file_path$data_directory)
 system("git clone -b sunp-buoy-data --depth 1 https://github.com/FLARE-forecast/SUNP-data.git buoy-data")
