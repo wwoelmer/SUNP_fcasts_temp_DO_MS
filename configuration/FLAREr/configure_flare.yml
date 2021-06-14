@@ -6,6 +6,7 @@ file_path:
    configuration_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/configuration/'
    execute_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/flare_tempdir/'
    run_config: 'C:/Users/wwoel/Desktop/SUNP-forecast/configuration/flarer/configure_run.yml'
+   script_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/R/'
 location:
    site_id: sunp
    name: Lake Sunapee
