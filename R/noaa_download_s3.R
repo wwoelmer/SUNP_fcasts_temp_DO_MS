@@ -2,11 +2,11 @@
 
 noaa_download_s3 <- function(siteID, # LOWERCASE e.g. sunp
                              date, # start date of noaa forecasts
-                             cycle,
+                             cycle, # noaa forecast cycle, e.g. 00, 06, 12, 18
                              noaa_horizon, # numeric, either 16 or 35 depending on NOAA forecasts desired
                              noaa_directory # place where forecasts will be downloaded
                              ){
-  
+
   Sys.setenv("AWS_S3_ENDPOINT" = "tacc.jetstream-cloud.org:8080/")
   
   # currently not able to get 35 day forecasts downloaded but the setup is here
@@ -27,7 +27,7 @@ noaa_download_s3 <- function(siteID, # LOWERCASE e.g. sunp
   
   #Download a specific file from the server and save it locally (in this example, "localfile.nc"):
   for(i in 1:length(file_names)){
-    save_object(region="", 
+    aws.s3::save_object(region="", 
                 file_names[i], 
                 file=paste0(noaa_directory, file_names[i]), 
                 bucket="flare")
