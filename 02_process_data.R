@@ -1,6 +1,6 @@
 
-config$data_location 
-config$qaqc_data_location
+config$file_path$data_directory 
+config$file_path$qaqc_data_directory
 #config$obs_config <- readr::read_csv(file.path(run_config$forecast_location, config$obs_config_file), col_types = readr::cols())
 
 library(tidyverse)
