@@ -17,8 +17,10 @@ system("git pull")
 # download NOAA data
 # source a function here
 
+source(paste0(config$file_path$script_directory, "/noaa_download_s3.R"))
+
 noaa_download_s3(siteID = 'sunp',
-                 date = '2021-06-01',
+                 date = "2021-06-10",
                  cycle = '00',
                  noaa_horizon = 16,
                  noaa_directory = config$file_path$noaa_directory)
