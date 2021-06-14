@@ -42,4 +42,4 @@ vignettes/*.pdf
 data_raw/hist-data/hist_buoy_do.csv
 data_raw/hist-data/hist_buoy_temp.csv
 
-
+forecasted_drivers/
