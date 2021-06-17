@@ -9,6 +9,9 @@ names(realtimefile_data)<-names(realtimefile_header) #combine the names to deal 
 realtimefile_data$TIMESTAMP <- as.POSIXct(realtimefile_data$TIMESTAMP)
 attr(realtimefile_data$TIMESTAMP, "tzone") <- "UTC"
 
+# remove days before buoy was deployed
+d <- realtimefile_data
+d <- d %>% filter(TIMESTAMP > as.POSIXct('2021-06-07 12:00:00'))
 
 # combine with historical data? what to do about met at sunapee????? some conversion over to NLDAS?
 
