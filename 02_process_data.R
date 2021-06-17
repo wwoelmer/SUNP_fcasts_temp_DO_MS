@@ -6,6 +6,17 @@ config$file_path$qaqc_data_directory
 library(tidyverse)
 library(lubridate)
 
+
+# get NOAA met forecasts and stack first day to use as met 'obs'
+source(paste0(config$file_path$script_directory, "/stack_noaa_forecasts.R"))
+dates <- seq.Date(as.Date('2021-05-23'), as.Date('2021-06-17'), by = 'day') # cycle through historical dates 
+cycle <- '00'
+outfile <- paste0(config$file_path$noaa_directory, 'noaa-glm-driver')
+
+stack_noaa_forecasts(dates = dates, cycle = cycle, outfile = outfile)
+
+
+
 # these scripts are designed to process the raw data from github
 source(file.path(lake_directory, "data_processing/R/extract_CTD.R"))
 source(file.path(lake_directory, "data_processing/R/extract_nutrients.R"))
