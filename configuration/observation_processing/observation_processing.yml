@@ -67,7 +67,9 @@ realtime_inflow_data_location: diana-data
 
 insitu_obs_fname:
     - buoy-data/SUNP_buoy_wq.csv
-    - hist-data/field_temp_noon_obs.csv # created file from historical buoy data on EDI (see Sunapee_GLM repo)
+    - hist-data/manual_buoy_temp.csv # this file combines manual observations and buoy data from 1985 to 2020, created in Sunpee-GLM repo in 'combine_manual_hf_temp.R' 
+    #  hist_buoy_temp.csv  #this file comes straight from EDI:
+    #  field_temp_noon_obs.csv #created file from historical buoy data on EDI (see Sunapee-GLM repo, 'create_noon_temp_file_obs.R')
 secchi_fname: manual-data/Secchi_depth_2013-2019.csv
 nutrients_fname: manual-data/chemistry.csv
 variable_obsevation_depths: FALSE
