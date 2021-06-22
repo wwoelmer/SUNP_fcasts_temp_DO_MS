@@ -1,19 +1,11 @@
-realtime_file <- paste0(config$file_path$data_directory, "/", config_obs$insitu_obs_fname[1])
-qaqc_file,
-maintenance_url <- 'https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing'
-input_file_tz,
-focal_depths,
-local_tzone,
-config
 
-temp_qaqc <- function(realtime_file,
-                      surface_sonde,
-                      profiles,
-                      qaqc_file,
-                      maintenance_file,
-                      input_file_tz,
-                      focal_depths,
-                      local_tzone,
+insitu_qaqc <- function(realtime_file,
+                      hist_file,
+                      maintenance_url,
+                      variables,
+                      #input_file_tz,
+                      #focal_depths,
+                      #local_tzone,
                       config){
   
   library(gsheet)
@@ -39,6 +31,11 @@ temp_qaqc <- function(realtime_file,
   # remove days where maintenance occurred
   maint <- gsheet2tbl(maintenance_url)
   maint$colnumber <- NA
+  maint$TIMESTAMP_start <- as.POSIXct(maint$TIMESTAMP_start)
+  maint$TIMESTAMP_end <- as.POSIXct(maint$TIMESTAMP_end)
+  attr(maint$TIMESTAMP_start, "tzone") <- "UTC"
+  attr(maint$TIMESTAMP_end, "tzone") <- "UTC"
+  
   
   for(i in 1:nrow(maint)){
     
@@ -96,55 +93,45 @@ temp_qaqc <- function(realtime_file,
     }
     # replace relevant data with NAs and set "all" flag while maintenance was in effect
     d[d$TIMESTAMP >= start & d$TIMESTAMP <= end, maintenance_cols] <- NA
-    #d[d$TIMESTAMP >= start & d$TIMESTAMP <= end, "Flag_All"] <- 1
 }
   
+  # convert depth columns into long format
+
+  temp_format <- data.frame(matrix(ncol=length(variables) + 1), nrow = 0)
+  colnames(temp_format) <- c('DateTime', 'Depth', variables)
+  temp_format$DateTime <- as.POSIXct(temp_format$DateTime)
   
   
+  depths <- c('0.1', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10')
   
-  d_therm <- d %>% dplyr::rename(timestamp = timestamp,
-                                 depth = depth,
-                                 value = value) %>%
-    dplyr::mutate(variable = "temperature",
-                  method = "thermistor",
-                  value = ifelse(is.nan(value), NA, value),
-                  hour = lubridate::hour(timestamp))%>%
-    rename(date = timestamp)%>%
-    filter(date < "2020-12-05 00:00:00")
+  for (i in 1:length(depths)) {
+    temp <- d[,c(1, i+5)]
+    temp$Depth <- depths[i]
+    colnames(temp) <- c('DateTime', 'Temp', 'Depth')
+    temp_format <- full_join(temp, temp_format)
+  }
   
-  d_top <- readr::read_csv(surface_sonde)
+  # put depth as second column and sort by date and depth
+  temp_format <- temp_format %>% 
+    mutate(Depth = as.numeric(Depth)) %>% 
+    select( 'DateTime', 'Depth', 'Temp') %>% 
+    arrange(DateTime, Depth)
   
-  d_therm_top <- d_top %>% select(-X1)%>%
-    dplyr::rename(timestamp = dateTime,
-                  depth = sensorDepth,
-                  value = waterTemp) %>%    
-    dplyr::mutate(timestamp = mdy_hm(timestamp))%>%
-    rename(date = timestamp)%>%
-    arrange(date)%>%
-    na.omit(.)%>%
-    mutate(time = lubridate::floor_date(date, unit = "hour"))%>%
-    group_by(time) %>%
-    summarize_at(c("value"), mean, na.rm = TRUE)%>%
-    mutate(variable = "temperature",
-           method = "sonde",
-           value = ifelse(is.nan(value), NA, value),
-           value = ifelse(value ==0,NA,value),
-           value = ifelse(value ==25, NA, value),
-           hour = lubridate::hour(time),
-           depth = 0.5)%>%
-    select(time, hour, depth, value, variable, method)%>%
-    rename(date = time)
+  # combine with historical data
+  h <- read.csv(hist_file)
+  h$DateTime <- as.POSIXct(h$DateTime)
   
+  dh <- left_join(h, temp_format)
   
-  d_prof <- readr::read_csv(profiles)%>%
-    rename(date = timestamp)
+  # make some simple QAQC corrections, e.g. if temp > 100C, etc.
   
-  d <- d_therm %>% mutate(depth = as.numeric(depth))
-  d_top <- d_therm_top %>% mutate(depth = as.numeric(depth))
-  d_prof <- d_prof %>% mutate(depth = as.numeric(depth))
-  
-  d <- bind_rows(d,d_top)
-  d <- bind_rows(d, d_prof)
-  
-  write_csv(d, paste0(config$qaqc_data_location,"/observations_postQAQC_long.csv"))
+  # put into FLARE format
+  dh <- dh %>% 
+    mutate(date = date(DateTime),
+           hour = hour(DateTime),
+           depth = Depth) %>% 
+    select(-c(DateTime, Depth)) %>% 
+    pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') 
+
+  write_csv(dh, paste0(config$file_path$qaqc_data_directory,"observations_postQAQC_long.csv"))
 }
