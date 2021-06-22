@@ -120,8 +120,10 @@ insitu_qaqc <- function(realtime_file,
   # combine with historical data
   h <- read.csv(hist_file)
   h$DateTime <- as.POSIXct(h$DateTime)
+  attr(h$DateTime, "tzone") <- "UTC"
   
-  dh <- left_join(h, temp_format)
+  
+  dh <- rbind(h, temp_format)
   
   # make some simple QAQC corrections, e.g. if temp > 100C, etc.
   
@@ -129,9 +131,12 @@ insitu_qaqc <- function(realtime_file,
   dh <- dh %>% 
     mutate(date = date(DateTime),
            hour = hour(DateTime),
-           depth = Depth) %>% 
-    select(-c(DateTime, Depth)) %>% 
+           depth = Depth,
+           temperature = Temp) %>% 
+    select(-c(DateTime, Depth, Temp)) %>% 
     pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') 
+  
+  dh <- na.omit(dh)
 
   write_csv(dh, paste0(config$file_path$qaqc_data_directory,"observations_postQAQC_long.csv"))
 }
