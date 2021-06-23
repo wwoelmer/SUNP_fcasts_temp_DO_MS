@@ -1,28 +1,31 @@
+lake_directory <- getwd()
+config <- yaml::read_yaml(file.path(lake_directory, "configuration", "FLAREr", "configure_flare.yml"))
 
-config$file_path$data_directory 
-config$file_path$qaqc_data_directory
-#config$obs_config <- readr::read_csv(file.path(run_config$forecast_location, config$obs_config_file), col_types = readr::cols())
+# Set working directories for your system
+config$file_path$qaqc_data_directory <- file.path(lake_directory, "data_processed")
+config$file_path$data_directory <- file.path(lake_directory, "data_raw")
 
 library(tidyverse)
 library(lubridate)
 
 
 # get NOAA met forecasts and stack first day to use as met 'obs'
-source(paste0(config$file_path$script_directory, "/stack_noaa_forecasts.R"))
+source(file.path(lake_directory, "R", "/stack_noaa_forecasts.R"))
 dates <- seq.Date(as.Date('2021-05-23'), as.Date('2021-06-21'), by = 'day') # cycle through historical dates 
 cycle <- '00'
-outfile <- paste0(config$file_path$qaqc_data_directory)
-stack_noaa_forecasts(dates = dates, cycle = cycle, outfile = outfile)
+outfile <- config$file_path$qaqc_data_directory
+stack_noaa_forecasts(dates = dates, cycle = cycle, outfile = outfile, config = config)
 
 
 # QAQC insitu buoy data
-source(paste0(config$file_path$script_directory, "/buoy_wq_qaqc.R"))
-realtime_file <- paste0(config$file_path$data_directory, "/", config_obs$insitu_obs_fname[1])
-hist_file <- paste0(config$file_path$data_directory, "/", config_obs$insitu_obs_fname[2])
+source(file.path(lake_directory, "R", "insitu_qaqc.R"))
+realtime_file <- file.path(config$file_path$data_directory, config_obs$insitu_obs_fname[1])
+hist_file <- file.path(config$file_path$data_directory, config_obs$insitu_obs_fname[2])
 maintenance_url <- 'https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing'
 variables <- c('temperature') # list of WQ variables to include in FLARE notation, e.g., temperature, oxygen, chla, fdom
 config <- config
 
+# install.packages("gsheet")
 insitu_qaqc(realtime_file = realtime_file,
             hist_file = hist_file,
             maintenance_url = maintenance_url,

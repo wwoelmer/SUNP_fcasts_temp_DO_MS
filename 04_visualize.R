@@ -2,8 +2,7 @@
 #qaqc_data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE_package/flare_lake_examples/fcre/qaqc_data/"
 
 #file_name <- saved_file
-flare::plotting_general(file_name = saved_file,
-                        qaqc_location = qaqc_data_location)
+FLAREr::plotting_general(file_name = saved_file,qaqc_data_directory = config$file_path$qaqc_data_directory, ncore = 2)
 
 visualization_location <- file.path(lake_directory,"visualization")
 source(paste0(visualization_location,"/manager_plot.R"))
