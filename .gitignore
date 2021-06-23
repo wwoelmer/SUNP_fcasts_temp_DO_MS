@@ -2,6 +2,9 @@
 .Rhistory
 .Rapp.history
 
+# ignore things in the tempdir
+flare_tempdir*
+
 # Session Data files
 .RData
 
