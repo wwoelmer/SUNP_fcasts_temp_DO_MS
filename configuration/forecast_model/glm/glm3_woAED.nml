@@ -41,15 +41,14 @@
    timefmt = 2
    start = '2007-08-28 12:00:00'
    stop = '2018-12-31 12:00:00'
-   dt = 3600
+   dt = 1800
    num_days = 3650
    timezone = -5
 /
 &output
-   out_dir = 'output'
-   out_fn = 'output'
-   nsave = 24 ! number of hours that pass before saving, 24 means saving once daily
-   csv_lake_fname = 'lake'
+   out_dir = "./"
+   out_fn = "output"
+   nsave = 48
 /
 &init_profiles
    lake_depth = 33.33408
