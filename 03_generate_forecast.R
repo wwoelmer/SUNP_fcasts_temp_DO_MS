@@ -1,15 +1,32 @@
 #remotes::install_github("FLARE-forecast/FLAREr")
-library(FLAREr)
+# library(FLAREr)
 
 ############## set up config directories
-lake_directory <- getwd()
+lake_directory <- getwd() # Captures the project directory 
 config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
-config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration", "observation_processing", "observation_processing.yml"))
+
+# Set working directories for your system
+config$file_path$qaqc_data_directory <- file.path(lake_directory, "data_processed")
+config$file_path$data_directory <- file.path(lake_directory, "data_raw")
+config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers", config$met$forecast_met_model)
+config$file_path$inflow_directory <- file.path(lake_directory, "forecasted_drivers", config$inflow$forecast_inflow_model)
+config$file_path$configuration_directory <- file.path(lake_directory, "configuration")
+config$file_path$execute_directory <- file.path(lake_directory, "flare_tempdir")
+config$file_path$run_config <- file.path(lake_directory, "configuration", "flarer/configure_run.yml")
+config$file_path$forecast_output_directory <- file.path(lake_directory, "forecast_output")
 run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
 config$run_config <- run_config
 
+# Create directories if not present
+if(!dir.exists(config$file_path$execute_directory)) {
+  dir.create(config$file_path$execute_directory)
+}
+if(!dir.exists(config$file_path$forecast_output_directory)) {
+  dir.create(config$file_path$forecast_output_directory)
+}
 
-observed_met_file <- paste0(config$file_path$qaqc_data_directory,"observed-met-noaa_sunp.nc") # need met_qaqc to produce .nc file
+
+observed_met_file <- file.path(config$file_path$qaqc_data_directory, "observed-met-noaa_sunp.nc") # need met_qaqc to produce .nc file
 
 start_datetime <- lubridate::as_datetime(config$run_config$start_datetime)
 if(is.na(config$run_config$forecast_start_datetime)){
@@ -22,8 +39,8 @@ if(is.na(config$run_config$forecast_start_datetime)){
 forecast_hour <- lubridate::hour(forecast_start_datetime)
 if(forecast_hour < 10){forecast_hour <- paste0("0",forecast_hour)}
 
-noaa_forecast_path <- paste0(config$file_path$noaa_directory, "drivers/",  config$met$forecast_met_model, "/", config$location$site_id, "/",
-                             lubridate::as_date(forecast_start_datetime), "/00")
+noaa_forecast_path <- file.path(config$file_path$noaa_directory, config$location$site_id,
+                             lubridate::as_date(forecast_start_datetime), "00")
 
 
 # convert NOAA forecasts to GLM format
@@ -31,6 +48,7 @@ met_out <- FLAREr::generate_glm_met_files(obs_met_file = observed_met_file,
                                          out_dir = config$file_path$execute_directory,
                                          forecast_dir = noaa_forecast_path,
                                          config = config)
+
 met_file_names <- met_out$met_file_names
 historical_met_error <- met_out$historical_met_error
 
