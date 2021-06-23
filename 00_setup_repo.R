@@ -6,6 +6,15 @@
 #install.packages(aws.s3)
 #install.packages(tidyverse)
 
+############## set up config directories
+lake_directory <- getwd() # Captures the project directory 
+config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
+
+# Set working directories for your system
+config$file_path$qaqc_data_directory <- file.path(lake_directory, "data_processed")
+config$file_path$data_directory <- file.path(lake_directory, "data_raw")
+
+
 
 ############## clone github repositories
 setwd(config$file_path$data_directory)
@@ -14,11 +23,10 @@ system("git clone -b sunp-buoy-data --depth 1 https://github.com/FLARE-forecast/
 ############## download historical data
 # buoy temp and DO data from 2007 onward
 data  <-  "https://pasta.lternet.edu/package/data/eml/edi/499/2/1f903796efc8d79e263a549f8b5aa8a6" # URL from EDI: https://portal.edirepository.org/nis/codeGeneration?packageId=edi.499.2&statisticalFileType=r
-destination <- config$file_path$data_directory # some location on your computer
-try(download.file(data,destfile = paste0(destination, '/hist-data/hist_buoy_temp.csv'),method="curl"))
+try(download.file(data, destfile = file.path(config$file_path$data_directory, "hist-data", "hist_buoy_temp.csv"), 
+                  method = "curl"))
 
 data <- "https://pasta.lternet.edu/package/data/eml/edi/499/2/f4d3535cebd96715c872a7d3ca45c196" 
-destination <- config$file_path$data_directory # some location on your computer
-try(download.file(data,destfile = paste0(destination, '/hist-data/hist_buoy_do.csv'),method="curl"))
+try(download.file(data, destfile = file.path(config$file_path$data_directory, "hist-data", "hist_buoy_do.csv"), method = "curl"))
 
-
+setwd(lake_directory)

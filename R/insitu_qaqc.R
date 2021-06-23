@@ -8,8 +8,6 @@ insitu_qaqc <- function(realtime_file,
                       #local_tzone,
                       config){
   
-  library(gsheet)
-  
   d_head<-read.csv(realtime_file, skip=1, as.is=T) #get header minus wonky Campbell rows
   d <-read.csv(realtime_file, skip=4, header=F) #get data minus wonky Campbell rows
   names(d)<-names(d_head) #combine the names to deal with Campbell logger formatting
@@ -29,7 +27,7 @@ insitu_qaqc <- function(realtime_file,
   d <- d[d$TIMESTAMP > '2021-06-07 00:00:00',]
   
   # remove days where maintenance occurred
-  maint <- gsheet2tbl(maintenance_url)
+  maint <- gsheet::gsheet2tbl(maintenance_url)
   maint$colnumber <- NA
   maint$TIMESTAMP_start <- as.POSIXct(maint$TIMESTAMP_start)
   maint$TIMESTAMP_end <- as.POSIXct(maint$TIMESTAMP_end)
@@ -138,5 +136,5 @@ insitu_qaqc <- function(realtime_file,
   
   dh <- na.omit(dh)
 
-  write_csv(dh, paste0(config$file_path$qaqc_data_directory,"observations_postQAQC_long.csv"))
+  write_csv(dh, file.path(config$file_path$qaqc_data_directory,"observations_postQAQC_long.csv"))
 }
