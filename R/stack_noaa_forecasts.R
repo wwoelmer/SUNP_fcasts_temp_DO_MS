@@ -3,7 +3,8 @@
 
 stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc forecasts for 
                                  cycle = '00',
-                                 outfile # file path where you want the output file to go
+                                 outfile, # file path where you want the output file to go
+                                 config # FLARE config list
                                  ){
   
 # cf_met_vars <- c("air_temperature",
@@ -44,12 +45,12 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
   # loop through each date of forecasts and extract the first day, stack together to create a continuous dataset of day 1 forecasts
   for(k in 1:length(dates)){
     
-    forecast_dir <- file.path(config$file_path$noaa_directory, 'drivers', 'noaa-point', 'NOAAGEFS_1hr', 'sunp', dates[k], cycle)
+    forecast_dir <- file.path(config$file_path$noaa_directory, config$location$site_id, dates[k], cycle)
     
     if(!is.null(forecast_dir)){
       
       forecast_files <- list.files(forecast_dir, pattern = ".nc", full.names = TRUE)
-      nfiles <-   length(forecast_files)
+      nfiles <- length(forecast_files)
       
     }
     
@@ -88,16 +89,15 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
         # "j" is the variable number.  "i" is the ensemble number. Remember that each row represents an ensemble
         ncdf4::ncvar_put(nc_flptr, nc_var_list[[j]], unlist(data[,j]))
       }
-      
       ncdf4::nc_close(nc_flptr)  #Write to the disk/storage
     }
+    
       daily_noaa <- data.frame(matrix(ncol = length(cf_met_vars) + 2, nrow = 0))
       colnames(daily_noaa) <- c('time', cf_met_vars, 'ens')
       
       for(j in 1:nfiles){
         
-        if(!is.null(forecast_dir) & config$met$use_forecasted_met){
-          
+        if(!is.null(forecast_dir) & config$met$use_forecasted_met) {
           
           ens <- dplyr::last(unlist(stringr::str_split(basename(forecast_files[j]),"_")))
           ens <- stringr::str_sub(ens,1,5)
@@ -176,7 +176,7 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
   }
   
   ncdf4::nc_close(nc_flptr)  #Write to the disk/storage
-
-    }
+  
+  }
 
 
