@@ -4,6 +4,9 @@
 
 # ignore things in the tempdir
 flare_tempdir*
+forecast_output*
+data_processed*
+forecast_drivers*
 
 # Session Data files
 .RData
