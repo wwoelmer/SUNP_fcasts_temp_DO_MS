@@ -10,14 +10,13 @@ config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "c
 
 # Set working directories for your system
 config$file_path$data_directory <- file.path(lake_directory, "data_raw")
-config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers", config$met$forecast_met_model)
+config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers")
 config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration", "observation_processing", "observation_processing.yml"))
 
 
 # download buoy data, water quality and met
 setwd(file.path(config$file_path$data_directory, config_obs$realtime_insitu_location))
 system("git pull")
-# setwd("C:/Users/wwoel/Desktop/SUNP-forecast") # NO HARDCODED PATHS!!!! Antithesis of reproducible workflows 
 setwd("../../") # Either use relative paths or lake_directory which is defined above!
 setwd(lake_directory)
 
@@ -30,7 +29,7 @@ source(file.path(lake_directory, "R", "noaa_download_s3.R"))
 dates <- seq.Date(as.Date('2021-05-22'), as.Date(Sys.Date()), by = 'day')
 download_dates <- c()
 for (i in 1:length(dates)) {
-  fpath <- file.path(config$file_path$noaa_directory, "NOAAGEFS_1hr", "sunp", dates[i])
+  fpath <- file.path(config$file_path$noaa_directory, config$met$forecast_met_model, "sunp", dates[i])
   if(dir.exists(fpath)){
     message(paste0(dates[i], ' already downloaded'))
   }else{
@@ -47,7 +46,7 @@ for (i in 1:length(download_dates)) {
                    date = download_dates[i],
                    cycle = '00',
                    noaa_horizon = 16,
-                   noaa_directory = config$file_path$noaa_directory)
+                   noaa_directory = file.path(config$file_path$noaa_directory, config$met$forecast_met_model))
   
 }
 
