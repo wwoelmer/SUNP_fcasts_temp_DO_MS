@@ -7,6 +7,7 @@ flare_tempdir*
 forecast_output*
 data_processed*
 forecast_drivers*
+data_raw*
 
 # Session Data files
 .RData
