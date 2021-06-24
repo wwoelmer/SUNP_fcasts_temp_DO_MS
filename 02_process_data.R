@@ -14,7 +14,10 @@ source(file.path(lake_directory, "R", "/stack_noaa_forecasts.R"))
 dates <- seq.Date(as.Date('2021-05-23'), as.Date('2021-06-21'), by = 'day') # cycle through historical dates 
 cycle <- '00'
 outfile <- config$file_path$qaqc_data_directory
-stack_noaa_forecasts(dates = dates, cycle = cycle, outfile = outfile, config = config)
+stack_noaa_forecasts(dates = dates, 
+                     cycle = cycle, 
+                     outfile = outfile, 
+                     config = config)
 
 
 # QAQC insitu buoy data
