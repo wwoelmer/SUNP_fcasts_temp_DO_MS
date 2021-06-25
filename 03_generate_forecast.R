@@ -8,8 +8,8 @@ config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "c
 # Set working directories for your system
 config$file_path$qaqc_data_directory <- file.path(lake_directory, "data_processed")
 config$file_path$data_directory <- file.path(lake_directory, "data_raw")
-config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers", config$met$forecast_met_model)
-config$file_path$inflow_directory <- file.path(lake_directory, "forecasted_drivers", config$inflow$forecast_inflow_model)
+config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers") #, config$met$forecast_met_model
+#config$file_path$inflow_directory <- file.path(lake_directory, "forecasted_drivers", config$inflow$forecast_inflow_model)
 config$file_path$configuration_directory <- file.path(lake_directory, "configuration")
 config$file_path$execute_directory <- file.path(lake_directory, "flare_tempdir")
 config$file_path$run_config <- file.path(lake_directory, "configuration", "flarer/configure_run.yml")
@@ -39,7 +39,7 @@ if(is.na(config$run_config$forecast_start_datetime)){
 forecast_hour <- lubridate::hour(forecast_start_datetime)
 if(forecast_hour < 10){forecast_hour <- paste0("0",forecast_hour)}
 
-noaa_forecast_path <- file.path(config$file_path$noaa_directory, config$location$site_id,
+noaa_forecast_path <- file.path(config$file_path$noaa_directory, config$met$forecast_met_model, config$location$site_id,
                              lubridate::as_date(forecast_start_datetime), "00")
 
 
