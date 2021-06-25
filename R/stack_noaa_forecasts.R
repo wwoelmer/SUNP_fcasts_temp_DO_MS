@@ -45,7 +45,7 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
   # loop through each date of forecasts and extract the first day, stack together to create a continuous dataset of day 1 forecasts
   for(k in 1:length(dates)){
     
-    forecast_dir <- file.path(config$file_path$noaa_directory, config$location$site_id, dates[k], cycle)
+    forecast_dir <- file.path(config$file_path$noaa_directory, config$met$forecast_met_model, config$location$site_id, dates[k], cycle)
     
     if(!is.null(forecast_dir)){
       
