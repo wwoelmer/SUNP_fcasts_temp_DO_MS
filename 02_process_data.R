@@ -4,7 +4,7 @@ config <- yaml::read_yaml(file.path(lake_directory, "configuration", "FLAREr", "
 # Set working directories for your system
 config$file_path$qaqc_data_directory <- file.path(lake_directory, "data_processed")
 config$file_path$data_directory <- file.path(lake_directory, "data_raw")
-config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers", config$met$forecast_met_model)
+config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers")
 
 
 library(tidyverse)
@@ -13,7 +13,7 @@ library(lubridate)
 
 # get NOAA met forecasts and stack first day to use as met 'obs'
 source(file.path(lake_directory, "R", "/stack_noaa_forecasts.R"))
-dates <- seq.Date(as.Date('2021-05-23'), as.Date('2021-06-21'), by = 'day') # cycle through historical dates 
+dates <- seq.Date(as.Date('2021-05-23'), as.Date('2021-06-24'), by = 'day') # cycle through historical dates 
 cycle <- '00'
 outfile <- config$file_path$qaqc_data_directory
 stack_noaa_forecasts(dates = dates, 
