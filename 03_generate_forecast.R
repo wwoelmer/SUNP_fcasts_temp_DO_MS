@@ -14,9 +14,19 @@ config$file_path$configuration_directory <- file.path(lake_directory, "configura
 config$file_path$execute_directory <- file.path(lake_directory, "flare_tempdir")
 config$file_path$run_config <- file.path(lake_directory, "configuration", "flarer/configure_run.yml")
 config$file_path$forecast_output_directory <- file.path(lake_directory, "forecast_output")
+config$da_setup$ensemble_size <- 100
+
+
+# set up run config settings
 run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
 config$run_config <- run_config
-config$da_setup$ensemble_size <- 500
+
+# set forecast model info
+if(config$run_config$forecast_horizon==16){
+  config$met$forecast_met_model <-'noaa-point/NOAAGEFS_1hr'
+}else if(config$run_config$forecast_horizon==35){
+  config$met$forecast_met_model <- 'noaa/NOAAGEFS_1hr'
+}
 
 # Create directories if not present
 if(!dir.exists(config$file_path$execute_directory)) {
@@ -40,7 +50,7 @@ if(is.na(config$run_config$forecast_start_datetime)){
 forecast_hour <- lubridate::hour(forecast_start_datetime)
 if(forecast_hour < 10){forecast_hour <- paste0("0",forecast_hour)}
 
-noaa_forecast_path <- file.path(config$file_path$noaa_directory, 'drivers', 'noaa', 'NOAAGEFS_1hr', config$location$site_id,
+noaa_forecast_path <- file.path(config$file_path$noaa_directory, config$met$forecast_met_model, config$location$site_id,
                              lubridate::as_date(forecast_start_datetime), "00")
 
 
@@ -57,13 +67,13 @@ historical_met_error <- met_out$historical_met_error
 cleaned_observations_file_long <- file.path(config$file_path$qaqc_data_directory,"observations_postQAQC_long.csv")
 obs_config <- readr::read_csv(file.path(config$file_path$configuration_directory, "FLAREr", config$model_settings$obs_config_file), col_types = readr::cols())
 
-obs_config$obs_sd <- 0.25
+obs_config$obs_sd <- 0.15
 obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
                                  obs_config,
                                  config)
 
 states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, "FLAREr", config$model_settings$states_config_file), col_types = readr::cols())
-states_config$vert_decorr_length <- 5
+#states_config$vert_decorr_length <- 5
 states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
 
 model_sd <- FLAREr::initiate_model_error(config = config, states_config = states_config)
@@ -81,7 +91,7 @@ init <- FLAREr::generate_initial_conditions(states_config,
                                             historical_met_error = met_out$historical_met_error)
 
 #Run EnKF
-
+config$run_config$sim_name <- "default_sd_obs_longerda"
 da_forecast_output <- FLAREr::run_da_forecast(states_init = init$states,
                                               pars_init = init$pars,
                                               aux_states_init = init$aux_states_init,
@@ -102,4 +112,5 @@ da_forecast_output <- FLAREr::run_da_forecast(states_init = init$states,
 # Save forecast
 saved_file <- FLAREr::write_forecast_netcdf(da_forecast_output = da_forecast_output,
                                             forecast_output_directory = config$file_path$forecast_output_directory)
+FLAREr::plotting_general(file_name = saved_file,qaqc_data_directory = config$file_path$qaqc_data_directory, ncore = 2)
 
