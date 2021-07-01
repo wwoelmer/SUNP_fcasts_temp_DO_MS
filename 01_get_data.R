@@ -48,13 +48,15 @@ for (i in 1:length(dates)) {
 download_dates <- na.omit(download_dates)
 download_dates <- as.Date(download_dates, origin = '1970-01-01')
 
-
-for (i in 1:length(download_dates)) {
-  noaa_download_s3(siteID = 'sunp',
-                   date = download_dates[i],
-                   cycle = '00',
-                   noaa_horizon = config$run_config$forecast_horizon,
-                   noaa_directory = file.path(config$file_path$noaa_directory, config$met$forecast_met_model))
+if(length(download_dates>1)){
+  for (i in 1:length(download_dates)) {
+    noaa_download_s3(siteID = 'sunp',
+                     date = download_dates[i],
+                     cycle = '00',
+                     noaa_horizon = config$run_config$forecast_horizon,
+                     noaa_directory = file.path(config$file_path$noaa_directory, config$met$forecast_met_model))
+    
+  }
   
 }
 
