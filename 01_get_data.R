@@ -13,6 +13,9 @@ config$file_path$data_directory <- file.path(lake_directory, "data_raw")
 config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers")
 config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration", "observation_processing", "observation_processing.yml"))
 
+# set up run config settings
+run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
+config$run_config <- run_config
 
 # download buoy data, water quality and met
 setwd(file.path(config$file_path$data_directory, config_obs$realtime_insitu_location))
@@ -25,6 +28,11 @@ setwd(lake_directory)
 
 source(file.path(lake_directory, "R", "noaa_download_s3.R"))
 
+if(config$run_config$forecast_horizon==16){
+  config$met$forecast_met_model <-'noaa-point/NOAAGEFS_1hr'
+}else if(config$run_config$forecast_horizon==35){
+  config$met$forecast_met_model <- 'noaa/NOAAGEFS_1hr'
+}
 # set a start and end date for NOAA forecasts and check which days are not available in local NOAA directory
 dates <- seq.Date(as.Date('2021-05-22'), as.Date(Sys.Date()), by = 'day')
 download_dates <- c()
@@ -45,10 +53,10 @@ for (i in 1:length(download_dates)) {
   noaa_download_s3(siteID = 'sunp',
                    date = download_dates[i],
                    cycle = '00',
-                   noaa_horizon = 16,
+                   noaa_horizon = config$run_config$forecast_horizon,
                    noaa_directory = file.path(config$file_path$noaa_directory, config$met$forecast_met_model))
   
 }
 
-# noaa-point is 16 day
+
 

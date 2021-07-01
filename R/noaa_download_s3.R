@@ -31,7 +31,8 @@ noaa_download_s3 <- function(siteID, # LOWERCASE e.g. sunp
     tryCatch({
       aws.s3::save_object(region = "", 
                           file_names[i], 
-                          file = file.path(noaa_directory, gsub("drivers/noaa-point/NOAAGEFS_1hr/", "", file_names[i])), 
+                          file = file.path(noaa_directory, gsub(paste0(prefix, "/"), "", file_names[i])), 
+                          #file = file.path(noaa_directory, gsub("drivers/noaa-point/NOAAGEFS_1hr/", "", file_names[i])), 
                           bucket = "flare")
     }, error = function(e) {warning("Cannot download ", file_names[i], " from the AWS server.")})
     
