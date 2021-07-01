@@ -2,8 +2,8 @@
    sim_name = 'Sunapee'
    max_layers = 700
    min_layer_vol = 0.025
-   min_layer_thick = 0.05
-   max_layer_thick = 0.75
+   min_layer_thick = 0.5
+   max_layer_thick = 1.0
    density_model = 1
    non_avg = .true.
 /
