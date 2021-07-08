@@ -20,7 +20,7 @@ noaa_download_s3 <- function(siteID, # LOWERCASE e.g. sunp
   }
   
   ens <- formatC(seq(0, 30), width = 2, flag = 0)
-  file_names <- file.path(prefix, siteID, date, cycle, paste0("NOAAGEFS_1hr_", siteID, "_", date, "T00_", end_date, "T00_ens", ens, ".nc"))
+  file_names <- file.path(prefix, siteID, date, cycle, paste0("NOAAGEFS_1hr_", siteID, "_", date, "T", cycle, "_", end_date, "T", cycle, "_ens", ens, ".nc"))
   if(noaa_horizon == 35){
     file_names[1] <- file.path(prefix, siteID, date, cycle, paste0("NOAAGEFS_1hr_", siteID, "_", date, "T00_", end_date_00, "T00_ens", ens, ".nc"))
   }
