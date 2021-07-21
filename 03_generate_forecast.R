@@ -2,31 +2,30 @@
 # library(FLAREr)
 
 ############## set up config directories
-lake_directory <- getwd() # Captures the project directory 
-config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
-
-# Set working directories for your system
+# lake_directory <- getwd() # Captures the project directory 
+# config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
+# 
+ # Set working directories for your system
 config$file_path$qaqc_data_directory <- file.path(lake_directory, "data_processed")
 config$file_path$data_directory <- file.path(lake_directory, "data_raw")
 config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers") #, config$met$forecast_met_model
-#config$file_path$inflow_directory <- file.path(lake_directory, "forecasted_drivers", config$inflow$forecast_inflow_model)
 config$file_path$configuration_directory <- file.path(lake_directory, "configuration")
 config$file_path$execute_directory <- file.path(lake_directory, "flare_tempdir")
 config$file_path$run_config <- file.path(lake_directory, "configuration", "flarer/configure_run.yml")
 config$file_path$forecast_output_directory <- file.path(lake_directory, "forecast_output")
-config$da_setup$ensemble_size <- 100
-
-
-# set up run config settings
-run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
-config$run_config <- run_config
-
-# set forecast model info
-if(config$run_config$forecast_horizon==16){
-  config$met$forecast_met_model <-'noaa-point/NOAAGEFS_1hr'
-}else if(config$run_config$forecast_horizon==35){
-  config$met$forecast_met_model <- 'noaa/NOAAGEFS_1hr'
-}
+#config$da_setup$ensemble_size <- 100
+# 
+# 
+# # set up run config settings
+# run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
+# config$run_config <- run_config
+# 
+# # set forecast model info
+# if(config$run_config$forecast_horizon==16){
+#   config$met$forecast_met_model <-'noaa-point/NOAAGEFS_1hr'
+# }else if(config$run_config$forecast_horizon==35){
+#   config$met$forecast_met_model <- 'noaa/NOAAGEFS_1hr'
+# }
 
 # Create directories if not present
 if(!dir.exists(config$file_path$execute_directory)) {
@@ -91,7 +90,7 @@ init <- FLAREr::generate_initial_conditions(states_config,
                                             historical_met_error = met_out$historical_met_error)
 
 #Run EnKF
-config$run_config$sim_name <- "default_sd_obs_longerda"
+#config$run_config$sim_name <- "default_sd_obs_longerda"
 da_forecast_output <- FLAREr::run_da_forecast(states_init = init$states,
                                               pars_init = init$pars,
                                               aux_states_init = init$aux_states_init,
@@ -99,7 +98,7 @@ da_forecast_output <- FLAREr::run_da_forecast(states_init = init$states,
                                               obs_sd = obs_config$obs_sd,
                                               model_sd = model_sd,
                                               working_directory = config$file_path$execute_directory,
-                                              met_file_names = met_out$filenames,
+                                              met_file_names = met_out$filenames[2:31],
                                               #inflow_file_names = inflow_file_names,
                                               #outflow_file_names = outflow_file_names,
                                               config = config,
@@ -112,5 +111,4 @@ da_forecast_output <- FLAREr::run_da_forecast(states_init = init$states,
 # Save forecast
 saved_file <- FLAREr::write_forecast_netcdf(da_forecast_output = da_forecast_output,
                                             forecast_output_directory = config$file_path$forecast_output_directory)
-FLAREr::plotting_general(file_name = saved_file,qaqc_data_directory = config$file_path$qaqc_data_directory, ncore = 2)
 
