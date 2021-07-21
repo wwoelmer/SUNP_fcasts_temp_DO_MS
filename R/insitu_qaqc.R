@@ -127,12 +127,12 @@ insitu_qaqc <- function(realtime_file,
   
   # put into FLARE format
   dh <- dh %>% 
-    mutate(date = date(DateTime),
-           hour = hour(DateTime),
+    dplyr::mutate(date = lubridate::date(DateTime),
+           hour = lubridate::hour(DateTime),
            depth = Depth,
            temperature = Temp) %>% 
-    select(-c(DateTime, Depth, Temp)) %>% 
-    pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') 
+    dplyr::select(-c(DateTime, Depth, Temp)) %>% 
+    tidyr::pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') 
   
   dh <- na.omit(dh)
 
