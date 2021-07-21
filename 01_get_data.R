@@ -4,18 +4,18 @@
 #remotes::install_github("FLARE-forecast/FLAREr")
 # library(FLAREr)
 
-############## set up config directories
-lake_directory <- getwd() # Captures the project directory 
-config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
-
-# Set working directories for your system
-config$file_path$data_directory <- file.path(lake_directory, "data_raw")
-config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers")
-config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration", "observation_processing", "observation_processing.yml"))
-
-# set up run config settings
-run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
-config$run_config <- run_config
+# ############## set up config directories
+# lake_directory <- getwd() # Captures the project directory 
+# config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
+# 
+# # Set working directories for your system
+# config$file_path$data_directory <- file.path(lake_directory, "data_raw")
+# config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers")
+# config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration", "observation_processing", "observation_processing.yml"))
+# 
+# # set up run config settings
+# run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
+# config$run_config <- run_config
 
 # download buoy data, water quality and met
 setwd(file.path(config$file_path$data_directory, config_obs$realtime_insitu_location))
@@ -47,18 +47,22 @@ for (i in 1:length(dates)) {
 
 download_dates <- na.omit(download_dates)
 download_dates <- as.Date(download_dates, origin = '1970-01-01')
+#download_dates <-seq.Date(as.Date('2021-05-22'), as.Date(Sys.Date()), by = 'day')
+#cycle <- c('00', '06', '12', '18')
 
 if(length(download_dates>1)){
   for (i in 1:length(download_dates)) {
+   # for(j in 1:length(cycle)){
     noaa_download_s3(siteID = 'sunp',
                      date = download_dates[i],
-                     cycle = '00',
+                     cycle = '00', #cycle[j],
                      noaa_horizon = config$run_config$forecast_horizon,
                      noaa_directory = file.path(config$file_path$noaa_directory, config$met$forecast_met_model))
+    }
     
   }
   
-}
+#}
 
 
 
