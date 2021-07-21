@@ -1,5 +1,5 @@
 file_path:
-   qaqc_data_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/flare_tempdir/' # this is the temporary directory where FLARE will write and erase files
+   qaqc_data_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/data_processed/' # this is the temporary directory where FLARE will write and erase files
    data_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/data_raw'
    noaa_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/forecasted_drivers/'
    inflow_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/forecasted_drivers/'
