@@ -1,4 +1,5 @@
 # plot EXO DO + proDSS DO to see mismatch
+library(tidyverse)
 
 d_head<-read.csv('./data_raw/buoy-data/SUNP_buoy_wq.csv', skip=1, as.is=T) #get header minus wonky Campbell rows
 d <-read.csv('./data_raw/buoy-data/SUNP_buoy_wq.csv', skip=4, header=F) #get data minus wonky Campbell rows
@@ -85,7 +86,7 @@ for(i in 1:nrow(maint)){
 
 dh <- d %>% select(TIMESTAMP, wtr_1, wtr_10, dosat_1, doobs_1, dotemp, dosat, doobs)
 dh$TIMESTAMP <- as.POSIXct(dh$TIMESTAMP)
-#dh <- dh[dh$dosat_1 > 5,]
+dh <- dh[dh$dosat_1 > 5,]
 
 manual_url <- 'https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit#gid=1721211942'
 manual <- gsheet::gsheet2tbl(manual_url)
@@ -103,6 +104,14 @@ ggplot(data = dh, aes (x = TIMESTAMP, y = doobs_1, col = '1m')) +
   geom_line(aes(x = TIMESTAMP, y = doobs, col = '10m')) +
   geom_point(data = manual[manual$Depth==1,], aes(x = Date, y = DO_mgL, col = '1m'), size = 4) +
   geom_point(data = manual[manual$Depth==10,], aes(x = Date, y = DO_mgL, color = '10m'), size = 4)
+
+ggplot(data = dh[dh$TIMESTAMP>'2021-07-20',], aes (x = TIMESTAMP, y = doobs_1, col = '1m')) + 
+  geom_line() + 
+  geom_line(aes(x = TIMESTAMP, y = doobs, col = '10m')) 
+  
+ggplot(data = dh[dh$TIMESTAMP>'2021-07-20',], aes (x = TIMESTAMP, y = dosat_1, col = '1m')) + 
+  geom_line() + 
+  geom_line(aes(x = TIMESTAMP, y = dosat, col = '10m')) 
 
 maint_days <- maint[maint$instrument=='EXO',]
 maint_days <- as.Date(maint_days$TIMESTAMP_start)
