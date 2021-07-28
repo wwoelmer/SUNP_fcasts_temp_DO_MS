@@ -2,7 +2,6 @@
 
 
 stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc forecasts for 
-                                 #cycle = '00',
                                  outfile, # file path where you want the output file to go
                                  config, # FLARE config list
                                  model_name = "observed-met-noaa",
