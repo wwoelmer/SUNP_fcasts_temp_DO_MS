@@ -30,6 +30,10 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
   
   # check output directory to see if there are already existing files to append to
   hist_files <- list.files(file.path(outfile))
+  hist_met_all <- NULL
+  run_fx <- TRUE
+  append_data <- FALSE
+  
   
   if(hist_file %in% hist_files){
     hist_met_nc <- ncdf4::nc_open(file.path(outfile, hist_file))
@@ -44,19 +48,29 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
     }
     
     names(hist_met) <- c("time", cf_met_vars) # glm_met_vars
+    }
     
+    if(max(hist_met$time) == max(dates)){
+      print('Already up to date, cancel the rest of the function')
+      run_fx <- FALSE
+    }else if(max(hist_met$time) > max(dates)){
+      print('Already up to date, cancel the rest of the function')
+      run_fx <- FALSE
+    }else if(max(hist_met$time) > min(dates)){
+      print('Appending existing historical files')
+      append_data <- TRUE
+      dates <- dates[dates > max(hist_met$time)]
+    }else{
+      append_data <- FALSE
+    }
   }
   
-  if(max(hist_met$time) > min(dates)){
-    append <- TRUE
-    dates <- dates[dates > max(hist_met$time)]
-  }
-
   # set up dataframe for outfile
   noaa_obs_out <- NULL
   
   # loop through each date of forecasts and extract the first day, stack together to create a continuous dataset of day 1 forecasts
-  for(k in 1:length(dates)){
+  if(run_fx){
+    for(k in 1:length(dates)){
     
     cycle <- list.files(file.path(noaa_directory, config$met$forecast_met_model, config$location$site_id, dates[k]))
     
@@ -65,6 +79,7 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
     
       for(f in 1:length(cycle)){
         forecast_dir <- file.path(config$file_path$noaa_directory, config$met$forecast_met_model, config$location$site_id, dates[k], cycle[f])
+        print(forecast_dir)
         
         if(!is.null(forecast_dir)){
           
