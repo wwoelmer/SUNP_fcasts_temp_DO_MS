@@ -141,7 +141,7 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
   
   }
   
-  if(append==TRUE){
+  if(append_data==TRUE){
     noaa_obs_out <- noaa_obs_out %>% 
       select(-cycle)
     noaa_obs_out <- rbind(hist_met, noaa_obs_out)
