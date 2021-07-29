@@ -48,7 +48,6 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
     }
     
     names(hist_met) <- c("time", cf_met_vars) # glm_met_vars
-    }
     
     if(max(hist_met$time) == max(dates)){
       print('Already up to date, cancel the rest of the function')
@@ -63,7 +62,10 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
     }else{
       append_data <- FALSE
     }
-  }
+    }
+    
+ 
+  
   
   # set up dataframe for outfile
   noaa_obs_out <- NULL
@@ -187,5 +189,5 @@ stack_noaa_forecasts <- function(dates, # list of dates you have NOAA GEFS .nc f
   ncdf4::nc_close(nc_flptr)  #Write to the disk/storage
   
   }
-
+}
 
