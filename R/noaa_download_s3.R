@@ -33,8 +33,7 @@ noaa_download_s3 <- function(siteID, # LOWERCASE e.g. sunp
   }
   
   #Download a specific file from the server and save it locally (in this example, "localfile.nc"):
-  for(i in 1:length(file_names)){
-    
+  if(aws.s3::object_exists(object = file_names[i], bucket = "flare", region = "")) {
     tryCatch({
       aws.s3::save_object(region = "", 
                           file_names[i], 
@@ -42,7 +41,8 @@ noaa_download_s3 <- function(siteID, # LOWERCASE e.g. sunp
                           #file = file.path(noaa_directory, gsub("drivers/noaa-point/NOAAGEFS_1hr/", "", file_names[i])), 
                           bucket = "flare")
     }, error = function(e) {warning("Cannot download ", file_names[i], " from the AWS server.")})
-    
-    
+  } else {
+    warning("File ", file_names[i], " not found!")
   }
+
 }
