@@ -1,12 +1,5 @@
 # function to read in a list of stacked noaa forecasts and average them for input into flare. will look for existing file (assuming same location and name as output_directory and outfile_name) and append if data already exists
-lake_directory <- getwd()
-forecast_dates <- seq.Date(as.Date('2021-06-02'), as.Date('2021-07-02'), by = 'day') # cycle through historical dates 
-site <- "sunp" #four digit name in lowercase
-noaa_directory <- file.path(lake_directory, "forecasted_drivers", "noaa")
-#noaa_model <- "NOAAGEFS_6hr" 
-output_directory <- file.path(lake_directory, "data_processed") # file path where you want the output file to go
-outfile_name = "observed-met-noaa" # file name prefix of the output
-noaa_hour = 6 # numeric, whether you want to use the 6hr or 1hr forecasts
+
 
 average_stacked_forecasts <- function(forecast_dates, # vector of the date range you'd like to create
                                       site,
@@ -127,14 +120,14 @@ if(length(stacked_files) > 1){
 stacked_met_mean <- NULL
 stacked_met_mean <- stacked_met_all %>% 
   dplyr::group_by(time) %>% 
-  dplyr::mutate(air_temperature = mean(air_temperature),
-                air_pressure = mean(air_pressure),
-                relative_humidity = mean(relative_humidity),
-                surface_downwelling_longwave_flux_in_air = mean(surface_downwelling_longwave_flux_in_air),
-                surface_downwelling_shortwave_flux_in_air = mean(surface_downwelling_shortwave_flux_in_air),
-                precipitation_flux = mean(precipitation_flux),
-                specific_humidity = mean(specific_humidity),
-                wind_speed = mean(wind_speed)) %>% 
+  dplyr::mutate(air_temperature = mean(air_temperature, na.rm = TRUE),
+                air_pressure = mean(air_pressure, na.rm = TRUE),
+                relative_humidity = mean(relative_humidity, na.rm = TRUE),
+                surface_downwelling_longwave_flux_in_air = mean(surface_downwelling_longwave_flux_in_air, na.rm = TRUE),
+                surface_downwelling_shortwave_flux_in_air = mean(surface_downwelling_shortwave_flux_in_air, na.rm = TRUE),
+                precipitation_flux = mean(precipitation_flux, na.rm = TRUE),
+                specific_humidity = mean(specific_humidity, na.rm = TRUE),
+                wind_speed = mean(wind_speed, na.rm = TRUE)) %>% 
   dplyr::distinct(time, .keep_all = TRUE) %>% 
   dplyr::select(-NOAA.member)  %>% 
   dplyr::arrange(time) %>% 
@@ -145,41 +138,18 @@ if(append_data==TRUE){
   stacked_met_mean <- rbind(hist_met, stacked_met_mean)
 }
 
-# write the file
 stacked_met_mean <- na.omit(stacked_met_mean)
-start_time <- min(stacked_met_mean$time)
-end_time <- max(stacked_met_mean$time)
 
-data <- stacked_met_mean %>%
-  dplyr::select(-time)
+# write the file
+noaaGEFSpoint::write_noaa_gefs_netcdf(df = stacked_met_mean,
+                                      ens = NA, 
+                                      lat = lat, 
+                                      lon = lon, 
+                                      cf_units = cf_var_units1, 
+                                      output_file = output_file, 
+                                      overwrite = TRUE)
 
-diff_time <- as.numeric(difftime(stacked_met_mean$time, stacked_met_mean$time[1], units = "hours"))
 
-cf_var_names <- names(data)
-
-time_dim <- ncdf4::ncdim_def(name="time",
-                             units = paste("hours since", format(start_time, "%Y-%m-%d %H:%M")),
-                             diff_time, #GEFS forecast starts 5 hours from start time
-                             create_dimvar = TRUE)
-lat_dim <- ncdf4::ncdim_def("latitude", "degree_north", lat, create_dimvar = TRUE)
-lon_dim <- ncdf4::ncdim_def("longitude", "degree_east", lon, create_dimvar = TRUE)
-
-dimensions_list <- list(time_dim, lat_dim, lon_dim)
-
-nc_var_list <- list()
-for (i in 1:length(cf_var_names)) { #Each ensemble member will have data on each variable stored in their respective file.
-  nc_var_list[[i]] <- ncdf4::ncvar_def(cf_var_names[i], cf_units[i], dimensions_list, missval=NaN)
-}
-
-nc_flptr <- ncdf4::nc_create(output_file, nc_var_list, verbose = FALSE, )
-
-#For each variable associated with that ensemble
-for (j in 1:ncol(data)) {
-  # "j" is the variable number.  "i" is the ensemble number. Remember that each row represents an ensemble
-  ncdf4::ncvar_put(nc_flptr, nc_var_list[[j]], unlist(data[,j]))
-}
-
-ncdf4::nc_close(nc_flptr) 
 
   }
 }
