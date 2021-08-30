@@ -86,7 +86,7 @@ for(i in 1:nrow(maint)){
 }
 
 
-dh <- d %>% select(TIMESTAMP, wtr_1, wtr_10, dosat_1, doobs_1, dotemp, dosat, doobs)
+dh <- d %>% select(TIMESTAMP, wtr_1, wtr_10, dosat_1, doobs_1, dotemp, dosat, doobs, fDOM_RFU_1)
 dh$TIMESTAMP <- as.POSIXct(dh$TIMESTAMP)
 # before DO sensor was deployed in EXO, replace with NA
 dh <- dh %>% 
@@ -132,3 +132,7 @@ ggplot(data = day, aes(x = TIMESTAMP, y = dosat_1, col = '1m')) +
   geom_line() + 
   #geom_line(aes(x = TIMESTAMP, y = dosat, col = '10m')) + 
   geom_vline(xintercept = as.POSIXct(maint_days))
+
+
+ggplot(data = dh, aes(x = TIMESTAMP, y = fDOM_RFU_1)) +
+  geom_point()
