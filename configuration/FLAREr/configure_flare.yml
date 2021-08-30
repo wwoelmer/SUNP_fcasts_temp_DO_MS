@@ -78,7 +78,7 @@ inflow:
    forecast_inflow_model: .na
 met:
    use_forecasted_met: TRUE
-   forecast_met_model: noaa-point/NOAAGEFS_1hr #NOAAGEFS_1hr-debias
+   forecast_met_model: noaa/NOAAGEFS_6hr #noaa-point/NOAAGEFS_1hr #NOAAGEFS_1hr-debias
 uncertainty:
    use_obs_constraint: TRUE
    observation_uncertainty: TRUE
