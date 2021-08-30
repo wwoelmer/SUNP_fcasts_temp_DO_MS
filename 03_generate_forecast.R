@@ -17,15 +17,15 @@ config$file_path$forecast_output_directory <- file.path(lake_directory, "forecas
 # 
 # 
 # # set up run config settings
-# run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
-# config$run_config <- run_config
+run_config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_run.yml"))
+config$run_config <- run_config
 # 
 # # set forecast model info
-# if(config$run_config$forecast_horizon==16){
-#   config$met$forecast_met_model <-'noaa-point/NOAAGEFS_1hr'
-# }else if(config$run_config$forecast_horizon==35){
-#   config$met$forecast_met_model <- 'noaa/NOAAGEFS_1hr'
-# }
+if(config$run_config$forecast_horizon==16){
+   config$met$forecast_met_model <-'noaa-point/NOAAGEFS_1hr'
+ }else if(config$run_config$forecast_horizon==35){
+   config$met$forecast_met_model <- 'noaa/NOAAGEFS_1hr'
+ }
 
 # Create directories if not present
 if(!dir.exists(config$file_path$execute_directory)) {
