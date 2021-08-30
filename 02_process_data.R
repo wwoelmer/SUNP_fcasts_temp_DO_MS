@@ -21,18 +21,33 @@
 
 library(tidyverse)
 library(lubridate)
+ library(noaaGEFSpoint)
 
 
 # get NOAA met forecasts and stack first day to use as met 'obs'
-source(file.path(lake_directory, "R", "stack_noaa_forecasts_cycle_loop.R"))
-dates <- seq.Date(as.Date('2021-05-26'), as.Date(config$run_config$forecast_start_datetime), by = 'day') # cycle through historical dates 
-cycle <- '00'
-outfile <- config$file_path$qaqc_data_directory
-stack_noaa_forecasts(dates = dates, 
-                     #cycle = cycle, 
-                     outfile = outfile, 
-                     config = config)
+forecast_dates <- seq.Date(as.Date('2021-06-02'), as.Date('2021-07-06'), by = 'day') # cycle through historical dates 
+site <- 'sunp'
+noaa_directory <- config$file_path$noaa_directory
+noaa_model <- 'noaa/NOAAGEFS_6hr'
+output_directory <- file.path(config$file_path$noaa_directory)
+model_name <- 'NOAAGEFS_6hr'
+dates_w_errors <- c(as.Date('2021-06-01'), as.Date('2021-06-24'), as.Date('2021-07-03'))
+stack_noaa_forecasts(forecast_dates,
+                     site,
+                     noaa_directory = noaa_directory,
+                     noaa_model = noaa_model,
+                     output_directory = output_directory,
+                     dates_w_errors = dates_w_errors
+                     )
 
+# format the stacked forecasts for input into flare
+source(file.path(lake_directory, "R", "average_stacked_forecasts.R"))
+average_stacked_forecasts(forecast_dates = forecast_dates,
+                          site = site,
+                          noaa_hour = 1,
+                          noaa_directory = noaa_directory,
+                          output_directory = config$file_path$qaqc_data_directory,
+                          outfile_name = 'observed-met-noaa')
 
 # QAQC insitu buoy data
 source(file.path(lake_directory, "R", "insitu_qaqc.R"))
