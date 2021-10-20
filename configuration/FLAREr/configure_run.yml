@@ -1,9 +1,10 @@
 restart_file: .na
-start_datetime: 2021-10-15 16:00:00 # spinup start time
-end_datetime: .na # spinup end time, if not specified, then defaults to when forecasts start
-forecast_start_datetime: 2021-10-17 16:00:00 # noon EST
+start_datetime: 2021-10-15 00:00:00
+end_datetime: .na
+forecast_start_datetime: 2021-10-17 00:00:00
 forecast_horizon: 35
 sim_name: short_DA_noaa_met
 forecast_output_directory: .na
 forecast_configuration_directory: .na
 execute_directory: .na
+forecast_site: sunp

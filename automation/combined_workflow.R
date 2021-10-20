@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 lake_directory <- here::here()
 setwd(lake_directory)
 update_run_config <<- TRUE #TRUE is used for an iterative workflow
