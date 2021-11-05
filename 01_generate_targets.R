@@ -59,12 +59,17 @@ if(!file.exists(file.path(config$file_path$data_directory, "hist-data", "hist_bu
 download_s3_objects(lake_directory, bucket = "drivers", prefix = file.path("noaa", "NOAAGEFS_1hr_stacked", forecast_site))
 
 # format the stacked forecasts for input into flare
+stack_file_name <- file.path(lake_directory, "data_processed", paste0("observed-met-noaa_",forecast_site, ".nc"))
+
 average_stacked_forecasts(forecast_dates = seq.Date(as_date(run_config$start_datetime), as_date(run_config$forecast_start_datetime), by = 'day'), # cycle through historical dates
                           site = forecast_site, #four digit name in lowercase
+                          noaa_hour = 1,
                           noaa_stacked_directory = file.path(lake_directory, "drivers", "noaa", "NOAAGEFS_1hr_stacked"),
-                          output_directory = file.path(lake_directory, "data_processed"),
-                          outfile_name = paste0("observed-met-noaa_",forecast_site),
-                          noaa_hour = 1)
+                          output_file = stack_file_name)
+
+stack_file_name <- file.path(lake_directory, "data_processed", paste0("observed-met-noaa_",forecast_site, ".nc"))
+                          
+                          
 
 # QAQC insitu buoy data
 insitu_qaqc(realtime_file = file.path(config$file_path$data_directory, config_obs$insitu_obs_fname[1]),
@@ -74,7 +79,7 @@ insitu_qaqc(realtime_file = file.path(config$file_path$data_directory, config_ob
             config = config)
 
 if(s3_mode){
-  aws.s3::put_object(file = processed_filename, object = file.path(forecast_site, paste0(forecast_site, "-targets-insitu.csv")), bucket = "targets")
-  aws.s3::put_object(file = file.path(config$file_path$qaqc_data_directory, paste0("observed-met-noaa_",forecast_site, ".nc")), object = file.path(forecast_site, paste0("observed-met-noaa_",forecast_site,".nc")), bucket = "targets")
+  aws.s3::put_object(file = processed_filename, object = file.path(forecast_site, basename(processed_filename)), bucket = "targets")
+  aws.s3::put_object(file = stack_file_name, object = file.path(forecast_site, basename(stack_file_name)), bucket = "targets")
 }
 

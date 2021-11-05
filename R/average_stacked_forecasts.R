@@ -4,11 +4,7 @@ average_stacked_forecasts <- function(forecast_dates, # vector of the date range
                                       site,
                                       noaa_hour, # numeric; whether you want to average the 1hr or 6hr forecasts
                                       noaa_stacked_directory, # file path of the directory where the stacked ensemble files are stored
-                                      output_directory, # file path where you want the output file to go
-                                      outfile_name # prefix/name of the final output file
-                                      
-                                      
-){
+                                      output_file){ # file  where you want the output to go
   
   
   
@@ -36,12 +32,13 @@ average_stacked_forecasts <- function(forecast_dates, # vector of the date range
   dates <- lubridate::as_date(forecast_dates)
   dates <- dates[which(dates < system_date)]
   
-  identifier <- paste(outfile_name, sep="_")
-  fname <- paste0(identifier,".nc")
-  output_file <- file.path(output_directory, fname)
+  #identifier <- paste(outfile_name, sep="_")
+  #fname <- paste0(identifier,".nc")
+  output_file
+  
   
   # look in output directory for existing file
-  hist_file <- fname
+  hist_file <- outfile_name
   hist_files <- list.files(output_directory)
   append_data <- FALSE
   run_fx <- TRUE
