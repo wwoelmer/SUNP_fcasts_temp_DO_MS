@@ -3,11 +3,6 @@
 .Rapp.history
 
 # ignore things in the tempdir
-flare_tempdir*
-forecast_output*
-data_processed*
-forecast_drivers*
-data_raw/buoy_data*
 
 # Session Data files
 .RData
@@ -46,8 +41,9 @@ vignettes/*.pdf
 .Renviron
 
 # large files in the hist_data folder
-data_raw/hist-data/hist_buoy_do.csv
-data_raw/hist-data/hist_buoy_temp.csv
+data_raw/*
+drivers/*
+forecasts/*
+data_processed/*
+flare_tempdir/*
 
-forecasted_drivers/
-flare_tempdir/
