@@ -45,4 +45,5 @@ data_raw/*
 drivers/*
 forecasts/*
 data_processed/*
+flare_tempdir/*
 
