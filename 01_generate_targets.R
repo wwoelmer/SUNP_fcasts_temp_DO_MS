@@ -23,6 +23,7 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 configuration_file <- "configure_flare.yml"
 run_config <- yaml::read_yaml(file.path(lake_directory,"configuration","FLAREr","configure_run.yml"))
 forecast_site <- run_config$forecast_site
+sim_name <- run_config$sim_name
 
 config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration","observation_processing","observation_processing.yml"))
 #Note: lake_directory need to be set prior to running this script
