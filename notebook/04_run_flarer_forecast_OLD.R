@@ -6,13 +6,17 @@
 # config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
 # 
  # Set working directories for your system
+lake_directory <- here::here()
+run_config <- yaml::read_yaml(file.path(paste0(lake_directory,"/configuration/", "FLAREr/", "configure_run.yml")))
+forecast_site <- "sunp"
+config <- yaml::read_yaml(file.path(paste0(lake_directory,"/configuration/", "FLAREr/", "configure_flare.yml")))
 config$file_path$qaqc_data_directory <- file.path(lake_directory, "data_processed")
 config$file_path$data_directory <- file.path(lake_directory, "data_raw")
-config$file_path$noaa_directory <- file.path(lake_directory, "forecasted_drivers") #, config$met$forecast_met_model
+config$file_path$noaa_directory <- file.path(dirname(lake_directory), "drivers", "noaa", config$met$forecast_met_model)
 config$file_path$configuration_directory <- file.path(lake_directory, "configuration")
 config$file_path$execute_directory <- file.path(lake_directory, "flare_tempdir")
-config$file_path$run_config <- file.path(lake_directory, "configuration", "flarer/configure_run.yml")
-config$file_path$forecast_output_directory <- file.path(lake_directory, "forecast_output")
+config$file_path$forecast_output_directory <- file.path(dirname(lake_directory), "forecasts", forecast_site)
+config$run_config <- run_config
 #config$da_setup$ensemble_size <- 100
 # 
 # 
@@ -49,7 +53,7 @@ if(is.na(config$run_config$forecast_start_datetime)){
 forecast_hour <- lubridate::hour(forecast_start_datetime)
 if(forecast_hour < 10){forecast_hour <- paste0("0",forecast_hour)}
 
-noaa_forecast_path <- file.path(config$file_path$noaa_directory, config$met$forecast_met_model, config$location$site_id,
+noaa_forecast_path <- file.path(config$file_path$noaa_directory, config$location$site_id,
                              lubridate::as_date(forecast_start_datetime), "00")
 
 

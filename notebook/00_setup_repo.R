@@ -7,7 +7,7 @@
 #install.packages(tidyverse)
 
 ############## set up config directories
-lake_directory <- getwd() # Captures the project directory 
+lake_directory <- here::here() # Captures the project directory 
 config <- yaml::read_yaml(file.path(lake_directory,"configuration", "FLAREr", "configure_flare.yml"))
 
 # Set working directories for your system

@@ -57,21 +57,21 @@ depths_bins_top: [0.0, 0.1, 0.33, 0.67,
 
 obs_config_file: observations_config.csv
 
-realtime_insitu_location: buoy-data
-realtime_met_station_location: buoy-data
+realtime_insitu_location: sunp-buoy-data
+realtime_met_station_location: .na
 manual_data_location: manual-data
-realtime_inflow_data_location: diana-data
+realtime_inflow_data_location: .na
 
 #specified_inflow1: manual-data/FCR_weir_inflow_2013_2019_20200624_allfractions_2poolsDOC.csv
 #specified_outflow1: hist-data/corr_outflow_impmodel_baseflow_23Mar2017.csv
 
 insitu_obs_fname:
-    - buoy-data/SUNP_buoy_wq.csv
-    - hist-data/manual_buoy_temp.csv # this file combines manual observations and buoy data from 1985 to 2020, created in Sunpee-GLM repo in 'combine_manual_hf_temp.R' 
+    - sunp-buoy-data/SUNP_buoy_wq.csv
+    - hist-data/hist_buoy_temp.csv # this file combines manual observations and buoy data from 1985 to 2020, created in Sunpee-GLM repo in 'combine_manual_hf_temp.R' 
     #  hist_buoy_temp.csv  #this file comes straight from EDI:
     #  field_temp_noon_obs.csv #created file from historical buoy data on EDI (see Sunapee-GLM repo, 'create_noon_temp_file_obs.R')
-secchi_fname: manual-data/Secchi_depth_2013-2019.csv
-nutrients_fname: manual-data/chemistry.csv
+secchi_fname: .na
+nutrients_fname: .na
 variable_obsevation_depths: FALSE
 exo_sensor_2_ctd_chla: [0, 1]  #c(-2.0430, 2.5314) #c(1.8795, 0.6662)
 exo_sensor_2_ctd_do: [0, 1] #c(8.3670, 0.7152)
@@ -81,7 +81,7 @@ ctd_2_exo_sensor_chla: [0, 1]  #c(-2.0430, 2.5314) #c(-1.582, 1.335)
 ctd_2_exo_sensor_do: [0, 1] #c(-10.770, 1.061)
 exo_sensor_2_grab_sample_fdom: [-38.95, 22.47]
 focal_depths: .na #1.6
-maintenance_file: /mia-data/CAT_MaintenanceLog.txt
+maintenance_file: .na
 
 pull_from_git: TRUE
 
@@ -107,7 +107,7 @@ averaging_period:
  # - "1 day"
  # - "1 day"
     
-averaging_period_starting_hour: "16:00:00"
+averaging_period_starting_hour: "00:00:00"
 
 measurement_methods: 
     temperature:

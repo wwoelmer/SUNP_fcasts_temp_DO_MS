@@ -37,9 +37,15 @@ insitu_qaqc <- function(realtime_file,
   
   for(i in 1:nrow(maint)){
     
+    print(i)
+    
     # get start and end time of one maintenance event
     start <- maint$TIMESTAMP_start[i]
     end <- maint$TIMESTAMP_end[i]
+    if(is.na(end)){
+      end <- as.POSIXct(Sys.time())
+      attr(end, "tzone") <- "UTC"
+    }
     
     # set colnumbers for maintenance events
     if(maint$instrument[i]=='ALL'){
