@@ -3,6 +3,7 @@ insitu_qaqc <- function(realtime_file,
                       hist_file,
                       maintenance_url,
                       variables,
+                      cleaned_insitu_file,
                       #input_file_tz,
                       #focal_depths,
                       #local_tzone,
@@ -142,5 +143,11 @@ insitu_qaqc <- function(realtime_file,
   
   dh <- na.omit(dh)
 
-  write_csv(dh, file.path(config$file_path$qaqc_data_directory,"observations_postQAQC_long.csv"))
+  if(!dir.exists(dirname(cleaned_insitu_file))){
+    dir.create(dirname(cleaned_insitu_file), recursive = TRUE)
+  }
+  
+  write_csv(dh, cleaned_insitu_file)
+  
+  return(cleaned_insitu_file)
 }
