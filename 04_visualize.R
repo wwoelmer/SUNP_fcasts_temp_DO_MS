@@ -1,62 +1,29 @@
-renv::restore()
 
 library(tidyverse)
 library(lubridate)
 
+Sys.setenv("AWS_DEFAULT_REGION" = "s3",
+           "AWS_S3_ENDPOINT" = "flare-forecast.org")
+
 lake_directory <- here::here()
 
-source(file.path(lake_directory,"R/post_forecast_functions/plotting.R"))
+configure_run_file <- "configure_run.yml"
 
-s3_mode <- TRUE
+config <- FLAREr::set_configuration(configure_run_file,lake_directory)
 
-run_config <- yaml::read_yaml(file.path(lake_directory,"configuration","FLAREr","configure_run.yml"))
-forecast_site <- run_config$forecast_site
-sim_name <- run_config$sim_name
+config <- FLAREr::get_restart_file(config, lake_directory)
 
-config <- yaml::read_yaml(file.path(paste0(lake_directory,"/configuration/", "FLAREr/", "configure_flare_",forecast_site,".yml")))
-
-#Get updated run_config from bucket if one exists
-if(s3_mode){
-  restart_exists <- aws.s3::object_exists(object = file.path(forecast_site, sim_name, "configure_run.yml"), bucket = "restart")
-  if(restart_exists){
-    aws.s3::save_object(object = file.path(forecast_site, sim_name, "configure_run.yml"), bucket = "restart", file = file.path(lake_directory,"configuration","FLAREr","configure_run.yml"))
-  }
-  run_config <- yaml::read_yaml(file.path(lake_directory,"configuration","FLAREr","configure_run.yml"))
-  forecast_site <- run_config$forecast_site
-  run_config <- yaml::read_yaml(file.path(lake_directory,"configuration","FLAREr","configure_run.yml"))
-  if(!is.na(run_config$restart_file)){
-    restart_file <- basename(run_config$restart_file)
-  }else{
-    restart_file <- NA
-  }
-  if(!is.na(restart_file)){
-    aws.s3::save_object(object = file.path(forecast_site, restart_file),
-                        bucket = "forecasts",
-                        file = file.path(lake_directory, "forecasts", restart_file))
-    restart_file <- basename(run_config$restart_file)
-    config$run_config$restart_file <- file.path(lake_directory, "forecasts", restart_file)
-  }
-  if(!is.na(run_config$restart_file)){
-    config$run_config$restart_file <- file.path(lake_directory, "forecasts", restart_file)
-  }
-  config$run_config <- run_config
-}else{
-  if(!is.na(run_config$restart_file)){
-    file.copy(from = run_config$restart_file, to = config$file_path$forecast_output_directory)
-  }
-}
-
-target_directory <- file.path(lake_directory, "data_processed")
-
-if(s3_mode){
-  aws.s3::save_object(object = file.path(forecast_site, paste0(forecast_site, "-targets-insitu.csv")),
-                      bucket = "targets",
-                      file = file.path(target_directory, paste0(forecast_site, "-targets-insitu.csv")))
-}
+FLAREr::get_targets(lake_directory, config)
 
 pdf_file <- FLAREr::plotting_general_2(file_name = config$run_config$restart_file,
-                                       target_file = file.path(target_directory, paste0(forecast_site, "-targets-insitu.csv")))
+                                       target_file = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")))
 
+if(config$run_config$use_s3){
+  success <- aws.s3::put_object(file = pdf_file, object = file.path(config$location$site_id, basename(pdf_file)), bucket = "analysis")
+  if(success){
+    unlink(pdf_file)
+  }
+}
 
 source(file.path(lake_directory,"R/simple_plot.R"))
 
@@ -71,5 +38,10 @@ simple_plot(forecast_file_name,
             qaqc_data_directory,
             focal_depths_plotting,
             highlight_date = highlight_date)
+
+if(config$run_config$use_s3){
+  unlink(file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")))
+  unlink(config$run_config$restart_file)
+}
 
 
