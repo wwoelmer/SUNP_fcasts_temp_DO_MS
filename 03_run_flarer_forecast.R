@@ -1,3 +1,5 @@
+install.packages('tidyverse')
+install.packages('readr')
 library(tidyverse)
 library(lubridate)
 
@@ -21,7 +23,7 @@ config <- FLAREr::set_configuration(configure_run_file,lake_directory)
 
 config <- FLAREr::get_restart_file(config, lake_directory)
 
-get_targets(lake_directory, config)
+FLAREr::get_targets(lake_directory, config)
 
 noaa_forecast_path <- FLAREr::get_driver_forecast_path(config,
                                                forecast_model = config$met$forecast_met_model)
