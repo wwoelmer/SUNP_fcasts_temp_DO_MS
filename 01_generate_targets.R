@@ -12,11 +12,11 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 
 #' Source the R files in the repository
 
-source(file.path(lake_directory, "R", "workflow_functions.R"))
+#source(file.path(lake_directory, "R", "workflow_functions.R"))
 source(file.path(lake_directory, "R", "insitu_qaqc.R"))
 
 files.sources <- list.files(file.path(lake_directory, "R"), full.names = TRUE)
-sapply(files.sources, source)
+sapply(files.sources, source) # this is not working, can't see why--WW
 
 #' Generate the `config_obs` object and create directories if necessary
 
@@ -29,11 +29,11 @@ FLAREr::get_git_repo(lake_directory,
              directory = config_obs$realtime_insitu_location,
              git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
 
-#' Download files from EDI
+#' Download files from EDI and Zenodo
 #' 
 
-if(!dir.exists(dir.create(file.path(config$file_path$data_directory, "hist-data")))){
-  dir.create(file.path(config$file_path$data_directory, "hist-data"))
+if(!dir.exists(dir.create(file.path(config_obs$file_path$data_directory, "hist-data")))){
+  dir.create(file.path(config_obs$file_path$data_directory, "hist-data"))
 }
 
 FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/f4d3535cebd96715c872a7d3ca45c196",
@@ -44,6 +44,13 @@ FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi
              file = file.path("hist-data", "hist_buoy_temp.csv"),
              lake_directory)
 
+download.file(url = 'https://zenodo.org/record/4652076/files/Lake-Sunapee-Protective-Association/LMP-v2020.1.zip?download=1',
+              destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
+              mode = 'wb')
+unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
+      files = file.path('Lake-Sunapee-Protective-Association-LMP-271fcb0', 'master files', 'LSPALMP_1986-2020_v2021-03-29.csv'),
+      exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
+      junkpaths = TRUE)
 
 #' Clean up insitu
 
@@ -53,7 +60,7 @@ cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_pat
             maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
             variables = "temperature",
             cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, paste0(config_obs$site_id,"-targets-insitu.csv")),
-            config = config)
+            config = config_obs)
 
 #' Move targets to s3 bucket
 
