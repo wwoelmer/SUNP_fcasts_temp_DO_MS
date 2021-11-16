@@ -1,14 +1,118 @@
 
 insitu_qaqc <- function(realtime_file,
-                      hist_file,
-                      maintenance_url,
-                      variables,
-                      cleaned_insitu_file,
-                      #input_file_tz,
-                      #focal_depths,
-                      #local_tzone,
-                      config){
+                        hist_buoy_file,
+                        hist_manual_file,
+                        hist_all_file,
+                        maintenance_url,
+                        variables,
+                        cleaned_insitu_file,
+                        lake_directory,
+                        config){
   
+  # create combined manual and high frequency buoy data file
+  library(tidyverse)
+  library(lubridate)
+  
+  sim_folder <- lake_directory
+  
+  # download manual data from zenodo: https://zenodo.org/record/4652076#.YKKBbqhKg2x
+  manual <- read.csv(hist_manual_file)
+  manual <- manual %>% 
+    dplyr::filter(parameter == 'temp_C') %>% 
+    dplyr::mutate(date = as.Date(date)) %>% 
+    dplyr::select(date, depth_m, parameter, value, station) %>% 
+    tidyr::pivot_wider(names_from = parameter, values_from = value) %>% 
+    tidyr::unchop(everything()) # do this bc of strange formating with pivot wider
+  
+  manual <- manual %>% 
+    dplyr::filter(station == 210) %>%  # this is the deep hole site
+    dplyr::mutate(time = hms("12:00:00")) %>% 
+    dplyr::mutate(DateTime = as.POSIXct(date, format = "%Y-%m-%d %H:%M:%S", tz = 'UTC+5') + 60*60*16) %>% 
+    dplyr::select(DateTime, depth_m, temp_C, station) %>% 
+    dplyr::mutate(method = 'manual')
+  colnames(manual) <- c('DateTime', 'Depth', 'Temp_manual', 'site', 'method')  
+  manual$site <- as.character(manual$site)
+  manual$DateDepth <- paste0(manual$DateTime, " ", manual$Depth)
+  
+  
+  # and historical high frequency buoy data
+  # extract noon measurements only and only observations when buoy is deployed
+  field_all <- read.csv(hist_buoy_file)
+  field_all$datetime <- as.POSIXct(field_all$datetime, format = "%Y-%m-%d %H:%M:%S")
+  field_noon <- field_all %>% 
+    dplyr::mutate(day = day(datetime)) %>% 
+    dplyr::mutate(hour = hour(datetime)) %>% 
+    dplyr::mutate(minute = minute(datetime))
+  field_noon <- field_noon[field_noon$hour=='12' & field_noon$minute=='0',]
+  field_noon <- field_noon[field_noon$location=='loon',]  
+  field_noon <- field_noon %>% dplyr::select(-location, -day, -minute, -hour)
+  
+  # add depth column and remove from column name
+  field_format <- data.frame("DateTime" = as.Date(NA),
+                             "Depth" = NA,
+                             "Temp" = NA
+  )
+  
+  depths <- c('0.5', '0.75', '0.85', '1.0', '1.5', '1.75', '1.85', '2.0', '2.5', '2.75',
+              '2.85', '3.0', '3.5', '3.75', '3.85', '4.5', '4.75', '4.85', '5.5', '5.75', 
+              '5.85', '6.5', '6.75', '6.85', '7.5', '7.75', '7.85', '8.5', '8.75', '8.85',
+              '9.5', '9.75', '9.85', '10.5', '11.5', '13.5')
+  
+  for (i in 1:length(depths)) {
+    temp <- field_noon[,c(1, i+1)]
+    temp$Depth <- depths[i]
+    colnames(temp) <- c('DateTime', 'Temp', 'Depth')
+    field_format <- full_join(temp, field_format)
+  }
+  
+  
+  # put depth as second column
+  field_format <- field_format %>% dplyr::select( 'DateTime', 'Depth', 'Temp') %>% 
+    dplyr::arrange(DateTime, Depth)
+  field_format <- na.omit(field_format)
+  
+  buoy <- field_format
+  buoy$DateTime <- as.POSIXct(buoy$DateTime)
+  buoy$site <- as.character('210') # set up buoy site to 210?
+  buoy$method <- 'buoy'
+  colnames(buoy) <- c('DateTime', 'Depth', 'Temp_buoy', 'site', 'method')
+  buoy <- na.omit(buoy)
+  buoy$DateDepth <- paste0(buoy$DateTime, " ", buoy$Depth)
+  buoy$Depth <- as.numeric(buoy$Depth)
+  
+  
+  # remove days from buoy dataset where there is manual data
+  remove <- manual$DateTime
+  
+  buoy <- buoy[!buoy$DateTime %in% remove,  ]
+  
+  # combine the two datasets
+  temp_data <- dplyr::full_join(manual, buoy)
+  
+  data_nodups <- temp_data[!duplicated(temp_data[,1:2]),]
+  
+  table(duplicated(data_nodups[,1:2]))
+  table(duplicated(temp_data[,1:2]))
+  
+  ggplot(data_nodups[data_nodups$DateTime > '2018-01-01 00:00:00' & data_nodups$DateTime < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_buoy)) +
+    geom_line() +
+    geom_line(aes(x= DateTime, y = Temp_manual, col = 'red')) 
+  
+  
+  ggplot(buoy[buoy$DateDepth > '2018-01-01 00:00:00' & buoy$DateDepth < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_buoy)) +
+    geom_line(aes(col = as.factor(Depth))) 
+  
+  ggplot(manual[manual$DateDepth > '2018-01-01 00:00:00' & manual$DateDepth < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_manual)) +
+    geom_line(aes(col = as.factor(Depth))) 
+  
+  data_nodups <- data_nodups %>% 
+    mutate(Temp = ifelse(is.na(Temp_manual), Temp_buoy, Temp_manual)) %>% 
+    select(DateTime, Depth, Temp)
+  
+  write.csv(data_nodups, hist_all_file, row.names = FALSE)
+  
+  
+  # now combine the historical manual + buoy data with the realtime file
   d_head<-read.csv(realtime_file, skip=1, as.is=T) #get header minus wonky Campbell rows
   d <-read.csv(realtime_file, skip=4, header=F) #get data minus wonky Campbell rows
   names(d)<-names(d_head) #combine the names to deal with Campbell logger formatting
@@ -123,7 +227,7 @@ insitu_qaqc <- function(realtime_file,
     arrange(DateTime, Depth)
   
   # combine with historical data
-  h <- read.csv(hist_file)
+  h <- read.csv(hist_all_file)
   h$DateTime <- as.POSIXct(h$DateTime)
   attr(h$DateTime, "tzone") <- "UTC"
   
