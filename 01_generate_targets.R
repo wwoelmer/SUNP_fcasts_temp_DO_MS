@@ -36,6 +36,7 @@ if(!dir.exists(dir.create(file.path(config_obs$file_path$data_directory, "hist-d
   dir.create(file.path(config_obs$file_path$data_directory, "hist-data"))
 }
 
+# high frequency buoy data
 FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/f4d3535cebd96715c872a7d3ca45c196",
              file = file.path("hist-data", "hist_buoy_do.csv"),
              lake_directory)
@@ -44,6 +45,7 @@ FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi
              file = file.path("hist-data", "hist_buoy_temp.csv"),
              lake_directory)
 
+# manually collected data
 download.file(url = 'https://zenodo.org/record/4652076/files/Lake-Sunapee-Protective-Association/LMP-v2020.1.zip?download=1',
               destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
               mode = 'wb')
@@ -56,11 +58,14 @@ unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
 
 # QAQC insitu buoy data
 cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
-            hist_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]),
-            maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
-            variables = "temperature",
-            cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, paste0(config_obs$site_id,"-targets-insitu.csv")),
-            config = config_obs)
+                                   hist_buoy_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]),
+                                   hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
+                                   hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
+                                   maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
+                                   variables = "temperature",
+                                   cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, paste0(config_obs$site_id,"-targets-insitu.csv")),
+                                   config = config_obs,
+                                   lake_directory = lake_directory)
 
 #' Move targets to s3 bucket
 
