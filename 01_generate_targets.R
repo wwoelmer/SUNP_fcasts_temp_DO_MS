@@ -7,6 +7,9 @@ message("Beginning generate targets")
 
 lake_directory <- here::here()
 
+Sys.setenv("AWS_DEFAULT_REGION" = "s3",
+           "AWS_S3_ENDPOINT" = "flare-forecast.org")
+
 #' Source the R files in the repository
 
 source(file.path(lake_directory, "R", "workflow_functions.R"))
