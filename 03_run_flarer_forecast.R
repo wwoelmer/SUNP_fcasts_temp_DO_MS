@@ -1,5 +1,3 @@
-install.packages('tidyverse')
-install.packages('readr')
 library(tidyverse)
 library(lubridate)
 
