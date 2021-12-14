@@ -29,4 +29,5 @@ if(noaa_ready){
   
   message("Generating plots")
   source(file.path("04_visualize.R"))
+  
 }

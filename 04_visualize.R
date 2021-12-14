@@ -33,11 +33,11 @@ qaqc_data_directory <- config$file_path$qaqc_data_directory
 focal_depths_plotting <- c('0.1', '5', '10')
 highlight_date <- as.Date('2021-07-17')
 
-simple_plot(forecast_file_name,
-            output_file_name,
-            qaqc_data_directory,
-            focal_depths_plotting,
-            highlight_date = highlight_date)
+#simple_plot(forecast_file_name,
+#            output_file_name,
+#            qaqc_data_directory,
+#            focal_depths_plotting,
+#            highlight_date = highlight_date)
 
 if(config$run_config$use_s3){
   unlink(file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")))
