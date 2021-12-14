@@ -2,7 +2,7 @@ restart_file: .na
 start_datetime: 2021-10-15 00:00:00
 end_datetime: .na
 forecast_start_datetime: 2021-10-17 00:00:00
-forecast_horizon: 35
+forecast_horizon: 16
 sim_name: short_DA_noaa_met
 configure_flare: configure_flare.yml
 configure_obs: observation_processing.yml
