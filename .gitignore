@@ -48,5 +48,5 @@ data_processed/*
 flare_tempdir/*
 targets/*
 restart/*
-automation/sunp.log
+workflows/default/sunp.log
 

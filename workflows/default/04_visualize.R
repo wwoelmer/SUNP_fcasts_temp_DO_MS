@@ -8,8 +8,9 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 lake_directory <- here::here()
 
 configure_run_file <- "configure_run.yml"
+config_set_name <- "default"
 
-config <- FLAREr::set_configuration(configure_run_file,lake_directory)
+config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
 
 config <- FLAREr::get_restart_file(config, lake_directory)
 

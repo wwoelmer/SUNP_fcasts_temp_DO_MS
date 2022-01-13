@@ -6,6 +6,7 @@ message("Beginning generate targets")
 #' Set the lake directory to the repository directory
 
 lake_directory <- here::here()
+config_set_name <- "default"
 
 Sys.setenv("AWS_DEFAULT_REGION" = "s3",
            "AWS_S3_ENDPOINT" = "flare-forecast.org")
@@ -20,7 +21,7 @@ source(file.path(lake_directory, "R", "insitu_qaqc.R"))
 
 #' Generate the `config_obs` object and create directories if necessary
 
-config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml")
+config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
 use_s3 <- TRUE
 
 #' Clone or pull from data repositories

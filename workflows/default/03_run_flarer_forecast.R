@@ -12,12 +12,13 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 
 lake_directory <- here::here()
 update_run_config <- TRUE
+config_set_name <- "default"
 #files.sources <- list.files(file.path(lake_directory, "R"), full.names = TRUE)
 #sapply(files.sources, source)
 
 configure_run_file <- "configure_run.yml"
 
-config <- FLAREr::set_configuration(configure_run_file,lake_directory)
+config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
 
 config <- FLAREr::get_restart_file(config, lake_directory)
 
@@ -45,9 +46,9 @@ if(!is.null(inflow_forecast_path)){
   inflow_file_dir <- NULL
 }
 
-pars_config <- readr::read_csv(file.path(config$file_path$configuration_directory, "FLAREr", config$model_settings$par_config_file), col_types = readr::cols())
-obs_config <- readr::read_csv(file.path(config$file_path$configuration_directory, "FLAREr", config$model_settings$obs_config_file), col_types = readr::cols())
-states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, "FLAREr", config$model_settings$states_config_file), col_types = readr::cols())
+pars_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$par_config_file), col_types = readr::cols())
+obs_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$obs_config_file), col_types = readr::cols())
+states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$states_config_file), col_types = readr::cols())
 
 
 #Download and process observations (already done)
