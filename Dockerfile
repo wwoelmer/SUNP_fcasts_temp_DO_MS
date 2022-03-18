@@ -2,6 +2,9 @@ FROM flareforecast/flare
 
 ENV NB_USER=rstudio
 
+RUN R --quiet -e "devtools::install_github('IRkernel/IRkernel')" && \
+    R --quiet -e "IRkernel::installspec(prefix='${VENV_DIR}')"
+
 RUN /rocker_scripts/install_python.sh
 RUN /rocker_scripts/install_binder.sh
 
