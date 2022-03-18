@@ -3,7 +3,7 @@ FROM flareforecast/flare
 ENV NB_USER=rstudio
 
 RUN apt-get update && \
-    apt-get -y install libzmq && \
+    apt-get -y install libzmq5 && \
     apt-get purge && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
