@@ -1,9 +1,9 @@
 restart_file: .na
-start_datetime: 2021-10-15 00:00:00
+start_datetime: 2022-04-26 00:00:00
 end_datetime: .na
-forecast_start_datetime: 2021-10-17 00:00:00
-forecast_horizon: 16
-sim_name: short_DA_noaa_met
+forecast_start_datetime: 2022-05-10 00:00:00
+forecast_horizon: 0
+sim_name: TEST
 configure_flare: configure_flare.yml
 configure_obs: observation_processing.yml
 use_s3: FALSE
