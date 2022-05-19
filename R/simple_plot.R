@@ -135,5 +135,6 @@ for(i in 1:length(state_names)){
 
 dev.off()
 
+invisible(pdf_file_name)
 }
 }
