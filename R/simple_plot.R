@@ -10,9 +10,8 @@ csv_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".csv")
 
 target_file <- paste0(qaqc_data_directory,"/observations_postQAQC_long.csv")
 
-
-output <- FLAREr::combine_forecast_observations(file_name,
-                                                target_file,
+output <- FLAREr::combine_forecast_observations(file_name = forecast_file_name,
+                                                target_file = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")),
                                                 extra_historical_days = 0,
                                                 ncore = 1)
 obs <- output$obs
@@ -99,27 +98,42 @@ for(i in 1:length(state_names)){
                                 forecast_start_day = forecast_start_day) %>%
     dplyr::filter(depth %in% focal_depths_plotting)
   
-  
   p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = date)) +
-    ggplot2::facet_wrap(~depth) +
-    ggplot2::geom_ribbon(ggplot2::aes(ymin = forecast_lower_95, ymax = forecast_upper_95),
-                         alpha = 0.70,
-                         fill = "gray") +
-    ggplot2::geom_line(ggplot2::aes(y = forecast_mean), size = 0.5) +
+    ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = as.factor(depth)), size = 0.5) +
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = forecast_lower_95, ymax = forecast_upper_95, 
+                                      fill = as.factor(depth)),
+                         alpha = 0.3) +
+    ggplot2::geom_point(ggplot2::aes(y = observed, color = as.factor(depth)), size = 0.5) +
     ggplot2::geom_vline(xintercept = forecast_start_day,
                         alpha = forecast_start_day_alpha) +
-    ggplot2::geom_point(ggplot2::aes(y = observed), size = 0.5, color = "red") +
     ggplot2::theme_light() +
-    ggplot2::labs(x = "Date", y = state_names[i], title = paste0(state_names[i], " forecast on ", lubridate::date(forecast_start_day))) +
+    ggplot2::labs(x = "Date", 
+                  y = state_names[i], 
+                  fill = 'Depth',
+                  color = 'Depth',
+                  title = paste0("Lake Sunapee water temp forecast, ", lubridate::date(forecast_start_day))) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, size = 10))
+  
+  #p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = date)) +
+  #  ggplot2::facet_wrap(~depth) +
+  #  ggplot2::geom_ribbon(ggplot2::aes(ymin = forecast_lower_95, ymax = forecast_upper_95),
+  #                       alpha = 0.70,
+  #                       fill = "gray") +
+  #  ggplot2::geom_line(ggplot2::aes(y = forecast_mean), size = 0.5) +
+  #  ggplot2::geom_vline(xintercept = forecast_start_day,
+  #                      alpha = forecast_start_day_alpha) +
+  #  ggplot2::geom_point(ggplot2::aes(y = observed), size = 0.5, color = "red") +
+  #  ggplot2::theme_light() +
+  #  ggplot2::labs(x = "Date", y = state_names[i], title = paste0(state_names[i], " forecast on ", lubridate::date(forecast_start_day))) +
+  #  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, size = 10))
   if(!is.na(highlight_date)){
     p <- p + 
       ggplot2::geom_vline(xintercept = as.POSIXct(highlight_date), col = 'blue')
   }
 
   print(p)
-
 dev.off()
 
+invisible(pdf_file_name)
 }
 }

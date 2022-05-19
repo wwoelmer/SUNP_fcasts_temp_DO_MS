@@ -16,9 +16,6 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 #source(file.path(lake_directory, "R", "workflow_functions.R"))
 source(file.path(lake_directory, "R", "insitu_qaqc.R"))
 
-#files.sources <- list.files(file.path(lake_directory, "R"), full.names = TRUE)
-#sapply(files.sources[2:8], source) # this is not working, can't see why--WW. - IT DOESN'T WORK BECAUSE THE FILES THAT ARE SOURCED ARE NOT ALL FUNCTIONS
-
 #' Generate the `config_obs` object and create directories if necessary
 
 config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
