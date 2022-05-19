@@ -6,6 +6,7 @@ message("Beginning generate targets")
 #' Set the lake directory to the repository directory
 
 lake_directory <- here::here()
+config_set_name <- "default"
 
 Sys.setenv("AWS_DEFAULT_REGION" = "s3",
            "AWS_S3_ENDPOINT" = "flare-forecast.org")
@@ -15,43 +16,41 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 #source(file.path(lake_directory, "R", "workflow_functions.R"))
 source(file.path(lake_directory, "R", "insitu_qaqc.R"))
 
-files.sources <- list.files(file.path(lake_directory, "R"), full.names = TRUE)
-
 #' Generate the `config_obs` object and create directories if necessary
 
-config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml")
+config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
 use_s3 <- TRUE
 
 #' Clone or pull from data repositories
 
 FLAREr::get_git_repo(lake_directory,
-             directory = config_obs$realtime_insitu_location,
-             git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
+                     directory = config_obs$realtime_insitu_location,
+                     git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
 
 #' Download files from EDI and Zenodo
 #' 
 
-if(!dir.exists(dir.create(file.path(config_obs$file_path$data_directory, "hist-data")))){
-  dir.create(file.path(config_obs$file_path$data_directory, "hist-data"))
-}
+dir.create(file.path(config_obs$file_path$data_directory, "hist-data"),showWarnings = FALSE)
 
 # high frequency buoy data
 FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/f4d3535cebd96715c872a7d3ca45c196",
-             file = file.path("hist-data", "hist_buoy_do.csv"),
-             lake_directory)
+                     file = file.path("hist-data", "hist_buoy_do.csv"),
+                     lake_directory)
 
 FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/1f903796efc8d79e263a549f8b5aa8a6",
-             file = file.path("hist-data", "hist_buoy_temp.csv"),
-             lake_directory)
+                     file = file.path("hist-data", "hist_buoy_temp.csv"),
+                     lake_directory)
 
 # manually collected data
-download.file(url = 'https://zenodo.org/record/4652076/files/Lake-Sunapee-Protective-Association/LMP-v2020.1.zip?download=1',
-              destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
-              mode = 'wb')
-unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
-      files = file.path('Lake-Sunapee-Protective-Association-LMP-271fcb0', 'master files', 'LSPALMP_1986-2020_v2021-03-29.csv'),
-      exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
-      junkpaths = TRUE)
+if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'))){
+  download.file(url = 'https://zenodo.org/record/4652076/files/Lake-Sunapee-Protective-Association/LMP-v2020.1.zip?download=1',
+                destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
+                mode = 'wb')
+  unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
+        files = file.path('Lake-Sunapee-Protective-Association-LMP-271fcb0', 'master files', 'LSPALMP_1986-2020_v2021-03-29.csv'),
+        exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
+        junkpaths = TRUE)
+}
 
 #' Clean up insitu
 
@@ -71,10 +70,9 @@ cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_pat
 message("Successfully generated targets")
 
 FLAREr::put_targets(site_id = config_obs$site_id,
-            cleaned_insitu_file,
-            cleaned_met_file,
-            cleaned_inflow_file,
-            use_s3)
+                    cleaned_insitu_file,
+                    cleaned_met_file,
+                    use_s3)
 
 message("Successfully moved targets to s3 bucket")
 

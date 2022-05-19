@@ -8,6 +8,7 @@ simple_plot <- function(forecast_file_name,
 pdf_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".pdf")
 csv_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".csv")
 
+target_file <- paste0(qaqc_data_directory,"/observations_postQAQC_long.csv")
 
 output <- FLAREr::combine_forecast_observations(file_name = forecast_file_name,
                                                 target_file = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")),
@@ -131,8 +132,6 @@ for(i in 1:length(state_names)){
   }
 
   print(p)
-
-
 dev.off()
 
 invisible(pdf_file_name)

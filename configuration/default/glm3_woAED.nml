@@ -1,10 +1,9 @@
 &glm_setup
    sim_name = 'Sunapee'
-   max_layers = 700
+   max_layers = 500
    min_layer_vol = 0.025
-   min_layer_thick = 0.5
-   max_layer_thick = 1.0
-   density_model = 1
+   min_layer_thick = 0.10
+   max_layer_thick = 0.50
    non_avg = .true.
 /
 &light
@@ -16,16 +15,13 @@
    Kw = 0.7442308
 /
 &mixing
-   surface_mixing = 1
-   coef_mix_conv = 0.08213
-   coef_wind_stir = 1.27
-   coef_mix_shear = 0.296
-   coef_mix_turb = 0.526
-   coef_mix_KH = 0.415
-   coef_mix_hyp = 0.4974922
+   coef_mix_conv = 0.2
+   coef_wind_stir = 0.23
+   coef_mix_shear = 0.3
+   coef_mix_turb = 0.51
+   coef_mix_KH = 0.3
+   coef_mix_hyp = 0.5
    deep_mixing = 2
-   diff = 0
-   coef_mix_shreq = 0
 /
 &morphometry
    lake_name = 'Sunapee'
@@ -41,14 +37,14 @@
    timefmt = 2
    start = '2007-08-28 12:00:00'
    stop = '2018-12-31 12:00:00'
-   dt = 1800
-   num_days = 3650
+   dt = 3600
+   num_days = 1
    timezone = -5
 /
 &output
    out_dir = "./"
    out_fn = "output"
-   nsave = 48
+   nsave = 24
 /
 &init_profiles
    lake_depth = 33.33408
@@ -66,7 +62,7 @@
 &meteorology
    met_sw = .true.
    lw_type = 'LW_IN'
-   rain_sw = .false.
+   rain_sw = .true.
    atm_stab = 0
    catchrain = .false.
    rad_mode = 1
@@ -74,64 +70,38 @@
    cloud_mode = 4
    meteo_fl = 'data/SunapeeMet_1979_2020EST.csv'
    subdaily = .true.
-   wind_factor = 1.060516
+   wind_factor = 1
    sw_factor = 1
-   lw_factor = 0.9753245
+   lw_factor = 1
    at_factor = 1
    rh_factor = 1
    rain_factor = 1
    cd = 0.0013
    ce = 0.0013
-   ch =  0.0013 !0.00124222863441015, 0.512789495779882
-   rain_threshold = 0.001
-   runoff_coef = 0.99
+   ch =  0.0013 
    time_fmt = 'YYYY-MM-DD hh:mm:ss'
 /
 &inflow
    num_inflows = 0
-   names_of_strms = 'ibal'
-   subm_flag = .false.
-   strm_hf_angle = 65
-   strmbd_slope = 3
-   strmbd_drag = 0.016
-   inflow_factor = 1
-   inflow_fl = 'data/oneInflow_14Jun19.csv'
-   inflow_varnum = 13
-   inflow_vars = 'FLOW','SALT','TEMP','OGM_doc','OGM_poc','OGM_don','NIT_nit','NIT_amm','OGM_pon','PHS_frp','OGM_dop','OGM_pop','PHS_frp_ads'
 /
 &outflow
    num_outlet = 0
-   outlet_type = 1
-   outl_elvs = 332.3143
-   bsn_len_outl = 799
-   bsn_wid_outl = 398
-   outflow_fl = 'data/corr_outflow_impmodel_baseflow_23Mar2017.csv'
-   outflow_factor = 1
+   seepage = .true.
+   seepage_rate = 0.001
 /
 &snowice
    snow_albedo_factor = 1
    snow_rho_max = 500
    snow_rho_min = 100
 /
-!&sediment!glm2doesnothave2sedimentzones
-!   benthic_mode = 2
-!   sed_heat_model = 1
-!   n_zones = 2
-!   zone_heights = 10, 20
-!   sed_temp_mean = 3.46308320462984, 9.50920557379741 !FCR is 11, 14
-!   !sed_temp_depth = 0.2, 0.2
-!   sed_temp_amplitude = 4, 3
-!   sed_temp_peak_doy = 242.5, 242.5
-!   sed_heat_Ksoil = 0.1, 0.1
-!/
-&sediment!glm2doesnothave2sedimentzones
+&sediment
    benthic_mode = 2
    sed_heat_model = 1
    n_zones = 2
    zone_heights = 20, 33
-   sed_temp_mean = 7, 14
-   sed_temp_depth = 0.2, 0.2
-   sed_temp_amplitude = 4, 3
+   sed_temp_mean = 12, 20
+   sed_temp_depth = 0.5, 0.5
+   sed_temp_amplitude = 0, 0
    sed_temp_peak_doy = 242.5, 242.5
-   sed_heat_Ksoil = 1.8, 1.8
+   sed_heat_Ksoil = 1.2, 1.2
 /

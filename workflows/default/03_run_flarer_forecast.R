@@ -12,11 +12,12 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 
 lake_directory <- here::here()
 update_run_config <- TRUE
-files.sources <- list.files(file.path(lake_directory, "R"), full.names = TRUE)
+
+config_set_name <- "default"
 
 configure_run_file <- "configure_run.yml"
 
-config <- FLAREr::set_configuration(configure_run_file,lake_directory)
+config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
 
 config <- FLAREr::get_restart_file(config, lake_directory)
 
@@ -44,9 +45,9 @@ if(!is.null(inflow_forecast_path)){
   inflow_file_dir <- NULL
 }
 
-pars_config <- readr::read_csv(file.path(config$file_path$configuration_directory, "FLAREr", config$model_settings$par_config_file), col_types = readr::cols())
-obs_config <- readr::read_csv(file.path(config$file_path$configuration_directory, "FLAREr", config$model_settings$obs_config_file), col_types = readr::cols())
-states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, "FLAREr", config$model_settings$states_config_file), col_types = readr::cols())
+pars_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$par_config_file), col_types = readr::cols())
+obs_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$obs_config_file), col_types = readr::cols())
+states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$states_config_file), col_types = readr::cols())
 
 
 #Download and process observations (already done)
@@ -58,6 +59,9 @@ met_out <- FLAREr::generate_glm_met_files(obs_met_file = file.path(config$file_p
                                             out_dir = config$file_path$execute_directory,
                                             forecast_dir = forecast_dir,
                                             config = config)
+
+#Need to remove the 00 ensemble member because it only goes 16-days in the future
+met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "ens00")]
 
 #Create observation matrix
 obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),
@@ -112,7 +116,13 @@ FLAREr::put_forecast(saved_file, eml_file_name, config)
 rm(da_forecast_output)
 gc()
 
-FLAREr::update_run_config(config, lake_directory, configure_run_file, saved_file, new_horizon = 16, day_advance = 1)
+FLAREr::update_run_config(config, lake_directory, configure_run_file, saved_file, new_horizon = 35, day_advance = 1)
+
+setwd(lake_directory)
+unlink(config$run_config$restart_file)
+unlink(forecast_dir, recursive = TRUE)
+unlink(file.path(lake_directory, "flare_tempdir", config$location$site_id, config$run_config$sim_name), recursive = TRUE)
+
 
 message(paste0("successfully generated flare forecats for: ", basename(saved_file)))
 
