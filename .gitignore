@@ -46,4 +46,7 @@ drivers/*
 forecasts/*
 data_processed/*
 flare_tempdir/*
+targets/*
+restart/*
+workflows/default/sunp.log
 

@@ -8,8 +8,9 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 lake_directory <- here::here()
 
 configure_run_file <- "configure_run.yml"
+config_set_name <- "default"
 
-config <- FLAREr::set_configuration(configure_run_file,lake_directory)
+config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
 
 config <- FLAREr::get_restart_file(config, lake_directory)
 
@@ -38,6 +39,7 @@ simple_file_name <- simple_plot(forecast_file_name,
                                 qaqc_data_directory,
                                 focal_depths_plotting,
                                 highlight_date = highlight_date)
+
 
 if(config$run_config$use_s3){
   success <- aws.s3::put_object(file = simple_file_name, object = file.path(config$location$site_id, basename(simple_file_name)), bucket = "analysis")

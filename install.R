@@ -1,0 +1,5 @@
+install.packages('googlesheets4')
+install.packages('lubridate')
+install.packages('tidyverse')
+install.packages('IRkernel')
+install.packages('gsheet')
