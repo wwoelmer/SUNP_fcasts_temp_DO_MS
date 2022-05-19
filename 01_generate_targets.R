@@ -16,7 +16,6 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 source(file.path(lake_directory, "R", "insitu_qaqc.R"))
 
 files.sources <- list.files(file.path(lake_directory, "R"), full.names = TRUE)
-sapply(files.sources, source) # this is not working, can't see why--WW
 
 #' Generate the `config_obs` object and create directories if necessary
 
