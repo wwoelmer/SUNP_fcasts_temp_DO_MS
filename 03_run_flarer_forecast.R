@@ -13,7 +13,6 @@ Sys.setenv("AWS_DEFAULT_REGION" = "s3",
 lake_directory <- here::here()
 update_run_config <- TRUE
 files.sources <- list.files(file.path(lake_directory, "R"), full.names = TRUE)
-sapply(files.sources, source)
 
 configure_run_file <- "configure_run.yml"
 
