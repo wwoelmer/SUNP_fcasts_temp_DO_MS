@@ -125,7 +125,7 @@ insitu_qaqc <- function(realtime_file,
   
   
   # convert to UTC
-  d$TIMESTAMP <- as.POSIXct(d$TIMESTAMP)
+  #d$TIMESTAMP <- as.POSIXct(d$TIMESTAMP)
   attr(d$TIMESTAMP, "tzone") <- "UTC"
   
   # remove data from before buoy was deployed
@@ -208,13 +208,14 @@ insitu_qaqc <- function(realtime_file,
 
   temp_format <- data.frame(matrix(ncol=length(variables) + 1), nrow = 0)
   colnames(temp_format) <- c('DateTime', 'Depth', variables)
-  temp_format$DateTime <- as.POSIXct(temp_format$DateTime)
+  #temp_format$DateTime <- as.POSIXct(temp_format$DateTime)
   
   
   depths <- c('0.1', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10')
   
   for (i in 1:length(depths)) {
     temp <- d[,c(1, i+5)]
+    #temp$DateTime <- as.POSIXct(temp$DateTime, tryFormats = c("%Y-%m-%d %T", "%Y-%m-%d"))
     temp$Depth <- depths[i]
     colnames(temp) <- c('DateTime', 'Temp', 'Depth')
     temp_format <- full_join(temp, temp_format)
@@ -228,7 +229,7 @@ insitu_qaqc <- function(realtime_file,
   
   # combine with historical data
   h <- read.csv(hist_all_file)
-  h$DateTime <- as.POSIXct(h$DateTime)
+  #h$DateTime <- as.POSIXct(h$DateTime)
   attr(h$DateTime, "tzone") <- "UTC"
   
   
