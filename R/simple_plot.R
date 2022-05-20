@@ -109,7 +109,7 @@ for(i in 1:length(state_names)){
                             linetype = "solid"),
                         alpha = forecast_start_day_alpha) +
     ggplot2::theme_light() +
-    ggplot2:: scale_x_date(date_breaks = '3 days', 
+    ggplot2:: scale_x_date(date_breaks = '2 days', 
                            date_labels = '%b %d\n%a',
                            limits = c(as.Date(config$run_config$start_datetime) - 1, as.Date(config$run_config$forecast_start_datetime) + num_days_plot)) +
     ggplot2::scale_linetype_manual(name = "",
