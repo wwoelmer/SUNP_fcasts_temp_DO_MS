@@ -1,8 +1,8 @@
 restart_file: .na
-start_datetime: 2021-04-01 00:00:00
+start_datetime: 2022-05-08 00:00:00
 end_datetime: .na
-forecast_start_datetime: 2021-06-01 00:00:00
-forecast_horizon: 0
+forecast_start_datetime: 2022-05-12 00:00:00
+forecast_horizon: 16
 sim_name: sunp_V1
 configure_flare: configure_flare.yml
 configure_obs: observation_processing.yml

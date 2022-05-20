@@ -67,6 +67,7 @@ met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "
 obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),
                                  obs_config = obs_config,
                                  config)
+obs[1, ,]
 
 states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
 
