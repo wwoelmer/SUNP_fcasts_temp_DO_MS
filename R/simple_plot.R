@@ -135,6 +135,6 @@ p
   print(p)
 dev.off()
 
-invisible(pdf_file_name)
 }
+invisible(pdf_file_name)
 }
