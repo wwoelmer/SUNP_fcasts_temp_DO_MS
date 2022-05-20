@@ -247,6 +247,9 @@ insitu_qaqc <- function(realtime_file,
     tidyr::pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') 
   
   dh <- na.omit(dh)
+  
+  # quick fix to set all hours to 0 to match with `FLAREr::combine_forecast_observations` function
+  dh$hour <- as.numeric(0)
 
   if(!dir.exists(dirname(cleaned_insitu_file))){
     dir.create(dirname(cleaned_insitu_file), recursive = TRUE)
