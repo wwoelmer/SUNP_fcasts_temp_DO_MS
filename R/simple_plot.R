@@ -2,7 +2,8 @@ simple_plot <- function(forecast_file_name,
                         output_file_name,
                         qaqc_data_directory,
                         focal_depths_plotting,
-                        highlight_date = NA){
+                        highlight_date = NA,
+                        num_days_plot = config$run_config$forecast_horizon){
   
 ####
 pdf_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".pdf")
@@ -98,39 +99,39 @@ for(i in 1:length(state_names)){
                                 forecast_start_day = forecast_start_day) %>%
     dplyr::filter(depth %in% focal_depths_plotting)
   
-  p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = date)) +
+  p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
     ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = as.factor(depth)), size = 0.5) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = forecast_lower_95, ymax = forecast_upper_95, 
                                       fill = as.factor(depth)),
-                         alpha = 0.3) +
-    ggplot2::geom_point(ggplot2::aes(y = observed, color = as.factor(depth)), size = 0.5) +
-    ggplot2::geom_vline(xintercept = forecast_start_day,
+                         alpha = 0.2) +
+    ggplot2::geom_point(ggplot2::aes(y = observed, color = as.factor(depth)), size = 2) +
+    ggplot2::geom_vline(aes(xintercept = as.Date(forecast_start_day),
+                            linetype = "solid"),
                         alpha = forecast_start_day_alpha) +
     ggplot2::theme_light() +
+    ggplot2:: scale_x_date(date_breaks = '3 days', 
+                           date_labels = '%b %d\n%a',
+                           limits = c(as.Date(config$run_config$start_datetime) - 1, as.Date(config$run_config$forecast_start_datetime) + num_days_plot)) +
+    ggplot2::scale_linetype_manual(name = "",
+                                   values = c('solid'),
+                                   labels = c('Forecast Date')) +
     ggplot2::labs(x = "Date", 
                   y = state_names[i], 
                   fill = 'Depth',
                   color = 'Depth',
                   title = paste0("Lake Sunapee water temp forecast, ", lubridate::date(forecast_start_day))) +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, size = 10))
-  
-  #p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = date)) +
-  #  ggplot2::facet_wrap(~depth) +
-  #  ggplot2::geom_ribbon(ggplot2::aes(ymin = forecast_lower_95, ymax = forecast_upper_95),
-  #                       alpha = 0.70,
-  #                       fill = "gray") +
-  #  ggplot2::geom_line(ggplot2::aes(y = forecast_mean), size = 0.5) +
-  #  ggplot2::geom_vline(xintercept = forecast_start_day,
-  #                      alpha = forecast_start_day_alpha) +
-  #  ggplot2::geom_point(ggplot2::aes(y = observed), size = 0.5, color = "red") +
-  #  ggplot2::theme_light() +
-  #  ggplot2::labs(x = "Date", y = state_names[i], title = paste0(state_names[i], " forecast on ", lubridate::date(forecast_start_day))) +
-  #  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, size = 10))
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10))
+  p
+
   if(!is.na(highlight_date)){
     p <- p + 
-      ggplot2::geom_vline(xintercept = as.POSIXct(highlight_date), col = 'blue')
+      ggplot2::geom_vline(aes(xintercept = as.Date(highlight_date), 
+                              linetype = 'longdash')) +
+      ggplot2::scale_linetype_manual(name = "",
+                                     values = c('longdash', 'solid'),
+                                     labels = c('Current Date', 'Forecast Date')) 
   }
-
+p
   print(p)
 dev.off()
 
