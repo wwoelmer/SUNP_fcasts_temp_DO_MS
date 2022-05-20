@@ -17,7 +17,7 @@ config_set_name <- "default"
 
 configure_run_file <- "configure_run.yml"
 
-config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
+config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name, clean_start = TRUE)
 
 config <- FLAREr::get_restart_file(config, lake_directory)
 
@@ -67,6 +67,7 @@ met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "
 obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),
                                  obs_config = obs_config,
                                  config)
+obs[1, ,]
 
 states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
 
