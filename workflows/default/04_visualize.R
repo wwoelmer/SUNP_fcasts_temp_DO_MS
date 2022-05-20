@@ -38,7 +38,8 @@ simple_file_name <- simple_plot(forecast_file_name,
                                 output_file_name,
                                 qaqc_data_directory,
                                 focal_depths_plotting,
-                                highlight_date = highlight_date)
+                                highlight_date = highlight_date,
+                                num_days_plot = 10)
 
 
 if(config$run_config$use_s3){
