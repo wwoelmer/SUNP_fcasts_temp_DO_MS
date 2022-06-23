@@ -41,7 +41,7 @@ if(length(which(forecast == 1)) > 0){
 
 
 if(length(focal_depths_plotting) < 4){
-  plot_height <- 3
+  plot_height <- 6
 }else{
   plot_height <- 8
 }
@@ -119,8 +119,10 @@ for(i in 1:length(state_names)){
                   y = state_names[i], 
                   fill = 'Depth',
                   color = 'Depth',
-                  title = paste0("Lake Sunapee water temp forecast, ", lubridate::date(forecast_start_day))) +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10))
+                  title = paste0("Lake Sunapee water temperature forecast, ", lubridate::date(forecast_start_day)),
+                  caption = 'Points represent sensor observations, lines represents the forecast mean, and the shaded areas represent the 95% confidence interval of the forecast') +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
+                   plot.title = element_text(size = 16))
   p
 
   if(!is.na(highlight_date)){
@@ -131,7 +133,7 @@ for(i in 1:length(state_names)){
                                      values = c('longdash', 'solid'),
                                      labels = c('Current Date', 'Forecast Date')) 
   }
-p
+
   print(p)
 dev.off()
 
