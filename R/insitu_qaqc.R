@@ -94,16 +94,16 @@ insitu_qaqc <- function(realtime_file,
   table(duplicated(data_nodups[,1:2]))
   table(duplicated(temp_data[,1:2]))
   
-  ggplot(data_nodups[data_nodups$DateTime > '2018-01-01 00:00:00' & data_nodups$DateTime < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_buoy)) +
-    geom_line() +
-    geom_line(aes(x= DateTime, y = Temp_manual, col = 'red')) 
+  #ggplot(data_nodups[data_nodups$DateTime > '2018-01-01 00:00:00' & data_nodups$DateTime < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_buoy)) +
+  #  geom_line() +
+  #  geom_line(aes(x= DateTime, y = Temp_manual, col = 'red')) 
   
   
-  ggplot(buoy[buoy$DateDepth > '2018-01-01 00:00:00' & buoy$DateDepth < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_buoy)) +
-    geom_line(aes(col = as.factor(Depth))) 
+  #ggplot(buoy[buoy$DateDepth > '2018-01-01 00:00:00' & buoy$DateDepth < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_buoy)) +
+  #  geom_line(aes(col = as.factor(Depth))) 
   
-  ggplot(manual[manual$DateDepth > '2018-01-01 00:00:00' & manual$DateDepth < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_manual)) +
-    geom_line(aes(col = as.factor(Depth))) 
+  #ggplot(manual[manual$DateDepth > '2018-01-01 00:00:00' & manual$DateDepth < '2019-01-01 00:00:00',], aes(x = DateTime, y = Temp_manual)) +
+  #  geom_line(aes(col = as.factor(Depth))) 
   
   data_nodups <- data_nodups %>% 
     mutate(Temp = ifelse(is.na(Temp_manual), Temp_buoy, Temp_manual)) %>% 
@@ -237,19 +237,24 @@ insitu_qaqc <- function(realtime_file,
   
   # make some simple QAQC corrections, e.g. if temp > 100C, etc.
   
-  # put into FLARE format
+  # take hourly average
   dh <- dh %>% 
     dplyr::mutate(date = lubridate::date(DateTime),
            hour = lubridate::hour(DateTime),
-           depth = Depth,
-           temperature = Temp) %>% 
+           depth = Depth) %>% 
+    dplyr::group_by(date, hour, depth) %>% 
+    mutate(temperature = mean(Temp, na.rm = TRUE)) %>% # take the average for each hour, data is every ten minutes
+    distinct(date, hour, depth, .keep_all = TRUE)
+  
+  # put into FLARE format
+  dh <- dh %>% 
     dplyr::select(-c(DateTime, Depth, Temp)) %>% 
     tidyr::pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') 
   
   dh <- na.omit(dh)
   
   # quick fix to set all hours to 0 to match with `FLAREr::combine_forecast_observations` function
-  dh$hour <- as.numeric(0)
+  #dh$hour <- as.numeric(0)
 
   if(!dir.exists(dirname(cleaned_insitu_file))){
     dir.create(dirname(cleaned_insitu_file), recursive = TRUE)
