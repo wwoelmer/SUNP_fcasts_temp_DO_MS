@@ -1,11 +1,11 @@
 file_path:
-   qaqc_data_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/data_processed/' # this is the temporary directory where FLARE will write and erase files
-   data_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/data_raw'
-   noaa_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/forecasted_drivers/'
-   inflow_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/forecasted_drivers/'
-   configuration_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/configuration/'
-   execute_directory: 'C:/Users/wwoel/Desktop/SUNP-forecast/flare_tempdir/'
-   run_config: 'C:/Users/wwoel/Desktop/SUNP-forecast/configuration/flarer/configure_run.yml'
+   qaqc_data_directory: .na #'C:/Users/wwoel/Desktop/SUNP-forecast/data_processed/'  this is the temporary directory where FLARE will write and erase files
+   data_directory: .na # 'C:/Users/wwoel/Desktop/SUNP-forecast/data_raw'
+   noaa_directory: .na #'C:/Users/wwoel/Desktop/SUNP-forecast/forecasted_drivers/'
+   inflow_directory: .na # 'C:/Users/wwoel/Desktop/SUNP-forecast/forecasted_drivers/'
+   configuration_directory: .na # 'C:/Users/wwoel/Desktop/SUNP-forecast/configuration/'
+   execute_directory: .na #'C:/Users/wwoel/Desktop/SUNP-forecast/flare_tempdir/'
+   run_config: .na #'C:/Users/wwoel/Desktop/SUNP-forecast/configuration/flarer/configure_run.yml'
 location:
    site_id: sunp
    name: Lake Sunapee
