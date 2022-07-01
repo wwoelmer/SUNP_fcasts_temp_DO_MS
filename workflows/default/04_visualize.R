@@ -28,29 +28,29 @@ if(config$run_config$use_s3){
   }
 }
 
-#source(file.path(lake_directory,"R/simple_plot.R"))
-#
-#forecast_file_name <- saved_file #"C:/Users/wwoel/Desktop/SUNP-forecast-code/forecasts/sunp/sunp-2022-05-22-sunp_V1.nc" #config$run_config$restart_file
-#output_file_name <- paste0(config$file_path$forecast_output_directory, "/", config$run_config$sim_name, "_", lubridate::date(config$run_config$forecast_start_datetime), "_", config$run_config$forecast_horizon, '_day_forecast_simple_plot' )
-#qaqc_data_directory <- config$file_path$qaqc_data_directory
-#focal_depths_plotting <- c('0.1', '5', '10')
-#highlight_date <- Sys.Date()
-#
-#simple_file_name <- simple_plot(forecast_file_name,
-#                                output_file_name,
-#                                qaqc_data_directory,
-#                                focal_depths_plotting,
-#                                highlight_date = highlight_date,
-#                                num_days_plot = 10)
-#
-#
-#if(config$run_config$use_s3){
-#  success <- aws.s3::put_object(file = simple_file_name, object = file.path(config$location$site_id, basename(simple_file_name)), bucket = "analysis")
-#  if(success){
-#    unlink(simple_file_name)
-#  }
-#  unlink(file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")))
-#  unlink(config$run_config$restart_file)
-#}
-#
+source(file.path(lake_directory,"R/simple_plot.R"))
+
+forecast_file_name <- saved_file #"C:/Users/wwoel/Desktop/SUNP-forecast-code/forecasts/sunp/sunp-2022-05-22-sunp_V1.nc" #config$run_config$restart_file
+output_file_name <- paste0(config$file_path$forecast_output_directory, "/", config$run_config$sim_name, "_", lubridate::date(config$run_config$forecast_start_datetime), "_", config$run_config$forecast_horizon, '_day_forecast_simple_plot' )
+qaqc_data_directory <- config$file_path$qaqc_data_directory
+focal_depths_plotting <- c('0.1', '5', '10')
+highlight_date <- Sys.Date()
+
+simple_file_name <- simple_plot(forecast_file_name,
+                                output_file_name,
+                                qaqc_data_directory,
+                                focal_depths_plotting,
+                                highlight_date = highlight_date,
+                                num_days_plot = 10)
+
+
+if(config$run_config$use_s3){
+  success <- aws.s3::put_object(file = simple_file_name, object = file.path(config$location$site_id, basename(simple_file_name)), bucket = "analysis")
+  if(success){
+    unlink(simple_file_name)
+  }
+  unlink(file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")))
+  unlink(config$run_config$restart_file)
+}
+
 
