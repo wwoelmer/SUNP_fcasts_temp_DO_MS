@@ -2,7 +2,6 @@ simple_plot <- function(forecast_file_name,
                         output_file_name,
                         qaqc_data_directory,
                         focal_depths_plotting,
-                        highlight_date = NA,
                         num_days_plot = config$run_config$forecast_horizon){
   
 ####
@@ -10,7 +9,6 @@ pdf_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".pdf")
 csv_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".csv")
 
 target_file <- paste0(qaqc_data_directory,"/observations_postQAQC_long.csv")
-
 output <- FLAREr::combine_forecast_observations(file_name = forecast_file_name,
                                                 target_file = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")),
                                                 extra_historical_days = 0,
@@ -109,15 +107,22 @@ for(i in 1:length(state_names)){
                             linetype = "solid"),
                         alpha = forecast_start_day_alpha) +
     ggplot2::theme_light() +
-    ggplot2:: scale_x_date(date_breaks = '2 days', 
+    ggplot2::scale_fill_manual(name = "Depth (m)",
+                                values = c("#D55E00", '#009E73', '#0072B2'),
+                                labels = c('0.1', '5.0', '10.0')) +
+    ggplot2::scale_color_manual(name = "Depth (m)",
+                               values = c("#D55E00", '#009E73', '#0072B2'),
+                               labels = c('0.1', '5.0', '10.0')) +
+    ggplot2::scale_x_date(date_breaks = '2 days', 
                            date_labels = '%b %d\n%a',
-                           limits = c(as.Date(config$run_config$start_datetime) - 1, as.Date(config$run_config$forecast_start_datetime) + num_days_plot)) +
+                           limits = c(as.Date(min(curr_tibble$date)), as.Date(max(curr_tibble$date)))) +
+                          #limits = c(as.Date(config$run_config$start_datetime) - 1, as.Date(config$run_config$forecast_start_datetime) + num_days_plot)) +
     ggplot2::scale_linetype_manual(name = "",
                                    values = c('solid'),
                                    labels = c('Forecast Date')) +
     ggplot2::labs(x = "Date", 
-                  y = state_names[i], 
-                  fill = 'Depth',
+                  y = "Temperature (°C)", #state_names[i], 
+                  fill = 'Depth (m)',
                   color = 'Depth',
                   title = paste0("Lake Sunapee water temperature forecast, ", lubridate::date(forecast_start_day)),
                   caption = 'Points represent sensor observations, lines represents the forecast mean, and the shaded areas represent the 95% confidence interval of the forecast') +
@@ -125,14 +130,6 @@ for(i in 1:length(state_names)){
                    plot.title = element_text(size = 16))
   p
 
-  if(!is.na(highlight_date)){
-    p <- p + 
-      ggplot2::geom_vline(aes(xintercept = as.Date(highlight_date), 
-                              linetype = 'longdash')) +
-      ggplot2::scale_linetype_manual(name = "",
-                                     values = c('longdash', 'solid'),
-                                     labels = c('Current Date', 'Forecast Date')) 
-  }
 
   print(p)
 dev.off()
