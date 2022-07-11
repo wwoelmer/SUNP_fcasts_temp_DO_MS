@@ -20,7 +20,7 @@ source(file.path(lake_directory, "R", "insitu_qaqc.R"))
 #' Generate the `config_obs` object and create directories if necessary
 
 config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
-use_s3 <- FALSE
+use_s3 <- TRUE
 
 #' Clone or pull from data repositories
 
@@ -73,7 +73,7 @@ message("Successfully generated targets")
 FLAREr::put_targets(site_id = config_obs$site_id,
                     cleaned_insitu_file,
                     cleaned_met_file = NULL,
-                    use_s3)
+                    use_s3 = config$run_config$use_s3)
 
 message("Successfully moved targets to s3 bucket")
 
