@@ -24,7 +24,7 @@ if (length(args)==0) {
 
 lake_directory <- here::here()
 setwd(lake_directory)
-forecast_site <- "fcre"
+forecast_site <- "sunp"
 update_run_config <- TRUE
 
 FLAREr::set_configuration(configure_run_file = configure_run_file,
