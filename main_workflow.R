@@ -29,8 +29,7 @@ update_run_config <- TRUE
 
 FLAREr::set_configuration(configure_run_file = configure_run_file,
                           lake_directory = lake_directory,
-                          config_set_name = config_set_name,
-                          use_s3 = config$run_config$use_s3)
+                          config_set_name = config_set_name)
 
 message("Checking for NOAA forecasts")
 
