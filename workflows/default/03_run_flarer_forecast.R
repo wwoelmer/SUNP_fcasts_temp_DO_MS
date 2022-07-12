@@ -6,12 +6,6 @@ if(file.exists("~/.aws")){
                 "Consider renaming these so that automated upload will work"))
 }
 
-Sys.setenv("AWS_DEFAULT_REGION" = "s3",
-           "AWS_S3_ENDPOINT" = "flare-forecast.org",
-           "USE_HTTPS" = "TRUE")
-
-
-
 lake_directory <- here::here()
 update_run_config <- TRUE
 
