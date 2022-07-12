@@ -2,11 +2,6 @@
 library(tidyverse)
 library(lubridate)
 
-Sys.setenv("AWS_DEFAULT_REGION" = "s3",
-           "AWS_S3_ENDPOINT" = "flare-forecast.org",
-           "USE_HTTPS" = "TRUE")
-
-
 lake_directory <- here::here()
 
 configure_run_file <- "configure_run.yml"
@@ -40,7 +35,6 @@ simple_file_name <- simple_plot(forecast_file_name,
                                 output_file_name,
                                 qaqc_data_directory,
                                 focal_depths_plotting,
-                                highlight_date = highlight_date,
                                 num_days_plot = 10)
 
 
