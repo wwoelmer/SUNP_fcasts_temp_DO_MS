@@ -6,7 +6,7 @@ message("Beginning generate targets")
 #' Set the lake directory to the repository directory
 
 lake_directory <- here::here()
-config_set_name <- "default"
+config_set_name <- "default" # TODO: Should read from environment variables
 
 #' Source the R files in the repository
 
@@ -20,6 +20,7 @@ config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_se
 
 #' Clone or pull from data repositories
 
+# TODO: Repo URL should read from environment variables
 FLAREr::get_git_repo(lake_directory,
                      directory = config_obs$realtime_insitu_location,
                      git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
