@@ -8,10 +8,6 @@ message("Beginning generate targets")
 lake_directory <- here::here()
 config_set_name <- "default"
 
-Sys.setenv("AWS_DEFAULT_REGION" = "s3",
-           "AWS_S3_ENDPOINT" = "flare-forecast.org",
-           "USE_HTTPS" = "TRUE")
-
 #' Source the R files in the repository
 
 #source(file.path(lake_directory, "R", "workflow_functions.R"))
@@ -72,7 +68,7 @@ message("Successfully generated targets")
 FLAREr::put_targets(site_id = config_obs$site_id,
                     cleaned_insitu_file,
                     cleaned_met_file = NULL,
-                    use_s3)
+                    use_s3 = config$run_config$use_s3)
 
 message("Successfully moved targets to s3 bucket")
 
