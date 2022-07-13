@@ -9,8 +9,6 @@ if(file.exists("~/.aws")){
 lake_directory <- here::here()
 update_run_config <- TRUE
 
-config_set_name <- "default"
-
 configure_run_file <- "configure_run.yml"
 
 config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)

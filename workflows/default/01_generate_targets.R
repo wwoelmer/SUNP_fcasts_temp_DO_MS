@@ -6,7 +6,6 @@ message("Beginning generate targets")
 #' Set the lake directory to the repository directory
 
 lake_directory <- here::here()
-config_set_name <- "default" # TODO: Should read from environment variables
 
 #' Source the R files in the repository
 
