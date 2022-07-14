@@ -1,5 +1,13 @@
-
 Sys.setenv("AWS_DEFAULT_REGION" = "s3",
            "AWS_S3_ENDPOINT" = "flare-forecast.org",
            "USE_HTTPS" = "TRUE",
-           "config_set_name" = "default")
+           "FORECAST_CODE" = 'https://github.com/FLARE-forecast/SUNP-forecast-code',
+           "FORECAST_CODE_BRANCH" = "main",
+           "CONFIG_SET" = 'default',
+           "FUNCTION" = '0',
+           "CONFIGURE_RUN" = 'configure_run.yml',
+           "AWS_DEFAULT_REGION" = 's3',
+           "AWS_S3_ENDPOINT" = 'flare-forecast.org',
+           "USE_HTTPS" = TRUE,
+           "AWS_ACCESS_KEY_ID" = '',
+           "AWS_SECRET_ACCESS_KEY" = '')
