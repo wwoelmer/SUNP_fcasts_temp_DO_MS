@@ -2,6 +2,9 @@
 library(tidyverse)
 library(lubridate)
 
+lake_directory <- here::here()
+source(file.path(lake_directory, "R/set_environment.R"))
+
 args <- commandArgs(trailingOnly=TRUE)
 # test if there is at least one argument: if not, return an error
 if (length(args)==0) {
@@ -22,7 +25,6 @@ if (length(args)==0) {
   configure_run_file <- args[3]
 }
 
-lake_directory <- here::here()
 setwd(lake_directory)
 forecast_site <- "sunp"
 update_run_config <- TRUE
