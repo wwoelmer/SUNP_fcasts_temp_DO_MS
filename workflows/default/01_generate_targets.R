@@ -15,11 +15,10 @@ source(file.path(lake_directory, "R", "insitu_qaqc.R"))
 #' Generate the `config_obs` object and create directories if necessary
 
 config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
-config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
+config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = Sys.getenv("CONFIG_SET"))
 
 #' Clone or pull from data repositories
 
-# TODO: Repo URL should read from environment variables
 FLAREr::get_git_repo(lake_directory,
                      directory = config_obs$realtime_insitu_location,
                      git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
@@ -71,4 +70,3 @@ FLAREr::put_targets(site_id = config_obs$site_id,
                     use_s3 = config$run_config$use_s3)
 
 message("Successfully moved targets to s3 bucket")
-
