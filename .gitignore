@@ -50,3 +50,5 @@ targets/*
 restart/*
 workflows/default/sunp.log
 
+# sensitive environment variables
+configuration/set_environment_sensitive.R
