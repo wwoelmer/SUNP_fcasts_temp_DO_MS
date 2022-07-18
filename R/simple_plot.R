@@ -9,7 +9,6 @@ simple_plot <- function(forecast_file_name,
 pdf_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".pdf")
 csv_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".csv")
 
-target_file <- paste0(qaqc_data_directory,"/observations_postQAQC_long.csv")
 output <- FLAREr::combine_forecast_observations(file_name = forecast_file_name,
                                                 target_file = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")),
                                                 extra_historical_days = 0,
@@ -68,8 +67,8 @@ for(i in 1:length(state_names)){
     for(ii in 1:length(depths)){
       mean_var[ii, j] <- mean(curr_var[j,ii , ], na.rm = TRUE)
       sd_var[ii, j] <- sd(curr_var[j,ii , ], na.rm = TRUE)
-      upper_var[ii, j] <- quantile(curr_var[j,ii , ], 0.1, na.rm = TRUE)
-      lower_var[ii, j] <- quantile(curr_var[j,ii , ], 0.9, na.rm = TRUE)
+      upper_var[ii, j] <- quantile(curr_var[j,ii , ], 0.05, na.rm = TRUE) 
+      lower_var[ii, j] <- quantile(curr_var[j,ii , ], 0.95, na.rm = TRUE)
     }
   }
   
@@ -96,8 +95,8 @@ for(i in 1:length(state_names)){
   curr_tibble <- tibble::tibble(date = lubridate::as_datetime(date),
                                 forecast_mean = round(c(mean_var),4),
                                 forecast_sd = round(c(sd_var),4),
-                                forecast_upper_95 = round(c(upper_var),4),
-                                forecast_lower_95 = round(c(lower_var),4),
+                                forecast_upper_90 = round(c(upper_var),4),
+                                forecast_lower_90 = round(c(lower_var),4),
                                 observed = round(obs_curr,4),
                                 depth = rep(depths, length(full_time)),
                                 state = state_names[i],
@@ -109,14 +108,15 @@ for(i in 1:length(state_names)){
   
 p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
     ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = as.factor(depth)), size = 0.5) +
-    ggplot2::geom_ribbon(ggplot2::aes(ymin = forecast_lower_95, ymax = forecast_upper_95, 
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = forecast_lower_90, ymax = forecast_upper_90, 
                                       fill = as.factor(depth)),
                          alpha = 0.2) +
     ggplot2::geom_point(data = obs_hist, ggplot2::aes(y = value, color = as.factor(depth)), size = 2) +
     ggplot2::geom_vline(aes(xintercept = as.Date(forecast_start_day),
                             linetype = "solid"),
                         alpha = forecast_start_day_alpha) +
-    ggplot2::annotate(x = as.Date(forecast_start_day - 2*24*60*60), y = max(curr_tibble$forecast_lower_95), label = 'Past', geom = 'text') +
+    ggplot2::annotate(x = as.Date(forecast_start_day - 2*24*60*60), y = max(curr_tibble$forecast_lower_90), label = 'Past', geom = 'text') +
+    ggplot2::annotate(x = as.Date(forecast_start_day + 3*24*60*60), y = max(curr_tibble$forecast_lower_90), label = 'Future', geom = 'text') +
     ggplot2::theme_light() +
     ggplot2::scale_fill_manual(name = "Depth (m)",
                                 values = c("#D55E00", '#009E73', '#0072B2'),
@@ -131,6 +131,8 @@ p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
     ggplot2::scale_linetype_manual(name = "",
                                    values = c('solid'),
                                    labels = c('Forecast Date')) +
+    ggplot2::scale_y_continuous(name = 'Temperature (°C)',
+                                sec.axis = sec_axis(trans = (~.*(9/5) + 32), name = 'Temperature (°F)')) +
     ggplot2::labs(x = "Date", 
                   y = "Temperature (°C)", #state_names[i], 
                   fill = 'Depth (m)',
