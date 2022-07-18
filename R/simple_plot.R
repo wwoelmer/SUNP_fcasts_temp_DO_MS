@@ -2,7 +2,8 @@ simple_plot <- function(forecast_file_name,
                         output_file_name,
                         qaqc_data_directory,
                         focal_depths_plotting,
-                        num_days_plot = config$run_config$forecast_horizon){
+                        num_days_plot = config$run_config$forecast_horizon,
+                        historical_days = 5){
   
 ####
 pdf_file_name <- paste0(tools::file_path_sans_ext(output_file_name),".pdf")
@@ -28,14 +29,20 @@ obs_long <- output$obs_long
 depths <- output$depths
 obs_names <- output$obs_names
 
+hist_dates <- seq.Date(as.Date(forecast_start_day - historical_days*25*60*60), as.Date(forecast_start_day), by = 'day')
+
+obs_hist <- obs_long %>% 
+  dplyr::filter(date %in% hist_dates) %>% 
+  dplyr::filter(depth %in% focal_depths_plotting) %>% 
+  dplyr::filter(hour==0)
+
+
 
 if(length(which(forecast == 1)) > 0){
   forecast_index <- which(forecast == 1)[1]
 }else{
   forecast_index <- 0
 }
-
-#focal_depths_plotting <- depths
 
 
 if(length(focal_depths_plotting) < 4){
@@ -97,15 +104,19 @@ for(i in 1:length(state_names)){
                                 forecast_start_day = forecast_start_day) %>%
     dplyr::filter(depth %in% focal_depths_plotting)
   
-  p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
+  # limit observations to only days before forecast start day
+  
+  
+p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
     ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = as.factor(depth)), size = 0.5) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = forecast_lower_95, ymax = forecast_upper_95, 
                                       fill = as.factor(depth)),
                          alpha = 0.2) +
-    ggplot2::geom_point(ggplot2::aes(y = observed, color = as.factor(depth)), size = 2) +
+    ggplot2::geom_point(data = obs_hist, ggplot2::aes(y = value, color = as.factor(depth)), size = 2) +
     ggplot2::geom_vline(aes(xintercept = as.Date(forecast_start_day),
                             linetype = "solid"),
                         alpha = forecast_start_day_alpha) +
+    ggplot2::annotate(x = as.Date(forecast_start_day - 2*24*60*60), y = max(curr_tibble$forecast_lower_95), label = 'Past', geom = 'text') +
     ggplot2::theme_light() +
     ggplot2::scale_fill_manual(name = "Depth (m)",
                                 values = c("#D55E00", '#009E73', '#0072B2'),
@@ -113,9 +124,9 @@ for(i in 1:length(state_names)){
     ggplot2::scale_color_manual(name = "Depth (m)",
                                values = c("#D55E00", '#009E73', '#0072B2'),
                                labels = c('0.1', '5.0', '10.0')) +
-    ggplot2::scale_x_date(date_breaks = '2 days', 
+    ggplot2::scale_x_date(date_breaks = '4 days', 
                            date_labels = '%b %d\n%a',
-                           limits = c(as.Date(min(curr_tibble$date)), as.Date(max(curr_tibble$date)))) +
+                           limits = c(as.Date(min(obs_hist$date)), as.Date(max(curr_tibble$date)))) +
                           #limits = c(as.Date(config$run_config$start_datetime) - 1, as.Date(config$run_config$forecast_start_datetime) + num_days_plot)) +
     ggplot2::scale_linetype_manual(name = "",
                                    values = c('solid'),
@@ -125,7 +136,7 @@ for(i in 1:length(state_names)){
                   fill = 'Depth (m)',
                   color = 'Depth',
                   title = paste0("Lake Sunapee water temperature forecast, ", lubridate::date(forecast_start_day)),
-                  caption = 'Points represent sensor observations, lines represents the forecast mean, and the shaded areas represent the 95% confidence interval of the forecast') +
+                  caption = 'Points represent sensor observations of water temperature.\n Lines represents the mean prediction from the forecast ensembles, or the most likely outcome.\n The shaded areas represent the 90% confidence interval of the forecast, \nor the possible range of outcomes based on the forecast.') +
     ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                    plot.title = element_text(size = 16))
   p
