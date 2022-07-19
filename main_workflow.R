@@ -3,7 +3,15 @@ library(tidyverse)
 library(lubridate)
 
 lake_directory <- here::here()
-source(file.path(lake_directory, "R/set_environment.R"))
+
+message("RUN_MODE: ", Sys.getenv("RUN_MODE"))
+
+# Get environment variables from R just if the code is not running in "container" mode or "serverless" mode.
+# These modes handle environment variables differently.
+if ((tolower(Sys.getenv("RUN_MODE"))!="container") & (tolower(Sys.getenv("RUN_MODE"))!="serverless")) {
+  source(file.path(lake_directory, "configuration/set_environment.R"))
+  source(file.path(lake_directory, "configuration/set_environment_sensitive.R"))
+}
 
 args <- commandArgs(trailingOnly=TRUE)
 # test if there is at least one argument: if not, return an error
@@ -26,8 +34,6 @@ if (length(args)==0) {
 }
 
 setwd(lake_directory)
-forecast_site <- "sunp"
-update_run_config <- TRUE
 
 FLAREr::set_configuration(configure_run_file = configure_run_file,
                           lake_directory = lake_directory,
