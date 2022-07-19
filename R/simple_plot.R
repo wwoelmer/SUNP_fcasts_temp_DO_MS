@@ -138,7 +138,7 @@ p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
                   fill = 'Depth (m)',
                   color = 'Depth',
                   title = paste0("Lake Sunapee water temperature forecast, ", lubridate::date(forecast_start_day)),
-                  caption = 'Points represent sensor observations of water temperature.\n Lines represents the mean prediction from the forecast ensembles, or the most likely outcome.\n The shaded areas represent the 90% confidence interval of the forecast, \nor the possible range of outcomes based on the forecast.') +
+                  caption = 'Points represent sensor observations of water temperature. Lines represents the mean prediction from the forecast ensembles, or the most likely outcome.\n The shaded areas represent the 90% confidence interval of the forecast, or the possible range of outcomes based on the forecast.') +
     ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                    plot.title = element_text(size = 16))
   p
