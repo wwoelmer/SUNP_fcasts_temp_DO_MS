@@ -28,14 +28,6 @@ obs_long <- output$obs_long
 depths <- output$depths
 obs_names <- output$obs_names
 
-hist_dates <- seq.Date(as.Date(forecast_start_day - historical_days*25*60*60), as.Date(forecast_start_day), by = 'day')
-
-obs_hist <- obs_long %>% 
-  dplyr::filter(date %in% hist_dates) %>% 
-  dplyr::filter(depth %in% focal_depths_plotting) %>% 
-  dplyr::filter(hour==0)
-
-
 
 if(length(which(forecast == 1)) > 0){
   forecast_index <- which(forecast == 1)[1]
@@ -43,6 +35,20 @@ if(length(which(forecast == 1)) > 0){
   forecast_index <- 0
 }
 
+if(forecast_index > 0){
+  forecast_start_day <- full_time[forecast_index-1]
+  forecast_start_day_alpha <- 1.0
+}else{
+  forecast_start_day <- dplyr::last(full_time)
+  forecast_start_day_alpha <- 0.0
+}
+
+hist_dates <- seq.Date(as.Date(forecast_start_day - historical_days*25*60*60), as.Date(forecast_start_day), by = 'day')
+
+obs_hist <- obs_long %>% 
+  dplyr::filter(date %in% hist_dates) %>% 
+  dplyr::filter(depth %in% focal_depths_plotting) %>% 
+  dplyr::filter(hour==0)
 
 if(length(focal_depths_plotting) < 4){
   plot_height <- 6
@@ -138,7 +144,7 @@ p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
                   fill = 'Depth (m)',
                   color = 'Depth',
                   title = paste0("Lake Sunapee water temperature forecast, ", lubridate::date(forecast_start_day)),
-                  caption = 'Points represent sensor observations of water temperature.\n Lines represents the mean prediction from the forecast ensembles, or the most likely outcome.\n The shaded areas represent the 90% confidence interval of the forecast, \nor the possible range of outcomes based on the forecast.') +
+                  caption = 'Points represent sensor observations of water temperature. Lines represents the mean prediction from the forecast ensembles, or the most likely outcome.\n The shaded areas represent the 90% confidence interval of the forecast, or the possible range of outcomes based on the forecast.') +
     ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                    plot.title = element_text(size = 16))
   p
