@@ -99,6 +99,29 @@ saved_file <- FLAREr::write_forecast_netcdf(da_forecast_output = da_forecast_out
                                             forecast_output_directory = config$file_path$forecast_output_directory,
                                             use_short_filename = TRUE)
 
+forecast_file <- FLAREr::write_forecast_csv(da_forecast_output = da_forecast_output,
+                                            forecast_output_directory = config$file_path$forecast_output_directory,
+                                            use_short_filename = TRUE)
+
+aws.s3::put_object(file = forecast_file,
+                   object = file.path(config$location$site_id, config$run_config$sim_name, basename(forecast_file)),
+                   bucket = "forecasts-csv",
+                   region = Sys.getenv("AWS_DEFAULT_REGION"),
+                   use_https = as.logical(Sys.getenv("USE_HTTPS")))
+
+dir.create(file.path(lake_directory, "scores", config$location$site_id, config$run_config$sim_name), recursive = TRUE, showWarnings = FALSE)
+score_file <- FLAREr::generate_forecast_score(targets_file = file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),
+                                              forecast_file = forecast_file,
+                                              output_directory = file.path(lake_directory, "scores", config$location$site_id, config$run_config$sim_name))
+
+
+aws.s3::put_object(file = score_file,
+                   object = file.path(config$location$site_id, config$run_config$sim_name, basename(score_file)),
+                   bucket = "scores",
+                   region = Sys.getenv("AWS_DEFAULT_REGION"),
+                   use_https = as.logical(Sys.getenv("USE_HTTPS")))
+
+
 #Create EML Metadata
 eml_file_name <- FLAREr::create_flare_metadata(file_name = saved_file,
                                                da_forecast_output = da_forecast_output)
