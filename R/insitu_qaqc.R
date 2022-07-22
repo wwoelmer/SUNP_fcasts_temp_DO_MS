@@ -248,10 +248,16 @@ insitu_qaqc <- function(realtime_file,
   
   # put into FLARE format
   dh <- dh %>% 
-    dplyr::select(-c(DateTime, Depth, Temp)) %>% 
-    tidyr::pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') 
+    dplyr::select(-c(Depth, Temp)) %>% 
+    tidyr::pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') %>% 
+    mutate(time = as.POSIXct(DateTime),
+           site_id = 'sunp') %>% 
+    ungroup() %>% 
+    select(time, site_id, depth, value, variable) %>% 
+    rename(observed = value)
   
   dh <- na.omit(dh)
+  
   
   # quick fix to set all hours to 0 to match with `FLAREr::combine_forecast_observations` function
   #dh$hour <- as.numeric(0)
