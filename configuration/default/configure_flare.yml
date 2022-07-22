@@ -89,5 +89,5 @@ uncertainty:
    met_downscale_uncertainty: TRUE
    inflow_process_uncertainty: TRUE
 output_settings:
-   diagnostics_names:  [extc_coef]
+   diagnostics_names:  [extc]
 
