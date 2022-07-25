@@ -72,7 +72,7 @@ init <- FLAREr::generate_initial_conditions(states_config,
                                             pars_config,
                                             obs,
                                             config,
-                                            restart_file = config$run_config$restart_file,
+                                            #restart_file = config$run_config$restart_file,
                                             historical_met_error = met_out$historical_met_error)
 #Run EnKF
 da_forecast_output <- FLAREr::run_da_forecast(states_init = init$states,
