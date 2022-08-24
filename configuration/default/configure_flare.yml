@@ -90,4 +90,25 @@ uncertainty:
    inflow_process_uncertainty: TRUE
 output_settings:
    diagnostics_names:  [extc]
-
+s3:
+  drivers:
+    endpoint: s3.flare-forecast.org
+    bucket: drivers
+  analysis:
+    endpoint: s3.flare-forecast.org
+    bucket: analysis
+  targets:
+    endpoint: s3.flare-forecast.org
+    bucket: targets
+  forecasts:
+    endpoint: s3.flare-forecast.org
+    bucket: forecasts
+  forecasts_csv:
+    endpoint: s3.flare-forecast.org
+    bucket: forecasts-csv
+  warm_start:
+    endpoint: s3.flare-forecast.org
+    bucket: restart
+  scores:
+    endpoint: s3.flare-forecast.org
+    bucket: scores
