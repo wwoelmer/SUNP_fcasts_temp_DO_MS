@@ -89,7 +89,7 @@ pull_from_git: TRUE
 
 target_variables:
     - temperature
-   #- oxygen
+   - oxygen
    #- NH4
    #- NO3NO2
    #- TN
@@ -100,7 +100,7 @@ target_variables:
 
 averaging_period:
     - "1 hour"
- # - "1 hour"
+    - "1 hour"
  # - "1 day"
  # - "1 day"
  # - "1 day"
@@ -116,9 +116,9 @@ measurement_methods:
         - thermistor
         - do_sensor
         - exo_sensor
-# oxygen:
-#     - do_sensor
-#     - exo_sensor
+    oxygen:
+        - do_sensor
+        - exo_sensor
 # NH4:
 #     - grab_sample
 # NO3NO2:
