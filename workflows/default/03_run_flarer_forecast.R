@@ -26,14 +26,14 @@ inflow_forecast_path <- NULL
 
 
 if(!is.null(noaa_forecast_path)){
-  FLAREr::get_driver_forecast(lake_directory, forecast_path = noaa_forecast_path)
+  FLAREr::get_driver_forecast(lake_directory, forecast_path = noaa_forecast_path, config)
   forecast_dir <- file.path(config$file_path$noaa_directory, noaa_forecast_path)
 }else{
   forecast_dir <- NULL
 }
 
 if(!is.null(inflow_forecast_path)){
-  FLAREr::get_driver_forecast(lake_directory, forecast_path = inflow_forecast_path)
+  FLAREr::get_driver_forecast(lake_directory, forecast_path = inflow_forecast_path, config)
   inflow_file_dir <- file.path(config$file_path$noaa_directory,inflow_forecast_path)
 }else{
   inflow_file_dir <- NULL
