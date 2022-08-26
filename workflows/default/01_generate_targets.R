@@ -10,7 +10,7 @@ lake_directory <- here::here()
 #' Source the R files in the repository
 
 #source(file.path(lake_directory, "R", "workflow_functions.R"))
-source(file.path(lake_directory, "R", "insitu_qaqc.R"))
+source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
 
 #' Generate the `config_obs` object and create directories if necessary
 
