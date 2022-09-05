@@ -38,7 +38,7 @@ da_setup:
     use_obs_constraint: TRUE
 model_settings:
    ncore: 2
-   model_name: glm-aed #other is "null"
+   model_name: glm_aed #other is "null"
    base_GLM_nml: glm3_wAED.nml
    modeled_depths: [0.1, 0.5, 1.0, 
                     1.5, 2.0, 3.0, 
