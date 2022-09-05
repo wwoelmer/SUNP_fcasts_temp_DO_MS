@@ -334,14 +334,14 @@ insitu_qaqc <- function(realtime_file,
     dplyr::distinct(date, depth, .keep_all = TRUE)
     
   # take hourly average
-  dh <- dh %>% 
-    dplyr::mutate(date = lubridate::date(DateTime),
-           hour = lubridate::hour(DateTime),
-           depth = Depth) %>% 
-    dplyr::group_by(date, depth) %>% 
-    mutate(temperature = mean(Temp, na.rm = TRUE)) %>% # take the average for each hour, data is every ten minutes
-    mutate(oxygen = mean(DO, na.rm = TRUE)) %>% 
-    distinct(date, depth, .keep_all = TRUE)
+  #dh <- dh %>% 
+  #  dplyr::mutate(date = lubridate::date(DateTime),
+  #         hour = lubridate::hour(DateTime),
+  #         depth = Depth) %>% 
+  #  dplyr::group_by(date, depth) %>% 
+  #  mutate(temperature = mean(Temp, na.rm = TRUE)) %>% # take the average for each hour, data is every ten minutes
+  #  mutate(oxygen = mean(DO, na.rm = TRUE)) %>% 
+  #  distinct(date, depth, .keep_all = TRUE)
   
   # put into FLARE format
   dh <- dh %>% 
