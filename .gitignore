@@ -1,46 +1,33 @@
 # History files
 .Rhistory
 .Rapp.history
-
 # ignore things in the tempdir
-
 # Session Data files
 .RData
-
 # User-specific files
 .Ruserdata
-
 # Example code in package build process
 *-Ex.R
-
 # Output files from R CMD build
 /*.tar.gz
-
 # Output files from R CMD check
 /*.Rcheck/
-
 # RStudio files
 .Rproj.user/
-
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
-
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
-
 # knitr and R markdown default cache directories
 *_cache/
 /cache/
-
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
-
 # R Environment Variables
 .Renviron
 set_environment_secret.R
-
 # large files in the hist_data folder
 data_raw/*
 drivers/*
@@ -50,6 +37,6 @@ flare_tempdir/*
 targets/*
 restart/*
 workflows/default/sunp.log
-
 # sensitive environment variables
 configuration/set_environment_sensitive.R
+sunp-2022-07-17-sunp_V3.nc
