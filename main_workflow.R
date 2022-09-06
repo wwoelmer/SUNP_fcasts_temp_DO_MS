@@ -3,7 +3,7 @@ library(tidyverse)
 library(lubridate)
 
 lake_directory <- here::here()
-
+config_set_name <- "default_aed"
 message("RUN_MODE: ", Sys.getenv("RUN_MODE"))
 
 # Get environment variables from R just if the code is not running in "container" mode or "serverless" mode.
