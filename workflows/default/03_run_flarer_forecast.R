@@ -62,6 +62,7 @@ obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = file.path(conf
                                  obs_config = obs_config,
                                  config)
 obs[1, ,]
+obs[2, ,]
 # first dimension is states, time, depth
 
 states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
