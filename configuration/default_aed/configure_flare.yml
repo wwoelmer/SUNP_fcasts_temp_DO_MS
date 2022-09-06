@@ -40,6 +40,9 @@ model_settings:
    ncore: 2
    model_name: glm_aed #other is "null"
    base_GLM_nml: glm3_wAED.nml
+   base_AED_nml: aed2.nml
+   base_AED_phyto_pars_nml: aed2_phyto_pars.nml
+   base_AED_zoop_pars_nml: aed2_zoop_pars.nml
    modeled_depths: [0.1, 0.5, 1.0, 
                     1.5, 2.0, 3.0, 
                     3.5, 4.0, 4.5, 
