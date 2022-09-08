@@ -7,7 +7,7 @@
    non_avg = .true.
 /
 &wq_setup
-   wq_lib = 'aed'
+   wq_lib = '.'
    wq_nml_file = 'aed2.nml'
    ode_method = 1
    split_factor = 1
@@ -97,7 +97,7 @@
 &outflow
    num_outlet = 0
    seepage = .true.
-   seepage_rate = 0.001
+   !seepage_rate = 0.001
 /
 &snowice
    snow_albedo_factor = 1
@@ -112,7 +112,7 @@
    sed_heat_model = 1
    n_zones = 2
    zone_heights = 20, 33 ! height above bottom
-   sed_temp_mean = 12, 20
+   sed_temp_mean = 6, 12
    sed_temp_depth = 0.5, 0.5
    sed_temp_amplitude = 0, 0
    sed_temp_peak_doy = 242.5, 242.5
