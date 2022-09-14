@@ -20,7 +20,7 @@
    light_extc = 1, 0.5, 2, 4
    energy_frac = 0.51, 0.45, 0.035, 0.005
    Benthic_Imin = 10
-   Kw = 0.7442308
+   Kw = 0.2
 /
 &mixing
    coef_mix_conv = 0.2
@@ -110,11 +110,11 @@
 &sediment
    benthic_mode = 2
    sed_heat_model = 1
-   n_zones = 2
-   zone_heights = 20, 33 ! height above bottom
-   sed_temp_mean = 6, 12
-   sed_temp_depth = 0.5, 0.5
-   sed_temp_amplitude = 0, 0
-   sed_temp_peak_doy = 242.5, 242.5
-   sed_heat_Ksoil = 1.2, 1.2
+   n_zones = 4
+   zone_heights = 10, 15, 20, 33 ! height above bottom
+   sed_temp_mean = 6, 6, 12, 12
+   sed_temp_depth = 0.5, 0.5, 0.5. 0.5
+   sed_temp_amplitude = 0, 0, 0, 0
+   sed_temp_peak_doy = 242.5, 242.5, 242.5, 242.5
+   sed_heat_Ksoil = 1.2, 1.2, 1.2, 1.2
 /
