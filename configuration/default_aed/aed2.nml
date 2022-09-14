@@ -5,9 +5,9 @@
    sedflux_model = 'Constant2D'
 /
 &aed_sed_const2d
-   n_zones = 4
-   active_zones = 1, 2, 3, 4
-   Fsed_oxy = -0.01, -0.01, -0.001, -0.001
+   n_zones = 3
+   active_zones = 1, 2, 3
+   Fsed_oxy = -0.01, -0.01, -0.001
 /
 &aed_tracer
    retention_time = .true.
