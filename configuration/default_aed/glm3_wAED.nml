@@ -112,7 +112,7 @@
    sed_heat_model = 1
    n_zones = 3
    zone_heights = 15, 20, 33 ! height above bottom
-   sed_temp_mean = 6, 6, 12
+   sed_temp_mean = 3, 6, 12
    sed_temp_depth = 0.5, 0.5, 0.5
    sed_temp_amplitude = 0, 0, 0
    sed_temp_peak_doy = 242.5, 242.5, 242.5
