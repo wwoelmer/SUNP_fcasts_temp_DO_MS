@@ -27,8 +27,8 @@
    sed_porosity = 0.6
 /
 &aed_oxygen
-   oxy_initial = 338
-   Ksed_oxy = 6.8 !FCR: 8.726660435
+   oxy_initial = 250
+   Ksed_oxy = 7.4 !FCR: 8.726660435
    theta_sed_oxy = 1.08
    Fsed_oxy_variable = 'SDF_Fsed_oxy'
 /
