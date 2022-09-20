@@ -10,6 +10,7 @@ lake_directory <- here::here()
 update_run_config <- TRUE
 
 configure_run_file <- "configure_run.yml"
+config_set_name <- "default_aed"
 
 config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
 
@@ -43,6 +44,7 @@ pars_config <- readr::read_csv(file.path(config$file_path$configuration_director
 obs_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$obs_config_file), col_types = readr::cols())
 states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$states_config_file), col_types = readr::cols())
 
+#pars_config <- NULL
 
 #Download and process observations (already done)
 
@@ -63,6 +65,7 @@ obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = file.path(conf
                                  config)
 obs[1, ,]
 obs[2, ,]
+obs[,2:96,] <- NA
 # first dimension is states, time, depth
 
 states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
@@ -104,6 +107,9 @@ saved_file <- FLAREr::write_forecast_netcdf(da_forecast_output = da_forecast_out
 forecast_file <- FLAREr::write_forecast_csv(da_forecast_output = da_forecast_output,
                                             forecast_output_directory = config$file_path$forecast_output_directory,
                                             use_short_filename = TRUE)
+
+pdf_file <- FLAREr::plotting_general_2(file_name = saved_file,  #config$run_config$restart_file,
+                                       target_file = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")))
 
 aws.s3::put_object(file = forecast_file,
                    object = file.path(config$location$site_id, config$run_config$sim_name, basename(forecast_file)),
