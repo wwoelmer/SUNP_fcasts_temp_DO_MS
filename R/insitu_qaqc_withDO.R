@@ -91,7 +91,10 @@ insitu_qaqc <- function(realtime_file,
       field_format$Depth[i] <- 1.0
     }else if(field_format$Depth[i]==1.5){
       field_format$Depth[i] <- field_format$Depth[i]
-    }else(field_format$Depth[i] <- ceiling(field_format$Depth[i]))
+    }else if(field_format$Depth[i] > 1 & field_format$Depth[i] < 2){
+      field_format$Depth[i] <- 1.5
+    }
+      else(field_format$Depth[i] <- ceiling(field_format$Depth[i]))
   }
   
   field_format$Depth <- as.character(field_format$Depth)
@@ -135,8 +138,8 @@ insitu_qaqc <- function(realtime_file,
   
   # round depths to match temp depths
   field_format_oxy <- field_format_oxy %>% 
-    mutate(depth_cor = ifelse(Depth==1.5, 1.0, Depth)) %>% 
-    mutate(depth_cor = ifelse(Depth==10.5, 10.0, depth_cor)) %>% 
+  #  mutate(depth_cor = ifelse(Depth==1.5, 1.0, Depth)) %>% 
+    mutate(depth_cor = ifelse(Depth==10.5, 10.0, Depth)) %>% 
     mutate(Depth = depth_cor) %>% 
     select(-depth_cor)
   
