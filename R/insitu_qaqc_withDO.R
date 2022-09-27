@@ -82,11 +82,25 @@ insitu_qaqc <- function(realtime_file,
     dplyr::arrange(DateTime, Depth)
   field_format <- na.omit(field_format)
   
+  field_format$Depth <- as.numeric(field_format$Depth)
+  # round depths to nearest integer for matching with DO
+  for(i in 1:nrow(field_format)){
+    if(field_format$Depth[i] < 1){
+      field_format$Depth[i] <- 0.5
+    }else if(field_format$Depth[i]==1){
+      field_format$Depth[i] <- 1.0
+    }else if(field_format$Depth[i]==1.5){
+      field_format$Depth[i] <- field_format$Depth[i]
+    }else(field_format$Depth[i] <- ceiling(field_format$Depth[i]))
+  }
+  
+  field_format$Depth <- as.character(field_format$Depth)
+  
   # and historical high frequency buoy DO data
-  # extract noon measurements only and only observations when buoy is deployed 
+  # extract midnight measurements only and only observations when buoy is deployed 
   field_oxy <- read.csv(hist_buoy_file[2])
   
-  # extract noon measurements only and only observations when buoy is deployed
+  # extract midnight measurements only and only observations when buoy is deployed
   field_oxy$datetime <- as.POSIXct(field_oxy$datetime, format = "%Y-%m-%d %H:%M:%S")
   field_noon_oxy <- field_oxy %>% 
     mutate(day = day(datetime)) %>% 
@@ -118,6 +132,14 @@ insitu_qaqc <- function(realtime_file,
   field_format_oxy <- field_format_oxy %>% select( 'DateTime', 'Depth', 'DOppm', 'Flag')
   field_format_oxy <- field_format_oxy %>% 
     arrange(DateTime, Depth)
+  
+  # round depths to match temp depths
+  field_format_oxy <- field_format_oxy %>% 
+    mutate(depth_cor = ifelse(Depth==1.5, 1.0, Depth)) %>% 
+    mutate(depth_cor = ifelse(Depth==10.5, 10.0, depth_cor)) %>% 
+    mutate(Depth = depth_cor) %>% 
+    select(-depth_cor)
+  
   
   # remove some data with flags
   field_format_oxy <- field_format_oxy[field_format_oxy$Flag != 'm' & field_format_oxy$Flag !='mcep', ]
