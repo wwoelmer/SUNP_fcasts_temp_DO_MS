@@ -41,3 +41,4 @@ workflows/default/sunp.log
 # sensitive environment variables
 configuration/set_environment_sensitive.R
 sunp-2022-07-17-sunp_V3.nc
+WW_notesbok/*
