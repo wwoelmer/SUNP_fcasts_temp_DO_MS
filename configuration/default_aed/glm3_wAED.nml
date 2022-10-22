@@ -60,9 +60,9 @@
    the_depths = 0, 4, 8, 12, 16, 20
    the_temps = 5.1, 5, 4.9, 4.9, 4.8, 4.8
    the_sals = 0, 0, 0, 0, 0, 0
-   num_wq_vars = 13
-   wq_names = 'OGM_don','OGM_pon','OGM_dop','OGM_pop','OGM_docr','OGM_doc','OGM_poc','SIL_rsi','OXY_oxy','CAR_dic','NIT_amm','NIT_nit','PHS_frp'
-   wq_init_vals = 20, 20, 20, 20, 20, 20, 6, 6, 6, 6, 6, 6, 0.5812, 0.7427, 0.7104, 0.7104, 0.7427, 0.9041, 1, 1, 1, 1, 1, 1, 460, 460, 460, 460, 460, 460, 0, 0, 0, 0, 0, 0, 100, 100, 50, 50, 50, 50, 16.52098, 21.04289, 18.5505, 21.93303, 32.04501, 42.37062, 440.625, 437.5, 434.375, 425, 400, 387.5, 3687.76, 3629.475, 3853.455, 3600.333, 3886.761, 3522.898, 5, 5, 5, 5, 5, 5, 50, 50, 50, 50, 50, 50, 3, 3, 3, 3, 3, 3
+   num_wq_vars = 1
+   wq_names = 'OXY_oxy'
+   wq_init_vals = 250, 250, 250, 250, 250, 250
    snow_thickness = 0
    white_ice_thickness = 0
    blue_ice_thickness = 0
@@ -111,7 +111,7 @@
    benthic_mode = 2
    sed_heat_model = 1
    n_zones = 3
-   zone_heights = 15, 20, 33 ! height above bottom
+   zone_heights = 15, 23, 35 ! height above bottom, should be above water surface
    sed_temp_mean = 3, 6, 12
    sed_temp_depth = 0.5, 0.5, 0.5
    sed_temp_amplitude = 0, 0, 0
