@@ -6,6 +6,7 @@ message("Beginning generate targets")
 #' Set the lake directory to the repository directory
 
 lake_directory <- here::here()
+config_set_name <- "default_aed"
 
 #' Source the R files in the repository
 
@@ -15,7 +16,7 @@ source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
 #' Generate the `config_obs` object and create directories if necessary
 
 config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml")
-config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = Sys.getenv("CONFIG_SET"))
+config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
 
 #' Clone or pull from data repositories
 
