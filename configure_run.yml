@@ -1,9 +1,0 @@
-restart_file: sunp-2022-07-17-sunp_V3.nc
-start_datetime: 2022-07-17 00:00:00
-end_datetime: .na
-forecast_start_datetime: 2022-07-18 00:00:00
-forecast_horizon: 35.0
-sim_name: sunp_V3
-configure_flare: configure_flare.yml
-configure_obs: observation_processing.yml
-use_s3: yes
