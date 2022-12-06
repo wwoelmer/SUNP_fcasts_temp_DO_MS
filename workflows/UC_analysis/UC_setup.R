@@ -1,13 +1,9 @@
-remotes::install_github("rqthomas/FLAREr")
-remotes::install_github("rqthomas/GLM3r")
-install.packages('tidyverse')
-install.packages('lubridate')
+#print(Sys.getenv())
 
+#remotes::install_github("rqthomas/FLAREr")
+#install.packages('gsheet')
 library(tidyverse)
 library(lubridate)
-
-
-set.seed(100)
 
 lake_directory <- here::here()
 forecast_site <- "sunp"
@@ -31,16 +27,16 @@ num_forecasts <- c(length(days_22)) # addin 2021, 2020, 2019
 days_between_forecasts <- 1
 forecast_horizon <- 35
 starting_date <- as.Date(days_22[1]) # addin 2021, 2020, 2019
-second_date <- starting_date + months(1) + days(5) # set up the spinup period
+second_date <- starting_date + lubridate::days(5)  #months(1) + lubridate::days(5) # set up the spinup period
 
-start_dates <- as_date(rep(NA, num_forecasts + 1))
-end_dates <- as_date(rep(NA, num_forecasts + 1))
+start_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
+end_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
 start_dates[1] <- starting_date
 end_dates[1] <- second_date
 
 for(i in 2:(num_forecasts+1)){
-  start_dates[i] <- as_date(end_dates[i-1])
-  end_dates[i] <- start_dates[i] + days(days_between_forecasts)
+  start_dates[i] <- lubridate::as_date(end_dates[i-1])
+  end_dates[i] <- start_dates[i] + lubridate::days(days_between_forecasts)
 }
 
 # limit to the last day when obs occur
@@ -48,23 +44,22 @@ start_dates <- start_dates[start_dates <= as.Date(max(days_22))]
 end_dates <- end_dates[end_dates <= as.Date(max(days_22))]
 
 # UC analysis vectors
-UC_names <- c('parameter', 'initial_condition', 'process', 'weather', 'observation', 'all_UC')
+UC_names <- c('parameter', 'initial_condition', 'process', 'weather', 'observation', "all_UC")
 
 # create dataframe with both
 sims <- expand.grid(paste0(start_dates,"_",end_dates,"_", forecast_horizon), UC_names)
 
 names(sims) <- c("date","UC_type")
-sims
 
 sims$start_dates <- stringr::str_split_fixed(sims$date, "_", 3)[,1]
 sims$end_dates <- stringr::str_split_fixed(sims$date, "_", 3)[,2]
 sims$horizon <- stringr::str_split_fixed(sims$date, "_", 3)[,3]
 
 sims <- sims |>
-  mutate(UC_type = as.character(UC_type)) |>
-  select(-date) |>
-  distinct_all() |>
-  arrange(start_dates)
+  dplyr::mutate(UC_type = as.character(UC_type)) |>
+  dplyr::select(-date) |>
+  dplyr::distinct_all() |>
+  dplyr::arrange(start_dates)
 
 sims$horizon[1:length(UC_names)] <- 0
 sims
@@ -74,12 +69,12 @@ message("Generating targets")
 source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
 
 #' Generate the `config_obs` object and create directories if necessary
-
+message('read config')
 config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
 dir.create(file.path(lake_directory, "targets", config_obs$site_id), showWarnings = FALSE)
 
 #' Clone or pull from data repositories
-
+message('download git')
 FLAREr::get_git_repo(lake_directory,
                      directory = config_obs$realtime_insitu_location,
                      git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
@@ -88,6 +83,7 @@ FLAREr::get_git_repo(lake_directory,
 dir.create(file.path(config_obs$file_path$data_directory, "hist-data"),showWarnings = FALSE)
 
 # high frequency buoy data
+message('download edi')
 FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/f4d3535cebd96715c872a7d3ca45c196",
                      file = file.path("hist-data", "hist_buoy_do.csv"),
                      lake_directory)
@@ -108,6 +104,7 @@ if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.
 }
 
 # QAQC insitu buoy data
+message('run insitu qaqc')
 cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
                                    hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
                                    hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
@@ -121,13 +118,6 @@ cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_pat
 
 message("Successfully generated targets")
 
-FLAREr::put_targets(site_id = config_obs$site_id,
-                    cleaned_insitu_file,
-                    cleaned_met_file,
-                    use_s3 = FALSE)
-
-message("Successfully moved targets to s3 bucket")
-
 
 # create directories with the UC sim name
 
@@ -140,7 +130,10 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 8
+starting_index <- 1
+# index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
+# no NOAA forecasts on 2022-08-10
+# need to fix restart file issue for these days
 
 for(i in starting_index:nrow(sims)){
   
@@ -183,22 +176,41 @@ for(i in starting_index:nrow(sims)){
   }else{
     config$run_config$restart_file <- file.path(config$file_path$forecast_output_directory, paste0(config$location$site_id, "-", lubridate::as_date(config$run_config$start_datetime), "-", sim_names, ".nc"))
     if(!file.exists(config$run_config$restart_file )){
-      warning(paste0("restart file: ", config$run_config$restart_file, " doesn't exist"))
+      warning(paste0("restart file: ", config$run_config$restart_file, " doesn't exist, switch to most recent restart file"))
+      #files <- list.files(path = file.path(config$file_path$forecast_output_directory), pattern = "*.nc")
+      #config$run_config$restart_file <- file.path(config$file_path$forecast_output_directory, tail(files, n = 1))
+      #config$run_config$start_datetime <- lubridate::ymd(basename(tail(files, n = 1)))
+        
     }
+    
   }
   
   #config <- FLAREr::set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name, sim_name = sim_names)
   config$model_settings$model <- UC_mode
   config$run_config$sim_name <- sim_names
-  #config <- FLAREr::get_restart_file(config, lake_directory)
-  
+
   run_config <- config$run_config
   yaml::write_yaml(run_config, file = file.path(lake_directory, "restart", forecast_site, sim_names, configure_run_file))
   
   # set UC mode within config file
-  id_uc <- which(names(config$uncertainty) == sims$UC_type[i])
-  config$uncertainty[id_uc] <- FALSE
+  # the WRONG WAY
+  #id_uc <- which(names(config$uncertainty) == sims$UC_type[i]) 
+  #config$uncertainty[id_uc] <- FALSE 
+  if(sims$horizon[i] > 1){
+    id_uc <- which(names(config$uncertainty) != sims$UC_type[i])
+
+    if(sims$UC_type[i] != 'all_UC'){
+      for(t in 1:length(id_uc)){
+        config$uncertainty[id_uc[t]] <- FALSE 
+      }
+    }
+  }
+  
+  # but not met_downscale UC ?
+  #config$uncertainty$met_downscale <- TRUE
+  
   print(config$uncertainty)
+  print(sims$UC_type[i])
   
   config$file_path$execute_directory <- file.path(lake_directory, "flare_tempdir", forecast_site, sim_names)
   config$file_path$restart_directory <- file.path(lake_directory, "restart", forecast_site, sim_names)
@@ -284,7 +296,7 @@ for(i in starting_index:nrow(sims)){
 
   message("Generating scores")
   score_file <- FLAREr::generate_forecast_score(targets_file = file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),
-                                                forecast_file = forecast_file,
+                                                forecast_file =  forecast_file,
                                                 output_directory = file.path(lake_directory, "scores", config$location$site_id, config$run_config$sim_name))
   
   
