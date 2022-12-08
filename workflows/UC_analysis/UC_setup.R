@@ -27,7 +27,7 @@ num_forecasts <- c(length(days_22)) # addin 2021, 2020, 2019
 days_between_forecasts <- 1
 forecast_horizon <- 35
 starting_date <- as.Date(days_22[1]) # addin 2021, 2020, 2019
-second_date <- starting_date + lubridate::days(5)  #months(1) + lubridate::days(5) # set up the spinup period
+second_date <- starting_date + months(1) + lubridate::days(5) # set up the spinup period
 
 start_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
 end_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
