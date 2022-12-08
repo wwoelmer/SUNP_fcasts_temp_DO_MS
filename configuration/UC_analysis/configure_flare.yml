@@ -84,13 +84,13 @@ met:
    forecast_met_model: noaa/NOAAGEFS_1hr #noaa-point/NOAAGEFS_1hr #NOAAGEFS_1hr-debias
 uncertainty:
    use_obs_constraint: TRUE
-   observation_uncertainty: TRUE
-   process_uncertainty: TRUE
-   weather_uncertainty: TRUE
-   initial_condition_uncertainty: TRUE
-   parameter_uncertainty: TRUE
-   met_downscale_uncertainty: TRUE
-   inflow_process_uncertainty: TRUE
+   observation: TRUE
+   process: TRUE
+   weather: TRUE
+   initial_condition: TRUE
+   parameter: TRUE
+   met_downscale: TRUE
+   inflow_process: TRUE
 output_settings:
    diagnostics_names:  [extc]
 s3:
