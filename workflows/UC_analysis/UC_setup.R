@@ -200,7 +200,6 @@ for(i in starting_index:nrow(sims)){
   # the WRONG WAY
   #id_uc <- which(names(config$uncertainty) == sims$UC_type[i]) 
   #config$uncertainty[id_uc] <- FALSE 
-  if(sims$horizon[i] > 1){
     id_uc <- which(names(config$uncertainty) != sims$UC_type[i])
 
     if(sims$UC_type[i] != 'all_UC'){
@@ -208,7 +207,7 @@ for(i in starting_index:nrow(sims)){
         config$uncertainty[id_uc[t]] <- FALSE 
       }
     }
-  }
+  
   
   # but not met_downscale UC ?
   #config$uncertainty$met_downscale <- TRUE
