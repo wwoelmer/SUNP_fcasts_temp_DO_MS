@@ -120,6 +120,10 @@ message("Successfully generated targets")
 
 
 # create directories with the UC sim name
+dir.create(file.path(lake_directory, 'restart'))
+dir.create(file.path(lake_directory, 'restart', forecast_site))
+dir.create(file.path(lake_directory, 'flare_tempdir', forecast_site))
+dir.create(file.path(lake_directory, 'forecasts', forecast_site))
 
 
 for(i in 1:length(UC_names)){
