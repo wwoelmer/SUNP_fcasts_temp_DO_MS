@@ -134,7 +134,8 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 1
+starting_index <- 7
+
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
 # need to fix restart file issue for these days
