@@ -90,8 +90,6 @@ f <- f %>%
          crps2 = crps(observation, family = "normal", mean = mean, sd = sd),
          crps2_mgL = ifelse(variable=='oxygen', crps2*32/1000, crps2))
 
-mean_score_temp <- mean(f$crps2[f$variable=='temperature'])
-mean_score_oxy <- mean(f$crps2[f$variable=='oxygen'])
 
 ggplot(f[f$model_id!='all_UC',], aes(x = as.Date(datetime), y = crps2_mgL)) +
   geom_point(aes(color = model_id)) +
