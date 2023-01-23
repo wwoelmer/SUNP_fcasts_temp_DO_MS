@@ -304,26 +304,26 @@ for(i in starting_index:nrow(sims)){
                                                 output_directory = file.path(lake_directory, "scores", config$location$site_id, config$run_config$sim_name))
   
   
-  #source(file.path(lake_directory,"R/simple_plot.R"))
-  
-  #forecast_file_name <- saved_file #config$run_config$restart_file
-  #output_file_name <- paste0(config$file_path$forecast_output_directory, "/", config$run_config$sim_name, "_", config$run_config$forecast_horizon, 'day_simple_plot_', lubridate::date(config$run_config$forecast_start_datetime))
-  #qaqc_data_directory <- config$file_path$qaqc_data_directory
-  #focal_depths_plotting <- c('0.1', '5', '10')
-  
-  #simple_file_name <- simple_plot(forecast_file_name,
-  #                                output_file_name,
-  #                                qaqc_data_directory,
-  #                                focal_depths_plotting,
-  #                                num_days_plot = 10)
-  
-
-  
+ 
   rm(da_forecast_output)
   gc()
   
   sink(paste0(lake_directory, '/last_completed_index.txt'))
   print(i)
   sink()
+  
+  # calculate and update process uncertainty
+  if(sims$UC_type[i]=='all_UC'){
+    calculate_process_error(lake_directory = lake_directory,
+                            folders = c('all_UC'),
+                            horizons = seq(1, 35, by = 1),
+                            vars = c('temperature', 'oxygen'),
+                            depths = c(1.0, 10.0),
+                            config = FLAREr::set_configuration(configure_run_file = configure_run_file,
+                                                               lake_directory, 
+                                                               config_set_name = config_set_name))
+    
+    
+  }
   
 }
