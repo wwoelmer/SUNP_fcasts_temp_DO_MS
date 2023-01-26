@@ -22,8 +22,16 @@ f <- f %>%
          depth %in% depths)  
 
 ggplot(f, aes(x = as.Date(datetime), y = observation)) +
-  geom_point(aes(color = 'red')) +
+  geom_point(aes(color = horizon)) +
   geom_line(aes(y = mean)) +
+  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free')
+
+ggplot(f, aes(x = horizon, y = observation)) +
+  geom_point() +
+  #xlim(0, 2) +
+  geom_ribbon(aes(ymin = quantile02.5, ymax = quantile97.5), alpha = 0.2) +
+  geom_line(aes(y = mean)) +
+  geom_vline(xintercept = 0) +
   facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free')
 
 starting_index <- 1
@@ -54,42 +62,68 @@ for(j in starting_index:length(folders)){
   
 }
 
-write.csv(f, file.path(lake_directory, 'all_obs_fcasts.csv'), row.names = FALSE)
+#write.csv(f, file.path(lake_directory, 'all_obs_fcasts.csv'), row.names = FALSE)
 
-f <- read.csv(file.path(lake_directory, 'all_obs_fcasts.csv'))
+#f <- read.csv(file.path(lake_directory, 'all_obs_fcasts.csv'))
 
 ##########################################################################
 # reliability diagrams
-rd <- f %>% 
-  select(reference_datetime, datetime, depth, model_id, variable, horizon,
-         observation, mean, sd)
+#rd <- f %>% 
+#  select(reference_datetime, datetime, depth, model_id, variable, horizon,
+#         observation, mean, sd)
 
-breaks <- seq(0, 1, by = 0.10)
+#breaks <- seq(0, 1, by = 0.10)
 
-for(i in 1:nrow(rd)){
-  for(j in 2:length(breaks)){
-    # subset to forecasts within each break range of the distribution
-    prob <- qnorm(breaks[j], rd$mean[i], rd$sd[i]) 
-    if(prob)
-  }
-}
+# 10% CI, 0.55, 0.45
 
-p <- rd %>% 
-  mutate()
+#for(i in 1:nrow(rd)){
+#  for(j in 2:length(breaks)){
+#    # subset to forecasts within each break range of the distribution
+#    prob_above <- qnorm(breaks[j], rd$mean[i], rd$sd[i]) 
+#    if(prob){
+      # 1 if obs in in CI, 0 if not, count total number in
+      
+#    }
+#  }
+#}
+
 
 ##########################################################################
 library(scoringRules)
-horizons <- c(1, 7, 14, 21, 35)
+horizons <- seq(1, 35, by = 1)
 # get rid of instances where sd = 0 (spinup?)
 f <- f %>% 
   filter(sd > 0) %>% 
-  filter(horizon > 0) %>% 
+#  filter(horizon > 0) %>% 
   filter(horizon %in% horizons) %>% 
   mutate(obs_mgL_C = ifelse(variable=='oxygen', observation*32/1000, observation),
          mean_mgL_C = ifelse(variable=='oxygen', mean*32/1000, mean),
          crps2 = crps(observation, family = "normal", mean = mean, sd = sd),
          crps2_mgL = ifelse(variable=='oxygen', crps2*32/1000, crps2))
 
+ggplot(f[f$model_id=='all_UC',], aes(x = horizon, y = mean)) +
+  geom_line(aes(col = as.factor(datetime))) +
+  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free')
+
+ggplot(f[f$model_id=='all_UC' & f$horizon<3,], aes(x = horizon, y = mean)) +
+  geom_line(aes(col = as.factor(datetime))) +
+  geom_point(aes(x = horizon, y = observation, col = as.factor(datetime))) +
+  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free')
+
+ggplot(f[f$model_id=='all_UC',]) +
+  geom_point(aes(x = horizon, y = mean - observation, col = as.factor(reference_datetime))) +
+  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free')
+
+
+crps_mean <- f %>% 
+  filter(model_id=='all_UC') %>% 
+  group_by(horizon, variable, depth) %>% 
+  mutate(crps_mean = mean(crps2)) %>% 
+  distinct(depth, horizon, variable, .keep_all = TRUE)
+
+ggplot(crps_mean, aes(x = horizon, y = crps_mean)) +
+  geom_point() +
+  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free')
 
 ggplot(f[f$model_id!='all_UC',], aes(x = as.Date(datetime), y = crps2_mgL)) +
   geom_point(aes(color = model_id)) +
