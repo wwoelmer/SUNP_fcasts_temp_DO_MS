@@ -28,7 +28,6 @@ calculate_process_error <- function(lake_directory,
   
   # some subsetting
   f <- f %>% 
-    tidyr::separate(site_id, into = c("site", "depth"), sep = "-") %>% 
     dplyr::filter(variable %in% vars,
                   !is.na(observation)) # keep any fcasts where there are obs to compare to 
 
@@ -42,7 +41,6 @@ calculate_process_error <- function(lake_directory,
     dataset <- arrow::read_parquet(file.path(score_folder, files1[2])) # because you read in the first file above
     
     dataset <- dataset %>% 
-      tidyr::separate(site_id, into = c("site", "depth"), sep = "-") %>% 
       dplyr::filter(variable %in% vars,
                     !is.na(observation))
     
@@ -51,7 +49,6 @@ calculate_process_error <- function(lake_directory,
       print(i)
       temp <- read_parquet(paste0(score_folder, "/", files1[i]))
       temp <- temp %>% 
-        tidyr::separate(site_id, into = c("site", "depth"), sep = "-") %>% 
         dplyr::filter(variable %in% vars,
                       !is.na(observation))  
       dataset <- rbind(dataset, temp)
@@ -68,7 +65,6 @@ calculate_process_error <- function(lake_directory,
     df <- f %>% 
       dplyr::filter(sd > 0) %>% 
       dplyr::filter(horizon==i) %>% 
-      #dplyr::filter(horizon %in% horizons) %>% 
       distinct(depth, datetime, variable, .keep_all = TRUE)
     
     m <- df %>% 
@@ -78,13 +74,14 @@ calculate_process_error <- function(lake_directory,
     
     m_temp <- m %>% 
       filter(variable=='temperature') %>% 
+      ungroup() %>% 
       select(-variable)
     
     m_oxy <- m %>% 
       filter(variable=='oxygen') %>% 
-      select(-variable, -reference_datetime, -observation, -mean) #%>% 
-    #pivot_wider(names_from = datetime, values_from = resid) %>% 
-    #select(-depth)
+      ungroup() %>% 
+      select(-variable, -reference_datetime, -observation, -mean) 
+    
     out[i, 1] <- i
     out[i, 2] <-  sd(m_temp$resid)
     out[i, 3] <- sd(m_oxy$resid)
@@ -95,9 +92,9 @@ calculate_process_error <- function(lake_directory,
   
   head(out)
   out <- out %>% 
-    pivot_longer(temperature:oxygen, names_to = 'variable', values_to = 'residual')
+    pivot_longer(temperature:oxygen, names_to = 'variable', values_to = 'sd_residual')
   
-  ggplot(out, aes(x = horizon, y = residual)) +
+  ggplot(out, aes(x = horizon, y = sd_residual)) +
     facet_wrap(~variable, scales = 'free_y') +
     geom_point()
 
@@ -114,7 +111,7 @@ calculate_process_error <- function(lake_directory,
                    process_sd = NA)
   
   for (i in 1:length(vars)) {
-    df$process_sd[i] <- out$residual[out$variable==vars[i] & out$horizon==1]
+    df$process_sd[i] <- out$sd_residual[out$variable==vars[i] & out$horizon==1]
   }
   
   # update process error in states_config
