@@ -1,9 +1,11 @@
 #print(Sys.getenv())
 
 #remotes::install_github("rqthomas/FLAREr")
+#remotes::install_github("FLARE-forecast/FLAREr")
 #install.packages('gsheet')
 library(tidyverse)
 library(lubridate)
+library(stringr)
 
 lake_directory <- here::here()
 forecast_site <- "sunp"
@@ -134,7 +136,7 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 7
+starting_index <- 12
 
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
@@ -313,16 +315,16 @@ for(i in starting_index:nrow(sims)){
   sink()
   
   # calculate and update process uncertainty
-  if(sims$UC_type[i]=='all_UC'){
-    calculate_process_error(lake_directory = lake_directory,
-                            folders = c('all_UC'),
-                            horizons = seq(1, 35, by = 1),
-                            vars = c('temperature', 'oxygen'),
-                            depths = c(1.0, 10.0),
-                            config = FLAREr::set_configuration(configure_run_file = configure_run_file,
-                                                               lake_directory, 
-                                                               config_set_name = config_set_name))
-    
+  #if(sims$UC_type[i]=='all_UC'){
+  #  calculate_process_error(lake_directory = lake_directory,
+  #                          folders = c('all_UC'),
+  #                          horizons = seq(1, 35, by = 1),
+  #                          vars = c('temperature', 'oxygen'),
+  #                          depths = c(1.0, 10.0),
+  #                          config = FLAREr::set_configuration(configure_run_file = configure_run_file,
+  #                                                             lake_directory, 
+  #                                                             config_set_name = config_set_name))
+  #  
     
   }
   
