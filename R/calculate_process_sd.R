@@ -2,14 +2,14 @@
 
 ###############################
 # arguments for testing
-lake_directory <- here::here()
-folders <- c('all_UC')
-horizons <- seq(1, 35, by = 1)
-vars <- c('temperature', 'oxygen')
-depths <- c(1.0, 10.0)
-config <- FLAREr::set_configuration(configure_run_file = "configure_run.yml",
-                                    lake_directory, 
-                                    config_set_name = "UC_analysis")
+#lake_directory <- here::here()
+#folders <- c('all_UC')
+#horizons <- seq(1, 35, by = 1)
+#vars <- c('temperature', 'oxygen')
+#depths <- c(1.0, 10.0)
+#config <- FLAREr::set_configuration(configure_run_file = "configure_run.yml",
+#                                    lake_directory, 
+#                                    config_set_name = "UC_analysis")
 
 ###############################
 calculate_process_error <- function(lake_directory,
@@ -17,7 +17,8 @@ calculate_process_error <- function(lake_directory,
                                     horizons, # which horizons you want to score across
                                     vars, # character string of variables you want to score across
                                     depths, # string of depths you have observations at
-                                    config
+                                    config,
+                                    multiple_depths = TRUE
                                     ){
   library(arrow)
   library(tidyverse)
@@ -47,7 +48,7 @@ calculate_process_error <- function(lake_directory,
     # read in files
     for (i in 3:length(files1)) {
       print(i)
-      temp <- read_parquet(paste0(score_folder, "/", files1[i]))
+      temp <- arrow::read_parquet(paste0(score_folder, "/", files1[i]))
       temp <- temp %>% 
         dplyr::filter(variable %in% vars,
                       !is.na(observation))  
@@ -58,60 +59,67 @@ calculate_process_error <- function(lake_directory,
     
   }
   
-  out <- data.frame(horizon = NA, 
-                    temperature = NA, 
-                    oxygen = NA)
-  for(i in 1:35){
-    df <- f %>% 
+ 
+ # calculate sd(resid) for each depth where observations are available
+  df <- f %>% 
       dplyr::filter(sd > 0) %>% 
-      dplyr::filter(horizon==i) %>% 
-      distinct(depth, datetime, variable, .keep_all = TRUE)
+      dplyr::filter(horizon==1) %>% 
+      dplyr::distinct(depth, datetime, variable, .keep_all = TRUE)
     
     m <- df %>% 
       dplyr::select(reference_datetime, depth, datetime, variable, observation, mean, horizon) %>% 
-      group_by(datetime, variable, depth, horizon) %>% 
-      mutate(resid = observation - mean)
+      dplyr::group_by(datetime, variable, depth, horizon) %>% 
+      dplyr::mutate(resid = observation - mean)
     
-    m_temp <- m %>% 
-      filter(variable=='temperature') %>% 
-      ungroup() %>% 
-      select(-variable)
+    m <- m %>% 
+      dplyr::group_by(depth, variable) %>% 
+      dplyr::mutate(sd_resid = sd(resid))
     
-    m_oxy <- m %>% 
-      filter(variable=='oxygen') %>% 
-      ungroup() %>% 
-      select(-variable, -reference_datetime, -observation, -mean) 
+    m_out <- m %>% 
+      dplyr::distinct(depth, variable, .keep_all = TRUE) %>% 
+      dplyr::select(depth, variable, sd_resid) 
+    m_out$sd_resid <- round(m_out$sd_resid, 2)
     
-    out[i, 1] <- i
-    out[i, 2] <-  sd(m_temp$resid)
-    out[i, 3] <- sd(m_oxy$resid)
+    m_wide <- m_out %>% 
+      pivot_wider(names_from = 'variable', values_from = 'sd_resid') %>% 
+      mutate(depth = as.numeric(depth))
+    m_wide <- m_wide[order(m_wide$depth),]
+      
+  # assign running process error value to config files
+    # for temperature, we assign all depths to depth_model_sd.csv
+    depth_temp_sd <- m_wide %>% 
+      select(depth, temperature) %>% 
+      rename(temp = temperature)
     
-
-  }
+    write.csv(depth_temp_sd, file.path(config$file_path$configuration_directory,
+                                       config$model_settings$depth_model_sd_config_file))
   
-  
-  head(out)
-  out <- out %>% 
-    pivot_longer(temperature:oxygen, names_to = 'variable', values_to = 'sd_residual')
-  
-  ggplot(out, aes(x = horizon, y = sd_residual)) +
-    facet_wrap(~variable, scales = 'free_y') +
-    geom_point()
-
-  ggplot(m_temp, aes(x = resid, fill = depth)) +
-    geom_histogram()
-  
-  ggplot(m_oxy, aes(x = resid, fill = depth)) +
-    geom_histogram()
-  
-  
-  # calculate running process error value
-  df <- data.frame('var' = vars, 
+  # calculate sd(resid) across all depths for states_config$model_sd (1 value)
+    df2 <- f %>% 
+      dplyr::filter(sd > 0) %>% 
+      dplyr::filter(horizon==1) %>% 
+      dplyr::distinct(depth, datetime, variable, .keep_all = TRUE)
+    
+    m2 <- df2 %>% 
+      dplyr::select(reference_datetime, depth, datetime, variable, observation, mean, horizon) %>% 
+      dplyr::group_by(datetime, variable, depth, horizon) %>% 
+      dplyr::mutate(resid = observation - mean)
+    
+    m2 <- m2 %>% 
+      dplyr::group_by(variable) %>% 
+      dplyr::mutate(sd_resid = sd(resid))
+    
+    m_out2 <- m2 %>% 
+      dplyr::distinct(variable, .keep_all = TRUE) %>% 
+      dplyr::select(variable, sd_resid) 
+    m_out2$sd_resid <- round(m_out2$sd_resid, 2)
+    
+    df <- data.frame('var' = vars, 
                    state_names = c('temp', 'OXY_oxy'),
                    process_sd = NA)
   
   for (i in 1:length(vars)) {
-    df$process_sd[i] <- out$sd_residual[out$variable==vars[i] & out$horizon==1]
+    df$process_sd[i] <- m_out2$sd_resid[m_out2$variable==vars[i]]
   }
   
   # update process error in states_config
