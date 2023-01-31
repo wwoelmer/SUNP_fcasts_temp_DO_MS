@@ -136,7 +136,7 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 12
+starting_index <- 6
 
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
@@ -242,6 +242,27 @@ for(i in starting_index:nrow(sims)){
   #Need to remove the 00 ensemble member because it only goes 16-days in the future
   met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "ens00")]
   
+  # if weather UC is off, we want to take an avg across the ensemble, 
+  # and write that as ens_01, rather than depend only on the 1st 
+  # weather ensemble (which could be randomly influencing forecast skill)
+  if(config$uncertainty$weather==FALSE){
+    met <- read_csv(met_out$filenames)
+    met_mean <- met %>% 
+      group_by(time) %>% 
+      summarise_at(c("AirTemp", "ShortWave", "LongWave",
+                    "RelHum", "WindSpeed"), mean) 
+    met_median <- met %>% 
+      group_by(time) %>% 
+      summarise_at(c("Rain", "Snow"), median)
+    
+    met_agg <- left_join(met_mean, met_median)
+    
+    for(i in 1:length(met_out$filenames)){
+      write.csv(met_agg, met_out$filenames[i])
+      
+    }
+  }
+  
   pars_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$par_config_file), col_types = readr::cols())
   obs_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$obs_config_file), col_types = readr::cols())
   states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$states_config_file), col_types = readr::cols())
@@ -315,16 +336,14 @@ for(i in starting_index:nrow(sims)){
   sink()
   
   # calculate and update process uncertainty
-  #if(sims$UC_type[i]=='all_UC'){
-  #  calculate_process_error(lake_directory = lake_directory,
-  #                          folders = c('all_UC'),
-  #                          horizons = seq(1, 35, by = 1),
-  #                          vars = c('temperature', 'oxygen'),
-  #                          depths = c(1.0, 10.0),
-  #                          config = FLAREr::set_configuration(configure_run_file = configure_run_file,
-  #                                                             lake_directory, 
-  #                                                             config_set_name = config_set_name))
-  #  
+  if(sims$UC_type[i]=='all_UC'){
+    calculate_process_error(lake_directory = lake_directory,
+                            folders = c('all_UC'),
+                            horizons = seq(1, 35, by = 1),
+                            vars = c('temperature', 'oxygen'),
+                            depths = c(1.0, 10.0),
+                            config = config)
+    
     
   }
   
