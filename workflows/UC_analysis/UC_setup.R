@@ -1,11 +1,13 @@
 #print(Sys.getenv())
 
 #remotes::install_github("rqthomas/FLAREr")
-#remotes::install_github("FLARE-forecast/FLAREr")
+#remotes::install_github("FLARE-forecast/FLAREr", force = TRUE)
+#remotes::install_github("FLARE-forecast/GLM3r")
 #install.packages('gsheet')
 library(tidyverse)
 library(lubridate)
 library(stringr)
+library(GLM3r)
 
 lake_directory <- here::here()
 forecast_site <- "sunp"
@@ -116,7 +118,7 @@ cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_pat
                                    cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, paste0(config_obs$site_id,"-targets-insitu.csv")),
                                    config = config_obs,
                                    lake_directory = lake_directory)
-
+message('skip qaqc test')
 
 message("Successfully generated targets")
 
@@ -136,7 +138,7 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 6
+starting_index <- 239
 
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
@@ -245,7 +247,8 @@ for(i in starting_index:nrow(sims)){
   # if weather UC is off, we want to take an avg across the ensemble, 
   # and write that as ens_01, rather than depend only on the 1st 
   # weather ensemble (which could be randomly influencing forecast skill)
-  if(config$uncertainty$weather==FALSE){
+  if(config$uncertainty$weather==FALSE & sims$horizon[i] > 0){
+    og <- read_csv(met_out$filenames[1])
     met <- read_csv(met_out$filenames)
     met_mean <- met %>% 
       group_by(time) %>% 
@@ -257,8 +260,8 @@ for(i in starting_index:nrow(sims)){
     
     met_agg <- left_join(met_mean, met_median)
     
-    for(i in 1:length(met_out$filenames)){
-      write.csv(met_agg, met_out$filenames[i])
+    for(k in 1:length(met_out$filenames)){
+      write.csv(met_agg, met_out$filenames[k], row.names = FALSE, quote = FALSE)
       
     }
   }
@@ -336,8 +339,12 @@ for(i in starting_index:nrow(sims)){
   sink()
   
   # calculate and update process uncertainty
-  if(sims$UC_type[i]=='all_UC'){
-    calculate_process_error(lake_directory = lake_directory,
+  num_files <- list.files(file.path(lake_directory, 'scores/sunp/all_UC'), pattern = "*.parquet")
+  print(paste0("number of all_UC score files: ",  length(num_files)))
+  source(file.path(lake_directory, "R", "calculate_process_sd.R"))
+  
+  if(sims$UC_type[i]=='all_UC' & length(num_files) > 10){
+    calculate_process_sd(lake_directory = lake_directory,
                             folders = c('all_UC'),
                             horizons = seq(1, 35, by = 1),
                             vars = c('temperature', 'oxygen'),
