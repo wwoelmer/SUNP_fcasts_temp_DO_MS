@@ -12,7 +12,7 @@
 #                                    config_set_name = "UC_analysis")
 
 ###############################
-calculate_process_error <- function(lake_directory,
+calculate_process_sd <- function(lake_directory,
                                     folders, # character string of folders where forecasts are stored
                                     horizons, # which horizons you want to score across
                                     vars, # character string of variables you want to score across
@@ -59,7 +59,18 @@ calculate_process_error <- function(lake_directory,
     
   }
   
- 
+
+  f$reference_datetime <- as.POSIXct(f$reference_datetime)
+  
+  for(t in 1:nrow(f)){
+    if(hour(f$reference_datetime[t])!=0){
+      hour(f$reference_datetime[t]) <- 0
+      
+    }
+  }
+  
+  f <- f %>% 
+    mutate(horizon2 = reference_datetime - datetime)
  # calculate sd(resid) for each depth where observations are available
   df <- f %>% 
       dplyr::filter(sd > 0) %>% 
@@ -88,11 +99,12 @@ calculate_process_error <- function(lake_directory,
   # assign running process error value to config files
     # for temperature, we assign all depths to depth_model_sd.csv
     depth_temp_sd <- m_wide %>% 
-      select(depth, temperature) %>% 
-      rename(temp = temperature)
+      dplyr::select(depth, temperature) %>% 
+      dplyr::rename(temp = temperature)
     
     write.csv(depth_temp_sd, file.path(config$file_path$configuration_directory,
-                                       config$model_settings$depth_model_sd_config_file))
+                                       config$model_settings$depth_model_sd_config_file),
+              row.names = FALSE, quote = FALSE)
   
   # calculate sd(resid) across all depths for states_config$model_sd (1 value)
     df2 <- f %>% 
