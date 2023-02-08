@@ -23,7 +23,7 @@ cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_pat
 f <- read.csv(file.path(config_obs$file_path$targets_directory, config_obs$site_id, paste0(config_obs$site_id,"-targets-insitu.csv")))
 # limit to first full month when sensors were out in the first year of this study (2019)
 f <- f %>% 
-  filter(time > as.POSIXct('2022-05-01 00:00:00') & time < as.POSIXct('2022-06-01 00:00:00'))
+  filter(time > as.POSIXct('2018-05-01 00:00:00') & time < as.POSIXct('2018-06-01 00:00:00'))
 #NOTE: this is generally pretty consistent across years so will stick with this initialization
 ##################################################
 lag <- f %>% 
@@ -49,7 +49,7 @@ st_config$model_sd[st_config$state_names=='temp'] <- temp_sd
 st_config$model_sd[st_config$state_names=='OXY_oxy'] <- oxy_sd
 
 write.csv(st_config, file.path(lake_directory, 'configuration/UC_analysis/states_config.csv'),
-          row.names = FALSE) 
+          row.names = FALSE, quote = FALSE) 
 
 # now update depth_model_sd for discrete depths where temperature obs are available
 temp_depths <- lag_temp %>% 
@@ -69,4 +69,4 @@ depth_model_sd <- NA
 depth_model_sd <- depth_temp_sd
 write.csv(depth_temp_sd,
           file.path(lake_directory, 'configuration/UC_analysis/depth_model_sd.csv'),
-          row.names = FALSE)
+          row.names = FALSE, quote = FALSE)
