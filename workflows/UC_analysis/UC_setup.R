@@ -31,7 +31,10 @@ num_forecasts <- c(length(days_22)) # addin 2021, 2020, 2019
 days_between_forecasts <- 1
 forecast_horizon <- 35
 starting_date <- as.Date(days_22[1]) # addin 2021, 2020, 2019
-second_date <- starting_date + months(1) + lubridate::days(5) # set up the spinup period
+second_date <- starting_date + lubridate::days(1)  #
+spin_up <- seq.Date(starting_date, starting_date + months(1) + lubridate::days(5), by = "day")
+  
+  starting_date + months(1) + lubridate::days(5) # set up the spinup period
 
 start_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
 end_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
@@ -65,7 +68,9 @@ sims <- sims |>
   dplyr::distinct_all() |>
   dplyr::arrange(start_dates)
 
-sims$horizon[1:length(UC_names)] <- 1
+
+spin_length <- length(UC_names)*length(spin_up)
+sims$horizon[1:spin_length] <- 1
 sims
 
 message("Generating targets")
@@ -128,6 +133,7 @@ dir.create(file.path(lake_directory, 'restart'))
 dir.create(file.path(lake_directory, 'restart', forecast_site))
 dir.create(file.path(lake_directory, 'flare_tempdir', forecast_site))
 dir.create(file.path(lake_directory, 'forecasts', forecast_site))
+dir.create(file.path(lake_directory, 'scores', forecast_site))
 
 
 for(i in 1:length(UC_names)){
@@ -138,7 +144,7 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 239
+starting_index <- 1
 
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
@@ -343,13 +349,13 @@ for(i in starting_index:nrow(sims)){
   print(paste0("number of all_UC score files: ",  length(num_files)))
   source(file.path(lake_directory, "R", "calculate_process_sd.R"))
   
-  if(sims$UC_type[i]=='all_UC' & length(num_files) > 10){
+  if(sims$UC_type[i]=='all_UC' & sims$horizon[i] > 1){
     calculate_process_sd(lake_directory = lake_directory,
-                            folders = c('all_UC'),
-                            horizons = seq(1, 35, by = 1),
-                            vars = c('temperature', 'oxygen'),
-                            depths = c(1.0, 10.0),
-                            config = config)
+                         folders = c('all_UC'),
+                         horizons = seq(1, 35, by = 1),
+                         vars = c('temperature', 'oxygen'),
+                         depths = c(1.0, 10.0),
+                         config = config)
     
     
   }
