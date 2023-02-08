@@ -17,61 +17,46 @@ calculate_process_sd <- function(lake_directory,
                                     horizons, # which horizons you want to score across
                                     vars, # character string of variables you want to score across
                                     depths, # string of depths you have observations at
-                                    config,
-                                    multiple_depths = TRUE
+                                    config
                                     ){
   library(arrow)
   library(tidyverse)
   
   score_folder <- file.path(lake_directory, 'scores/sunp', folders[1])
   files1 <- list.files(path = score_folder, pattern = "*.parquet")
-  f <- arrow::read_parquet(file.path(score_folder, files1[2])) # start with second file because first is the spinup period
+  
+  # subset file to include only 30 days before the forecast start date
+  start_d <- as.Date(config$run_config$forecast_start_datetime) - days(30)
+  end_d <- as.Date(config$run_config$forecast_start_datetime)
+  date_range <- seq.Date(start_d, end_d, by = "day")
+  file_range <- paste0(config$location$site_id, "-", date_range, "-", config$run_config$sim_name, ".parquet")
+  
+  files_sub <- files1[files1 %in% file_range]
+  
+  
+  f <- arrow::read_parquet(file.path(score_folder, files_sub[1])) # start with second file because first is the spinup period
+  
   
   # some subsetting
   f <- f %>% 
     dplyr::filter(variable %in% vars,
                   !is.na(observation)) # keep any fcasts where there are obs to compare to 
 
-  # read in files
-  starting_index <- 1
-  for(j in starting_index:length(folders)){
-    score_folder <- file.path(lake_directory, 'scores/sunp', folders[j])
-    print(folders[j])
-    
-    files1 <- list.files(path = score_folder, pattern = "*.parquet")
-    dataset <- arrow::read_parquet(file.path(score_folder, files1[2])) # because you read in the first file above
-    
-    dataset <- dataset %>% 
-      dplyr::filter(variable %in% vars,
-                    !is.na(observation))
     
     # read in files
-    for (i in 3:length(files1)) {
+    for (i in 2:length(files_sub)) {
       print(i)
-      temp <- arrow::read_parquet(paste0(score_folder, "/", files1[i]))
+      temp <- arrow::read_parquet(paste0(score_folder, "/", files_sub[i]))
       temp <- temp %>% 
         dplyr::filter(variable %in% vars,
                       !is.na(observation))  
-      dataset <- rbind(dataset, temp)
+      f <- rbind(f, temp)
     }
     
-    f <- rbind(f, dataset)
-    
-  }
   
-
   f$reference_datetime <- as.POSIXct(f$reference_datetime)
   
-  for(t in 1:nrow(f)){
-    if(hour(f$reference_datetime[t])!=0){
-      hour(f$reference_datetime[t]) <- 0
-      
-    }
-  }
-  
-  f <- f %>% 
-    mutate(horizon2 = reference_datetime - datetime)
- # calculate sd(resid) for each depth where observations are available
+  # calculate sd(resid) for each depth where observations are available
   df <- f %>% 
       dplyr::filter(sd > 0) %>% 
       dplyr::filter(horizon==1) %>% 
@@ -147,6 +132,6 @@ calculate_process_sd <- function(lake_directory,
   
   write.csv(st_config, file.path(config$file_path$configuration_directory,
                                  config$model_settings$states_config_file),
-            row.names = FALSE)  
+            row.names = FALSE, quote = FALSE)  
 }
 
