@@ -65,7 +65,7 @@ sims <- sims |>
   dplyr::distinct_all() |>
   dplyr::arrange(start_dates)
 
-sims$horizon[1:length(UC_names)] <- 0
+sims$horizon[1:length(UC_names)] <- 1
 sims
 
 message("Generating targets")
@@ -247,7 +247,7 @@ for(i in starting_index:nrow(sims)){
   # if weather UC is off, we want to take an avg across the ensemble, 
   # and write that as ens_01, rather than depend only on the 1st 
   # weather ensemble (which could be randomly influencing forecast skill)
-  if(config$uncertainty$weather==FALSE & sims$horizon[i] > 0){
+  if(config$uncertainty$weather==FALSE & sims$horizon[i] > 1){
     og <- read_csv(met_out$filenames[1])
     met <- read_csv(met_out$filenames)
     met_mean <- met %>% 
