@@ -33,8 +33,6 @@ forecast_horizon <- 35
 starting_date <- as.Date(days_22[1]) # addin 2021, 2020, 2019
 second_date <- starting_date + lubridate::days(1)  #
 spin_up <- seq.Date(starting_date, starting_date + months(1) + lubridate::days(5), by = "day")
-  
-  starting_date + months(1) + lubridate::days(5) # set up the spinup period
 
 start_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
 end_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
@@ -46,9 +44,6 @@ for(i in 2:(num_forecasts+1)){
   end_dates[i] <- start_dates[i] + lubridate::days(days_between_forecasts)
 }
 
-# limit to the last day when obs occur
-start_dates <- start_dates[start_dates <= as.Date(max(days_22))]
-end_dates <- end_dates[end_dates <= as.Date(max(days_22))]
 
 # UC analysis vectors
 UC_names <- c('parameter', 'initial_condition', 'process', 'weather', 'observation', "all_UC")
@@ -72,6 +67,13 @@ sims <- sims |>
 spin_length <- length(UC_names)*length(spin_up)
 sims$horizon[1:spin_length] <- 1
 sims
+
+# remove other UC modes during spinup period
+#first <- sims[1:spin_length,]
+#second <- sims[(spin_length+1):nrow(sims),]
+
+#first <- first[first$UC_type=='all_UC',]
+#sims <- rbind(first, second)
 
 message("Generating targets")
 
@@ -241,19 +243,35 @@ for(i in starting_index:nrow(sims)){
   }
   
   FLAREr::get_stacked_noaa(lake_directory, config, averaged = TRUE)
-  met_out <- FLAREr::generate_glm_met_files(obs_met_file = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
-                                            out_dir = config$file_path$execute_directory,
-                                            forecast_dir = forecast_dir,
-                                            config = config)
+  
+  source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
+  met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
+                config = config)
+  met_out <- FLAREr::generate_met_files_arrow(obs_met_file = file.path(config$file_path$qaqc_data_directory, paste0("observed-met_",config$location$site_id,".csv")),
+                                              out_dir = config$file_path$execute_directory,
+                                              start_datetime = config$run_config$start_datetime,
+                                              end_datetime = config$run_config$end_datetime,
+                                              forecast_start_datetime = config$run_config$forecast_start_datetime,
+                                              forecast_horizon =  config$run_config$forecast_horizon,
+                                              site_id = config$location$site_id,
+                                              use_s3 = TRUE,
+                                              bucket = config$s3$drivers$bucket,
+                                              endpoint = config$s3$drivers$endpoint,
+                                              local_directory = NULL,
+                                              use_forecast = TRUE,
+                                              use_ler_vars = FALSE)
+  
+  met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "31")]
+  
   
   #met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "31")]
   #Need to remove the 00 ensemble member because it only goes 16-days in the future
-  met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "ens00")]
+  #met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "ens00")]
   
   # if weather UC is off, we want to take an avg across the ensemble, 
   # and write that as ens_01, rather than depend only on the 1st 
   # weather ensemble (which could be randomly influencing forecast skill)
-  if(config$uncertainty$weather==FALSE & sims$horizon[i] > 1){
+  if(config$uncertainty$weather==FALSE & sims$horizon[i] > 0){
     og <- read_csv(met_out$filenames[1])
     met <- read_csv(met_out$filenames)
     met_mean <- met %>% 
@@ -320,6 +338,13 @@ for(i in starting_index:nrow(sims)){
   saved_file <- FLAREr::write_forecast_netcdf(da_forecast_output = da_forecast_output,
                                               forecast_output_directory = config$file_path$forecast_output_directory,
                                               use_short_filename = TRUE)
+  
+  message("Generating parquet")
+  forecast_df <- FLAREr::write_forecast_arrow(da_forecast_output = da_forecast_output,
+                                              use_s3 = config$run_config$use_s3,
+                                              bucket = config$s3$forecasts_parquet$bucket,
+                                              endpoint = config$s3$forecasts_parquet$endpoint,
+                                              local_directory = file.path(lake_directory, "forecasts/parquet"))
   
   message("Generating csv")
   forecast_file <- FLAREr::write_forecast_csv(da_forecast_output = da_forecast_output,
