@@ -37,7 +37,7 @@ insitu_qaqc <- function(realtime_file,
   
   # and historical high frequency buoy data
   # extract noon measurements only and only observations when buoy is deployed
-  field_all <- read.csv(hist_buoy_file)
+  field_all <- read.csv(hist_buoy_file[1])
   field_all$datetime <- as.POSIXct(field_all$datetime, format = "%Y-%m-%d %H:%M:%S")
   field_noon <- field_all %>% 
     dplyr::mutate(day = day(datetime)) %>% 
