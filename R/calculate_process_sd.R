@@ -26,12 +26,12 @@ calculate_process_sd <- function(lake_directory,
   files1 <- list.files(path = score_folder, pattern = "*.parquet")
   
   # subset file to include only 30 days before the forecast start date
-  start_d <- as.Date(config$run_config$forecast_start_datetime) - days(30)
-  end_d <- as.Date(config$run_config$forecast_start_datetime)
-  date_range <- seq.Date(start_d, end_d, by = "day")
-  file_range <- paste0(config$location$site_id, "-", date_range, "-", config$run_config$sim_name, ".parquet")
+   start_d <- as.Date(config$run_config$forecast_start_datetime) - days(30)
+   end_d <- as.Date(config$run_config$forecast_start_datetime)
+   date_range <- seq.Date(start_d, end_d, by = "day")
+   file_range <- paste0(config$location$site_id, "-", date_range, "-", config$run_config$sim_name, ".parquet")
   
-  files_sub <- files1[files1 %in% file_range]
+   files_sub <- files1[files1 %in% file_range]
   
   
   f <- arrow::read_parquet(file.path(score_folder, files_sub[1])) # start with second file because first is the spinup period
