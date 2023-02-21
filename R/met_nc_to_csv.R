@@ -1,7 +1,8 @@
 
 
 met_nc_to_csv <- function(input_met_nc,
-                          config){
+                          config,
+                          output_dir){
 
   dat <- ncdf4::nc_open(input_met_nc)
   cf_met_vars <- c("air_temperature",
@@ -31,7 +32,10 @@ met_nc_to_csv <- function(input_met_nc,
     pivot_longer(air_temperature:precipitation_flux, names_to = 'variable', values_to = 'observation') %>% 
     rename(datetime = time)
   
-  write.csv(met2, file.path(config$file_path$qaqc_data_directory, paste0("observed-met_",config$location$site_id,".csv")),
+  if(!file.exists(output_dir)){
+    dir.create(output_dir)
+  }
+  write.csv(met2, file.path(output_dir, paste0("observed-met_",config$location$site_id,".csv")),
             row.names = FALSE, quote = FALSE)
   
   
