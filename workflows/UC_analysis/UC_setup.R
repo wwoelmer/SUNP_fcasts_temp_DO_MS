@@ -26,13 +26,13 @@ if(use_archive){
 }
 
 # set up date vectors for each year
-days_22 <- seq.Date(as.Date('2022-04-27'), as.Date('2022-10-17'), by = 1) ## do again for 2021, 2020, 2019 and make list of the years
+days_22 <- seq.Date(as.Date('2022-04-27'), as.Date('2022-10-07'), by = 1) ## do again for 2021, 2020, 2019 and make list of the years
 num_forecasts <- c(length(days_22)) # addin 2021, 2020, 2019
 days_between_forecasts <- 1
 forecast_horizon <- 35
 starting_date <- as.Date(days_22[1]) # addin 2021, 2020, 2019
-second_date <- starting_date + lubridate::days(1)  #
-spin_up <- seq.Date(starting_date, starting_date + months(1) + lubridate::days(5), by = "day")
+second_date <- starting_date + months(1) + lubridate::days(5) # lubridate::days(1) 
+#spin_up <- seq.Date(starting_date, starting_date + months(1) + lubridate::days(5), by = "day")
 
 start_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
 end_dates <- lubridate::as_date(rep(NA, num_forecasts + 1))
@@ -46,7 +46,8 @@ for(i in 2:(num_forecasts+1)){
 
 
 # UC analysis vectors
-UC_names <- c('parameter', 'initial_condition', 'process', 'weather', 'observation', "all_UC")
+UC_names <- c('parameter', 'initial_condition', 'process', 'weather', 'observation')
+#UC_names <- c("all_UC")
 
 # create dataframe with both
 sims <- expand.grid(paste0(start_dates,"_",end_dates,"_", forecast_horizon), UC_names)
@@ -64,17 +65,12 @@ sims <- sims |>
   dplyr::arrange(start_dates)
 
 
-spin_length <- length(UC_names)*length(spin_up)
-sims$horizon[1:spin_length] <- 1
+#spin_length <- length(UC_names)*length(spin_up)
+#sims$horizon[1:spin_length] <- 1
+sims$horizon[1:length(UC_names)] <- 0
 sims
 
-# remove other UC modes during spinup period
-#first <- sims[1:spin_length,]
-#second <- sims[(spin_length+1):nrow(sims),]
-
-#first <- first[first$UC_type=='all_UC',]
-#sims <- rbind(first, second)
-
+###########################################################
 message("Generating targets")
 
 source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
@@ -116,13 +112,16 @@ if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.
 
 # QAQC insitu buoy data
 message('run insitu qaqc')
+if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
+  dir.create(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))
+}
 cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
                                    hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
                                    hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
                                    hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
                                    maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
                                    variables = c("temperature", "oxygen"),
-                                   cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, paste0(config_obs$site_id,"-targets-insitu.csv")),
+                                   cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, paste0(config_obs$site_id,"-targets-insitu.csv")),
                                    config = config_obs,
                                    lake_directory = lake_directory)
 message('skip qaqc test')
@@ -146,8 +145,8 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 1
-
+starting_index <- 540
+set.seed(24)
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
 # need to fix restart file issue for these days
@@ -246,8 +245,9 @@ for(i in starting_index:nrow(sims)){
   
   source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
   met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
+                output_dir = file.path(config$file_path$qaqc_data_directory, config_set_name),
                 config = config)
-  met_out <- FLAREr::generate_met_files_arrow(obs_met_file = file.path(config$file_path$qaqc_data_directory, paste0("observed-met_",config$location$site_id,".csv")),
+  met_out <- FLAREr::generate_met_files_arrow(obs_met_file = file.path(config$file_path$qaqc_data_directory, config_set_name, paste0("observed-met_",config$location$site_id,".csv")),
                                               out_dir = config$file_path$execute_directory,
                                               start_datetime = config$run_config$start_datetime,
                                               end_datetime = config$run_config$end_datetime,
@@ -295,7 +295,7 @@ for(i in starting_index:nrow(sims)){
   states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$states_config_file), col_types = readr::cols())
   
   #Create observation matrix
-  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")),
+  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = cleaned_insitu_file, #file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")),
                                    obs_config = obs_config,
                                    config)
   
@@ -353,10 +353,10 @@ for(i in starting_index:nrow(sims)){
   
   message("Generating plot")
   pdf_file <- FLAREr::plotting_general_2(file_name = saved_file,  #config$run_config$restart_file,
-                                         target_file = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")))
+                                         target_file = file.path(config$file_path$qaqc_data_directory, config_set_name, paste0(config$location$site_id, "-targets-insitu.csv")))
 
   message("Generating scores")
-  score_file <- FLAREr::generate_forecast_score(targets_file = file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),
+  score_file <- FLAREr::generate_forecast_score(targets_file = file.path(config$file_path$qaqc_data_directory, config_set_name, paste0(config$location$site_id, "-targets-insitu.csv")),
                                                 forecast_file =  forecast_file,
                                                 output_directory = file.path(lake_directory, "scores", config$location$site_id, config$run_config$sim_name))
   
@@ -369,20 +369,21 @@ for(i in starting_index:nrow(sims)){
   print(i)
   sink()
   
-  # calculate and update process uncertainty
-  num_files <- list.files(file.path(lake_directory, 'scores/sunp/all_UC'), pattern = "*.parquet")
-  print(paste0("number of all_UC score files: ",  length(num_files)))
-  source(file.path(lake_directory, "R", "calculate_process_sd.R"))
-  
-  if(sims$UC_type[i]=='all_UC' & sims$horizon[i] > 1){
-    calculate_process_sd(lake_directory = lake_directory,
-                         folders = c('all_UC'),
-                         horizons = seq(1, 35, by = 1),
-                         vars = c('temperature', 'oxygen'),
-                         depths = c(1.0, 10.0),
-                         config = config)
-    
-    
-  }
+#  # calculate and update process uncertainty
+#  num_files <- list.files(file.path(lake_directory, 'scores/sunp/all_UC'), pattern = "*.parquet")
+#  print(paste0("number of all_UC score files: ",  length(num_files)))
+#  source(file.path(lake_directory, "R", "calculate_process_sd.R"))
+#  
+#  if(sims$UC_type[i]=='all_UC' & length(num_files) > 10){
+#  #if(sims$UC_type[i]=='all_UC' & sims$horizon[i] > 1){
+#    calculate_process_sd(lake_directory = lake_directory,
+#                         folders = c('all_UC'),
+#                         horizons = seq(1, 35, by = 1),
+#                         vars = c('temperature', 'oxygen'),
+#                         depths = c(1.0, 10.0),
+#                         config = config)
+#    
+#    
+#  }
   
 }
