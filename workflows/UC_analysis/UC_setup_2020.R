@@ -13,7 +13,7 @@ lake_directory <- here::here()
 forecast_site <- "sunp"
 configure_run_file <- "configure_run.yml"
 config_files <- "configure_flare.yml"
-config_set_name <- "UC_analysis_2019"
+config_set_name <- "UC_analysis_2020"
 use_archive <- FALSE
 
 if(use_archive){
@@ -25,12 +25,12 @@ if(use_archive){
   use_s3 <- FALSE
 }
 
-# set up date vectors for each year
-days_19 <- seq.Date(as.Date('2019-05-24'), as.Date('2019-10-26'), by = 1) 
-num_forecasts <- c(length(days_19)) # addin 2021, 2020, 2019
+# set up date vectors for each year # 2021-06-30 is first day EXO had DO sensor
+days_20 <- seq.Date(as.Date('2020-05-04'), as.Date('2020-10-05'), by = 1) 
+num_forecasts <- c(length(days_20)) # addin 2021, 2020, 2020
 days_between_forecasts <- 1
 forecast_horizon <- 35
-starting_date <- as.Date(days_19[1]) # addin 2021, 2020, 2019
+starting_date <- as.Date(days_20[1]) # addin 2021, 2020, 2020
 second_date <- starting_date + months(1) + lubridate::days(5) # lubridate::days(1) 
 #spin_up <- seq.Date(starting_date, starting_date + months(1) + lubridate::days(5), by = "day")
 
@@ -46,7 +46,7 @@ for(i in 2:(num_forecasts+1)){
 
 
 # UC analysis vectors
-#UC_names <- c('parameter', 'initial_condition', 'process', 'weather', 'observation')
+#UC_names <- c('all_UC', 'parameter', 'initial_condition', 'process', 'weather', 'observation')
 UC_names <- c("all_UC")
 
 # create dataframe with both
@@ -68,13 +68,10 @@ sims <- sims |>
 #spin_length <- length(UC_names)*length(spin_up)
 #sims$horizon[1:spin_length] <- 1
 sims$horizon[1:length(UC_names)] <- 0
-sims
+head(sims)
 
 ###########################################################
 message("Generating targets")
-if(file.exists(file.path(lake_directory, 'targets/sunp/sunp-targets-insitu.csv'))){
-  message("targets already generated")
-}else{
   source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
   
   #' Generate the `config_obs` object and create directories if necessary
@@ -114,18 +111,21 @@ if(file.exists(file.path(lake_directory, 'targets/sunp/sunp-targets-insitu.csv')
   
   # QAQC insitu buoy data
   message('run insitu qaqc')
+  if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
+    dir.create(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))
+  }
   cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
                                      hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
                                      hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
                                      hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
                                      maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
                                      variables = c("temperature", "oxygen"),
-                                     cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, paste0(config_obs$site_id,"-targets-insitu.csv")),
+                                     cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, paste0(config_obs$site_id,"-targets-insitu.csv")),
                                      config = config_obs,
                                      lake_directory = lake_directory)
   message("Successfully generated targets")
   
-}
+
 
 
 # create directories with the UC sim name
@@ -147,9 +147,6 @@ for(i in 1:length(UC_names)){
 
 starting_index <- 1
 set.seed(24)
-# index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
-# no NOAA forecasts on 2022-08-10
-# need to fix restart file issue for these days
 
 for(i in starting_index:nrow(sims)){
   
@@ -243,23 +240,11 @@ for(i in starting_index:nrow(sims)){
   
   FLAREr::get_stacked_noaa(lake_directory, config, averaged = TRUE)
   
-  source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
-  met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
-                config = config)
-  met_out <- FLAREr::generate_met_files_arrow(obs_met_file = file.path(config$file_path$qaqc_data_directory, paste0("observed-met_",config$location$site_id,".csv")),
-                                              out_dir = config$file_path$execute_directory,
-                                              start_datetime = config$run_config$start_datetime,
-                                              end_datetime = config$run_config$end_datetime,
-                                              forecast_start_datetime = config$run_config$forecast_start_datetime,
-                                              forecast_horizon =  config$run_config$forecast_horizon,
-                                              site_id = config$location$site_id,
-                                              use_s3 = TRUE,
-                                              bucket = config$s3$drivers$bucket,
-                                              endpoint = config$s3$drivers$endpoint,
-                                              local_directory = NULL,
-                                              use_forecast = TRUE,
-                                              use_ler_vars = FALSE)
   
+  met_out <- FLAREr::generate_glm_met_files(obs_met_file = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
+                                            out_dir = config$file_path$execute_directory,
+                                            forecast_dir = forecast_dir,
+                                            config = config)
   met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "31")]
   
   
@@ -294,7 +279,7 @@ for(i in starting_index:nrow(sims)){
   states_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$states_config_file), col_types = readr::cols())
   
   #Create observation matrix
-  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")),
+  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long = cleaned_insitu_file, #file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")),
                                    obs_config = obs_config,
                                    config)
   
@@ -352,19 +337,19 @@ for(i in starting_index:nrow(sims)){
   
   message("Generating plot")
   pdf_file <- FLAREr::plotting_general_2(file_name = saved_file,  #config$run_config$restart_file,
-                                         target_file = file.path(config$file_path$qaqc_data_directory, paste0(config$location$site_id, "-targets-insitu.csv")))
+                                         target_file = file.path(config$file_path$qaqc_data_directory, config_set_name, paste0(config$location$site_id, "-targets-insitu.csv")))
   
   message("Generating scores")
-  score_file <- FLAREr::generate_forecast_score(targets_file = file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),
+  score_file <- FLAREr::generate_forecast_score(targets_file = file.path(config$file_path$qaqc_data_directory, config_set_name, paste0(config$location$site_id, "-targets-insitu.csv")),
                                                 forecast_file =  forecast_file,
-                                                output_directory = file.path(lake_directory, "scores", config$location$site_id, config$run_config$sim_name))
+                                                output_directory = file.path(lake_directory, "scores", config$location$site_id, config_set_name, config$run_config$sim_name))
   
   
   
   rm(da_forecast_output)
   gc()
   
-  sink(paste0(lake_directory, '/last_completed_index.txt'))
+  sink(paste0(lake_directory, '/last_completed_index_2021.txt'))
   print(i)
   sink()
   
