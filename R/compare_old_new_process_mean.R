@@ -6,9 +6,9 @@ library(arrow)
 library(tidyverse)
 lake_directory <- here::here()
 
-folder_old <- file.path(lake_directory, 'scores/sunp_old_scores/all_UC')
+folder_old <- file.path(lake_directory, 'scores/sunp_process_sd_old/all_UC')
 files_old <- list.files(path = folder_old, pattern = "*.parquet")
-f_old <- read_parquet(file.path(score_folder, files_old[1])) # start with second file because first is the spinup period
+f_old <- read_parquet(file.path(folder_old, files_old[1])) # start with second file because first is the spinup period
 
 # some subsetting
 vars <- c('temperature', 'oxygen')
@@ -59,9 +59,9 @@ f_old <- f_old %>%
   rename(mean_old = mean)
 
 
-f_all <- full_join(f_new, f_old) %>% 
-  mutate(diff = mean_old - mean_new) %>% 
-  mutate(resid = )
+f_all <- full_join(f_new, f_old) %>%
+  filter(horizon > 0) %>% 
+  mutate(diff = mean_old - mean_new) 
 
 ggplot(f_all[f_all$horizon==7,], aes(x = datetime, y = mean_old, color = 'old')) +
   geom_line() +
@@ -70,8 +70,16 @@ ggplot(f_all[f_all$horizon==7,], aes(x = datetime, y = mean_old, color = 'old'))
   facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free') +
   ggtitle('horizon = 7')
 
-ggplot(f_all, aes(x = datetime, y = diff, color = horizon)) +
+ggplot(f_all[f_all$horizon==3,], aes(x = datetime, y = mean_old, color = 'old')) +
   geom_line() +
-  geom_point(aes(x = datetime, y= observation)) +
-  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free')
+  geom_line(aes(x = datetime, y = mean_new, color = 'new')) +
+  geom_point(aes(x = datetime, y= observation, color = 'obs')) +
+  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free') +
+  ggtitle('horizon = 3')
 
+ggplot(f_all[f_all$horizon==14,], aes(x = datetime, y = mean_old, color = 'old')) +
+  geom_line() +
+  geom_line(aes(x = datetime, y = mean_new, color = 'new')) +
+  geom_point(aes(x = datetime, y= observation, color = 'obs')) +
+  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free') +
+  ggtitle('horizon = 14')

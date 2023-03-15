@@ -96,7 +96,7 @@ output_settings:
 s3:
   drivers:
     endpoint: s3.flare-forecast.org
-    bucket: drivers/noaa/gefs-v12
+    bucket: drivers/noaa
   analysis:
     endpoint: s3.flare-forecast.org
     bucket: analysis
