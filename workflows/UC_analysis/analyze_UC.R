@@ -17,7 +17,7 @@ uncert <- uncert %>%
   filter(variable %in% vars,
          forecast > 0,
          depth %in% depths) %>% 
-  mutate(horizon = as.POSIXct(datetime) - as.POSIXct(reference_datetime)) %>% 
+  mutate(horizon = difftime(as.POSIXct(datetime), as.POSIXct(reference_datetime), units = 'days')) %>% 
   filter(horizon %in% horizons) 
   
 starting_index <- 1
