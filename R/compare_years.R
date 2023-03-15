@@ -57,7 +57,8 @@ for(j in 1:length(folders)){
 fcast <- fcast %>% 
   mutate(doy = yday(datetime),
          year = year(datetime)) %>% 
-  select(-c(family, site_id, model_id, pub_time, forecast))
+  select(-c(family, site_id, model_id, pub_time)) %>% 
+  select()
 
 ggplot(fcast, aes(x = as.factor(year), y = prediction, fill = as.factor(year))) +
   geom_boxplot() +
@@ -131,6 +132,7 @@ scores <- full_join(score21, score22) %>%
 
 ggplot(scores[scores$horizon==7,], aes(x = doy, y = crps, color = as.factor(year))) +
   geom_line() +
+  xlim(220, 300) +
   facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free') 
   
 ggplot(scores[scores$horizon==7,], aes(x = doy, y = mean, color = as.factor(year))) +
