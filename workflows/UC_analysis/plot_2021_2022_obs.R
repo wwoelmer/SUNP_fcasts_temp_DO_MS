@@ -22,9 +22,11 @@ buoy_dates <- c(seq.Date(as.Date('2021-06-29'), as.Date('2021-10-19'), by = 'day
 obs <- obs %>% 
   filter(as.Date(time) %in% buoy_dates) %>% 
   mutate(year = year(time),
-         mo_day = format(as.Date(time), "%m-%d"))
+         mo_day = format(as.Date(time), "%m-%d")) %>% 
+  filter(mo_day > "06-29" & mo_day < '10-18')
 
 obs_mgL <- obs[obs$variable=='oxygen',]
+
 a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*32/1000, color = as.factor(year))) +
   geom_line() +
   facet_wrap(~depth, scales = 'free') +
@@ -49,9 +51,11 @@ temp <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
 temp <- temp %>% 
   select(time, depth, observed, variable) %>% 
   filter(variable=='temperature') %>% 
-  filter(as.Date(time) %in% buoy_dates) %>% 
+#  filter(as.Date(time) %in% buoy_dates) %>% 
   mutate(year = year(time),
-         mo_day = format(as.Date(time), "%m-%d"))
+         mo_day = format(as.Date(time), "%m-%d")) %>% 
+  filter(year %in% years,
+         as.Date(time) > as.Date('2021-06-08'))
 
 # round 1.5 data to 1.0m
 temp <- temp %>% 
@@ -59,9 +63,17 @@ temp <- temp %>%
   mutate(depth = depth_cor) %>% 
   select(-depth_cor)
 
+ggplot(data = temp[temp$year==2021,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
+  geom_line() +
+  facet_wrap(~depth)
+
 ggplot(data = temp, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
   geom_line() +
   facet_wrap(~depth)
+
+## limit to the same time duration between years
+temp <- temp %>% 
+  filter(mo_day > "06-08" & mo_day < '10-18')
 
 t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
   geom_line() +
@@ -131,3 +143,4 @@ c <- ggplot(data = mix_oxy, aes(x = as.Date(mo_day, format = "%m-%d"), y = obser
   geom_vline(aes(xintercept = as.Date(mix_day, format = "%m-%d"), color = as.factor(year))) +
   facet_wrap(~depth)
 c
+
