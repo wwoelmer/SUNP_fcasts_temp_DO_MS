@@ -46,7 +46,7 @@ for(i in 2:(num_forecasts+1)){
 
 
 # UC analysis vectors
-UC_names <- c('parameter', 'initial_condition', 'process', 'weather', 'observation')
+UC_names <- c('parameter', 'initial_condition', 'process', 'weather', 'observation', 'all_UC')
 #UC_names <- c("all_UC")
 
 # create dataframe with both
@@ -145,7 +145,7 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 533
+starting_index <- 500
 set.seed(24)
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
@@ -247,7 +247,7 @@ for(i in starting_index:nrow(sims)){
   met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
                 output_dir = file.path(config$file_path$qaqc_data_directory, config_set_name),
                 config = config)
-  met_out <- FLAREr::generate_met_files_arrow(obs_met_file = file.path(config$file_path$qaqc_data_directory, config_set_name, paste0("observed-met_",config$location$site_id,".csv")),
+  met_out <- FLAREr::generate_met_files_arrow(obs_met_file = NULL,
                                               out_dir = config$file_path$execute_directory,
                                               start_datetime = config$run_config$start_datetime,
                                               end_datetime = config$run_config$end_datetime,
@@ -259,8 +259,8 @@ for(i in starting_index:nrow(sims)){
                                               endpoint = config$s3$drivers$endpoint,
                                               local_directory = NULL,
                                               use_forecast = TRUE,
-                                              use_ler_vars = FALSE)
-  
+                                              use_ler_vars = FALSE,
+                                              use_siteid_s3 = TRUE)
   met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "31")]
   
   
