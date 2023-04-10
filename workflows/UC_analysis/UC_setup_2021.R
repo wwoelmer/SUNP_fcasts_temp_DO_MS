@@ -26,7 +26,7 @@ if(use_archive){
 }
 
 # set up date vectors for each year # 2021-06-30 is first day EXO had DO sensor
-days_21 <- seq.Date(as.Date('2021-06-30'), as.Date('2021-11-20'), by = 1) 
+days_21 <- seq.Date(as.Date('2021-06-08'), as.Date('2021-11-20'), by = 1) 
 num_forecasts <- c(length(days_21)) # addin 2021, 2020, 2020
 days_between_forecasts <- 1
 forecast_horizon <- 35
@@ -145,7 +145,7 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 500
+starting_index <- 1
 set.seed(24)
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
