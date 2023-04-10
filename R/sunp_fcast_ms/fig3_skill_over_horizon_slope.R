@@ -1,8 +1,11 @@
+#install.packages('Metrics')
+
 library(lubridate)
 library(tidyverse)
 library(ggpubr)
 library(arrow)
 library(scales)
+library(Metrics)
 
 lake_directory <- here::here()
 
@@ -62,7 +65,16 @@ sc <- sc %>%
 # convert oxy crps and obs to mg/L
 sc <- sc %>% 
   mutate(crps = ifelse(variable=='temperature', crps, (crps*32/1000)),
+         mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
          observation = ifelse(variable=='temperature', observation, (observation*32/1000)))
+
+sc <- sc %>% 
+  group_by(depth, variable, horizon, datetime) %>% 
+  mutate(rmse = rmse(observation, mean))
+
+#ggplot(sc, aes(x = rmse, y = crps)) +
+#  geom_point() +
+#  facet_grid(variable~depth)
 
 sc$variable <- factor(sc$variable, levels = c('temperature', 'oxygen'), 
                       ordered = TRUE, labels = c('temperature (C)', 'oxygen (mg/L)'))
@@ -72,9 +84,10 @@ mean_skill <- sc %>%
   filter(depth %in% c(1.0, 10.0)) %>% 
   group_by(variable, horizon, depth, year) %>% 
   mutate(mean_crps = mean(crps, na.rm = TRUE),
-         mean_log = mean(logs, na.rm = TRUE)) %>% 
+         mean_log = mean(logs, na.rm = TRUE),
+         mean_rmse = mean(rmse, na.rm = TRUE)) %>% 
   distinct(variable, horizon, depth, .keep_all = TRUE) %>% 
-  select(variable, horizon, depth, mean_crps, mean_log)
+  select(variable, horizon, depth, mean_crps, mean_log, mean_rmse)
 
 out <- plyr::ddply(mean_skill, c("variable", "depth", "year"), function(x){
   
@@ -84,6 +97,37 @@ out <- plyr::ddply(mean_skill, c("variable", "depth", "year"), function(x){
 colnames(out) <- c('variable', 'depth', 'year', 'slope')
 out$y <- c(1.4, 1.2, 1.7, 1.5, 1.4, 1.2, 1.8, 1.6)
 out$x <- rep(9, 8)  
+
+#################################################################################
+# plot rmse over horizon
+o <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~depth) +
+  xlab('horizon (days into future)') +
+  ylab('RMSE') +
+  ggtitle('Oxygen') +
+  labs(color = 'Year') +
+  #geom_hline(data = means[means$variable=='oxygen (mg/L)',], 
+  #           aes(yintercept = mean_log, color = as.factor(year)),
+  #           linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA, color = "black"))
+o
+
+t <- ggplot(mean_skill[mean_skill$variable=='temperature (C)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~depth) +
+  xlab('horizon (days into future)') +
+  ylab('RMSE') +
+  ggtitle('Temperature') +
+  labs(color = 'Year') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA, color = "black"))
+t
+
+ggarrange(t, o, common.legend = TRUE)
 
 ##################################################################################
 # read in climatology and calculate mean scores
@@ -112,9 +156,9 @@ o <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = horizon, 
   ylab('log score') +
   ggtitle('Oxygen') +
   labs(color = 'Year') +
-  geom_hline(data = means[means$variable=='oxygen (mg/L)',], 
-             aes(yintercept = mean_log, color = as.factor(year)),
-             linetype = 'dashed') +
+  #geom_hline(data = means[means$variable=='oxygen (mg/L)',], 
+  #           aes(yintercept = mean_log, color = as.factor(year)),
+  #           linetype = 'dashed') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 o
