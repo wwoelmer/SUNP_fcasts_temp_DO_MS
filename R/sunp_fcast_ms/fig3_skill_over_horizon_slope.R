@@ -68,14 +68,6 @@ sc <- sc %>%
          mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
          observation = ifelse(variable=='temperature', observation, (observation*32/1000)))
 
-sc <- sc %>% 
-  group_by(depth, variable, horizon, datetime) %>% 
-  mutate(rmse = rmse(observation, mean))
-
-#ggplot(sc, aes(x = rmse, y = crps)) +
-#  geom_point() +
-#  facet_grid(variable~depth)
-
 sc$variable <- factor(sc$variable, levels = c('temperature', 'oxygen'), 
                       ordered = TRUE, labels = c('temperature (C)', 'oxygen (mg/L)'))
 
@@ -100,7 +92,13 @@ out$x <- rep(9, 8)
 
 #################################################################################
 # plot rmse over horizon
-o <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
+rmse <- sc %>% 
+  group_by(depth, variable, horizon, year) %>% 
+  mutate(rmse = rmse(observation, mean)) %>% 
+  distinct(depth, variable, horizon, year, .keep_all = TRUE) %>% 
+  select(year, depth, variable, horizon, rmse)
+
+o <- ggplot(rmse[rmse$variable=='oxygen',], aes(x = horizon, y = rmse, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   facet_wrap(~depth) +
@@ -115,7 +113,7 @@ o <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = horizon, 
         panel.background = element_rect(fill = NA, color = "black"))
 o
 
-t <- ggplot(mean_skill[mean_skill$variable=='temperature (C)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
+t <- ggplot(rmse[rmse$variable=='temperature',], aes(x = horizon, y = rmse, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   facet_wrap(~depth) +
