@@ -5,7 +5,7 @@ setwd(lake_directory)
 forecast_site <- "sunp"
 configure_run_file <- "configure_run.yml"
 update_run_config <- TRUE
-config_set_name <- "default"
+config_set_name <- "default_temp_oxy"
 
 message("Checking for NOAA forecasts")
 noaa_ready <- FLAREr::check_noaa_present(lake_directory,
