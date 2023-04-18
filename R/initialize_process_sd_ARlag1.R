@@ -7,7 +7,7 @@ library(tidyverse)
 lake_directory <- here::here()
 
 # read in observations and run qaqc
-config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = "UC_analysis")
+config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = "UC_analysis_2021")
 source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
 
 cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
@@ -20,7 +20,7 @@ cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_pat
                                    config = config_obs,
                                    lake_directory = lake_directory)
 
-f <- read.csv(file.path(config_obs$file_path$targets_directory, config_obs$site_id, paste0(config_obs$site_id,"-targets-insitu.csv")))
+f <- read.csv(file.path(config_obs$file_path$targets_directory, config_obs$site_id, "UC_analysis_2021", paste0(config_obs$site_id,"-targets-insitu.csv")))
 # limit to first full month when sensors were out in the first year of this study (2019)
 f <- f %>% 
   filter(time > as.POSIXct('2018-05-01 00:00:00') & time < as.POSIXct('2018-06-01 00:00:00'))
