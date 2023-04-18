@@ -18,7 +18,7 @@ ggplot(tgts, aes(x = as.Date(time), y = observed)) +
 # set 1.5m obs of oxygen to 1.0m, convert oxy to mg/L
 tgts <- tgts %>% 
   mutate(depth = ifelse(variable=='oxygen' & depth==1.5, 1.0, depth),
-         observed = ifelse(variable=='oxygen', observed*32/1000, observed),
+         #observed = ifelse(variable=='oxygen', observed*32/1000, observed),
          depth = ifelse(variable=='temperature' & depth==1.5, 1.0, depth))
 
 
@@ -34,7 +34,7 @@ null <- tgts %>%
   mutate(mean = mean(observed, na.rm = TRUE),
          sd = sd(observed, na.rm = TRUE),
          n = n()) %>% 
-  filter(n > 3) %>% 
+  filter(n > 2) %>% 
   distinct(depth, variable, doy, .keep_all = TRUE) %>% 
   dplyr::select(doy, variable, depth, mean, sd, n)
 
@@ -54,7 +54,8 @@ ggplot(null, aes(x = doy, y = mean, color = as.factor(depth))) +
   facet_grid(depth~variable, scales = 'free')
 
 t_2021 <- tgts %>% 
-  filter(year==2021) #doy > 218 & doy < 292
+  filter(year==2021,
+         time > as.Date('2021-06-07')) #doy > 218 & doy < 292
 t_2021 <- full_join(t_2021, null)
 t_2021 <- t_2021 %>% 
   filter(observed > 0,
@@ -93,12 +94,12 @@ t_2022 <- t_2022 %>%
          logs = logs.numeric(y = observed, family = "normal", 
                              mean = mean, sd = sd))
 
-ggplot(t_2022[t_2022$variable=='oxygen',], aes(x = doy, y = crps)) +
+ggplot(t_2022[t_2022$variable=='oxygen',], aes(x = doy, y = logs)) +
   geom_line() +
   facet_wrap(~depth, scales = 'free') +
   ggtitle('oxygen')
 
-ggplot(t_2022[t_2022$variable=='temperature',], aes(x = doy, y = crps)) +
+ggplot(t_2022[t_2022$variable=='temperature',], aes(x = doy, y = logs)) +
   geom_line() +
   facet_wrap(~depth, scales = 'free') +
   ggtitle('temperature')
