@@ -1,11 +1,15 @@
 #install.packages('ggpubr')
 #install.packages('lubridate')
+install.packages('rMR')
 
 library(lubridate)
 library(tidyverse)
 library(ggpubr)
 library(arrow)
 library(scales)
+library(rMR)
+library(scoringRules)
+library(Metrics)
 
 lake_directory <- here::here()
 
@@ -38,7 +42,7 @@ for(i in 1:length(folders)){
 
 # now read in 2022 data
 for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", folders[i]))
+  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2022", folders[i]))
   
   temp <- arrow::open_dataset(score_dir) |> 
     filter(variable %in% vars,
@@ -65,7 +69,9 @@ sc <- sc %>%
 # convert oxy crps and obs to mg/L
 sc <- sc %>% 
   mutate(crps = ifelse(variable=='temperature', crps, (crps*32/1000)),
-         observation = ifelse(variable=='temperature', observation, (observation*32/1000)))
+         observation = ifelse(variable=='temperature', observation, (observation*32/1000)),
+         mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
+         sd = ifelse(variable=='temperature', sd, (sd*32/1000)))
 
 sc$variable <- factor(sc$variable, levels = c('temperature', 'oxygen'), 
                       ordered = TRUE, labels = c('temperature (C)', 'oxygen (mg/L)'))
@@ -121,3 +127,79 @@ ggplot(sc[sc$depth%in%c(1, 10),], aes(x = as.factor(year), y = logs, fill = as.f
   #stat_compare_means() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
+
+
+#######################################################################
+## calculate % saturation instead of mg/L
+ox <- sc %>% 
+  filter(variable=='oxygen (mg/L)') %>% 
+  select(model_id:observation, mean, sd) %>% 
+  mutate(row = row_number())%>%   
+  pivot_wider(names_from = variable, values_from = c(observation, mean, sd))
+
+temp <- sc %>% 
+  filter(variable=='temperature (C)') %>% 
+  select(model_id:observation) %>% 
+  mutate(row = row_number())%>%   
+  pivot_wider(names_from = variable, values_from = c(observation))
+
+sat <- left_join(ox, temp) 
+sat <- sat %>% 
+  dplyr::rename('obs_mgL' = "observation_oxygen (mg/L)",
+                'mean_mgL' = "mean_oxygen (mg/L)",
+                'sd_mgL' = "sd_oxygen (mg/L)",
+                'temp_C' = "temperature (C)") 
+sat <- sat %>% 
+  mutate(obs_sat = DO.saturation(obs_mgL, temp_C, elevation.m = 1093)*100,
+         mean_sat = DO.saturation(mean_mgL, temp_C, elevation.m = 1093)*100,
+         sd_sat = DO.saturation(sd_mgL, temp_C, elevation.m = 1093)*100,
+         crps_sat = crps.numeric(obs_sat, family = "normal", mean = mean_sat, sd = sd_sat),
+         log_sat = logs.numeric(obs_sat, family = "normal", mean = mean_sat, sd = sd_sat),
+         rmse = Metrics::rmse(obs_sat, mean_sat),
+         year = year(datetime),
+         doy = yday(datetime),
+         mo_day = format(as.Date(datetime), "%m-%d"))
+
+a <- ggplot(data = sat, aes(x = as.Date(mo_day, format = "%m-%d"), y = obs_sat, color = as.factor(year))) +
+  geom_line() +
+  facet_wrap(~depth, scales = 'free') +
+  scale_x_date(date_labels = "%b") +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  ylab('DO (% Sat)') +
+  xlab('Date') +
+  labs(color = 'Year')
+a
+b <- ggplot(data = sat, aes(x = as.factor(year), y = obs_sat)) +
+  facet_wrap(~depth) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  geom_boxplot(aes(group = year, fill = as.factor(year))) +
+  ylab('DO (% Sat)') +
+  xlab('Year') +
+  labs(fill = 'Year')
+
+ggarrange(a, b, common.legend = TRUE)
+
+
+ggplot(sat, aes(x = as.factor(year), y = log_sat, fill = as.factor(year))) +
+  geom_boxplot() +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  ggtitle('all horizons') + 
+  labs(fill = 'Year') +
+  xlab('Year') +
+  #stat_compare_means() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA, color = "black"))
+sat_p <- ggplot(sat, aes(x = as.factor(year), y = crps_sat, fill = as.factor(year))) +
+  geom_boxplot() +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~depth, ncol = 1, nrow = 2, scales = 'free') +
+  ggtitle('Oxygen (% Sat)') + 
+  labs(fill = 'Year') +
+  ylab('CRPS (%)') +
+  xlab('Year') +
+  #stat_compare_means() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA, color = "black"))
+sat_p
+
+ggarrange(o, sat_p)
