@@ -62,7 +62,7 @@ sc <- sc %>%
   mutate(doy = yday(datetime),
          year = year(datetime)) %>% 
   select(-c(family, site_id)) %>% 
-  filter(horizon > 0,
+  filter(horizon > 0,#) %>% 
          as.Date(datetime) %in% buoy_dates) %>% 
   select(model_id, reference_datetime, datetime, horizon, depth, variable, everything()) 
 
@@ -94,7 +94,7 @@ t <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='temperature (C)',], aes(x = 
   ggtitle('Temperature (°C)') + 
   labs(fill = 'Year') +
   xlab('Year') +
-  ylim(0, 3.6) +
+  #ylim(0, 3.6) +
   ylab ('CRPS (°C)') +
   #stat_compare_means() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -109,13 +109,31 @@ o <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='oxygen (mg/L)',], aes(x = as
   labs(fill = 'Year') +
   xlab('Year') +
   ylab ('CRPS (mg/L)') +
-  ylim(0, 2.3) +
+  #ylim(0, 2.3) +
   #stat_compare_means() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 o
 
 ggarrange(t, o, common.legend = TRUE)
+
+###############################
+# mean, min, max by year
+summ_crps <- sc %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(year, depth, variable) %>% 
+  dplyr::summarise(mean = mean(crps, na.rm = TRUE), 
+                   min = min(crps, na.rm = TRUE),
+                   max = max(crps, na.rm = TRUE),
+                   range = abs(min - max))
+
+summ_depth <- sc %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(depth, variable) %>% 
+  dplyr::summarise(mean = mean(crps, na.rm = TRUE), 
+                   min = min(crps, na.rm = TRUE),
+                   max = max(crps, na.rm = TRUE),
+                   range = abs(min - max))
 
 ####################################################################
 ## now a figure with log score instead of crps
