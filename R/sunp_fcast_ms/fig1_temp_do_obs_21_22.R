@@ -46,6 +46,17 @@ b <- ggplot(data = obs_mgL, aes(x = as.factor(year), y = observed*32/1000)) +
 
 ggarrange(a, b, common.legend = TRUE)
 
+# mean, min, max by year
+summ_o <- obs_mgL %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  mutate(obs_mgL = observed*32/1000) %>% 
+  group_by(year, depth) %>% 
+  dplyr::summarise(mean = mean(obs_mgL, na.rm = TRUE), 
+                   min = min(obs_mgL, na.rm = TRUE),
+                   max = max(obs_mgL, na.rm = TRUE),
+                   range = abs(min - max))
+
+
 #################################################################################################################
 temp <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
 temp <- temp %>% 
@@ -95,6 +106,15 @@ ggarrange(t_a, t_b,
           a, b,
           common.legend = TRUE)
 
+
+# mean, min, max by year
+summ_t <- temp %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(year, depth) %>% 
+  dplyr::summarise(mean = mean(observed, na.rm = TRUE), 
+                   min = min(observed, na.rm = TRUE),
+                   max = max(observed, na.rm = TRUE),
+                   range = abs(min - max))
 
 temp <- temp %>% 
   distinct()
