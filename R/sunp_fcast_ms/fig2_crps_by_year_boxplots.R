@@ -94,7 +94,7 @@ t <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='temperature (C)',], aes(x = 
   ggtitle('Temperature (°C)') + 
   labs(fill = 'Year') +
   xlab('Year') +
-  #ylim(0, 3.6) +
+  ylim(0, 3.6) +
   ylab ('CRPS (°C)') +
   #stat_compare_means() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -109,7 +109,7 @@ o <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='oxygen (mg/L)',], aes(x = as
   labs(fill = 'Year') +
   xlab('Year') +
   ylab ('CRPS (mg/L)') +
-  #ylim(0, 2.3) +
+  ylim(0, 2.3) +
   #stat_compare_means() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
