@@ -274,3 +274,62 @@ ggarrange(t, o,
 
 ####################################
 # diff between flare forecast and climatology
+diff_null <- mean_skill
+diff_null$diff_crps <- NA
+diff_null$diff_log <- NA
+
+for(i in 1:nrow(diff_null)){
+  idx <- which(means$variable==diff_null$variable[i] 
+               & means$depth==diff_null$depth[i]
+               & means$year==diff_null$year[i])
+  diff_null$diff_crps[i] <- means$mean_crps[idx] - diff_null$mean_crps[i]
+  diff_null$diff_log[i] <- means$mean_log[idx] - diff_null$mean_log[i]
+}
+
+t_c <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon, y = diff_crps, color = as.factor(year))) +
+  geom_line() +
+  facet_wrap(~depth) +
+  geom_hline(yintercept = 0, linetype = 'dashed') +
+  ylab('Difference from Null') +
+  ylim(-1.5, 1.5) +
+  ggtitle('Temperature, CRPS') +
+  labs(color = 'Year') +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  theme_bw()
+  
+o_c <- ggplot(diff_null[diff_null$variable=='oxygen (mg/L)',], aes(x = horizon, y = diff_crps, color = as.factor(year))) +
+  geom_line() +
+  facet_wrap(~depth) +
+  geom_hline(yintercept = 0, linetype = 'dashed') +
+  ylab('Difference from Null (mg/L)') +
+  ylim(-1.5, 1.5) +
+  ggtitle('Oxygen, CRPS') +
+  labs(color = 'Year') +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  theme_bw()
+
+t_l <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon, y = diff_log, color = as.factor(year))) +
+  geom_line() +
+  facet_grid(~depth) +
+  geom_hline(yintercept = 0, linetype = 'dashed') +
+  ylab('Difference from Null') +
+  ggtitle('Temperature, Log Score') +
+ # ylim(-1.5, 1.5) +
+  labs(color = 'Year') +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  theme_bw()
+
+o_l <- ggplot(diff_null[diff_null$variable=='oxygen (mg/L)',], aes(x = horizon, y = diff_log, color = as.factor(year))) +
+  geom_line() +
+  facet_grid(~depth) +
+  geom_hline(yintercept = 0, linetype = 'dashed') +
+  ylab('Difference (mg/L)') +
+  ggtitle('Oxygen, Log Score') +
+  labs(color = 'Year') +
+  # ylim(-1.5, 1.5) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  theme_bw()
+
+ggarrange(t_l, o_l, 
+          t_c, o_c,
+          common.legend = TRUE)
