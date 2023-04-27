@@ -159,7 +159,7 @@ o <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = horizon, 
   geom_ribbon(aes(ymax = mean_log + sd_log, ymin = mean_log - sd_log, 
                   col = as.factor(year),
                   fill = as.factor(year)),
-              alpha = 0.7) +
+              alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   facet_wrap(~depth) +
@@ -180,7 +180,7 @@ t <- ggplot(mean_skill[mean_skill$variable=='temperature (C)',], aes(x = horizon
   geom_ribbon(aes(ymax = mean_log + sd_log, ymin = mean_log - sd_log, 
                   col = as.factor(year),
                   fill = as.factor(year)),
-              alpha = 0.7) +
+              alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +  facet_wrap(~depth) +
   xlab('horizon (days into future)') +
@@ -204,7 +204,7 @@ ggplot(mean_skill, aes(x = horizon, y = mean_crps, color = as.factor(year))) +
   geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, 
                   col = as.factor(year),
                   fill = as.factor(year)),
-              alpha = 0.7) +
+              alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +  
   facet_grid(cols = vars(variable), rows = vars(depth), scale = 'free') +
@@ -225,7 +225,7 @@ o_crps <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = hori
   geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, 
                   col = as.factor(year),
                   fill = as.factor(year)),
-              alpha = 0.7) +
+              alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +   facet_wrap(~depth) +
   xlab('horizon (days into future)') +
@@ -249,7 +249,7 @@ t_crps <- ggplot(mean_skill[mean_skill$variable=='temperature (C)',], aes(x = ho
   geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, 
                   col = as.factor(year),
                   fill = as.factor(year)),
-              alpha = 0.7) +
+              alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) + 
   facet_wrap(~depth) +
@@ -270,7 +270,8 @@ t_crps
 ggarrange(t_crps, o_crps, common.legend = TRUE)
 ggarrange(t, o, 
           t_crps, o_crps,
-          common.legend = TRUE)
+          common.legend = TRUE,
+          align = 'v')
 
 ####################################
 # diff between flare forecast and climatology
