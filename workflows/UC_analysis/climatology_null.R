@@ -18,7 +18,7 @@ ggplot(tgts, aes(x = as.Date(time), y = observed)) +
 # set 1.5m obs of oxygen to 1.0m, convert oxy to mg/L
 tgts <- tgts %>% 
   mutate(depth = ifelse(variable=='oxygen' & depth==1.5, 1.0, depth),
-         #observed = ifelse(variable=='oxygen', observed*32/1000, observed),
+         observed = ifelse(variable=='oxygen', observed*32/1000, observed),
          depth = ifelse(variable=='temperature' & depth==1.5, 1.0, depth))
 
 
@@ -37,6 +37,12 @@ null <- tgts %>%
   filter(n > 2) %>% 
   distinct(depth, variable, doy, .keep_all = TRUE) %>% 
   dplyr::select(doy, variable, depth, mean, sd, n)
+
+# convert oxy into mg/L
+#null <- null %>% 
+#  mutate(mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
+#         sd = ifelse(variable=='temperature', sd, (sd*32/1000)))
+
 
 #null$variable <- factor(null$variable, levels = c('temperature', 'oxygen'), 
 #                      ordered = TRUE, labels = c('temperature (C)', 'oxygen (mg/L)'))
@@ -60,11 +66,12 @@ t_2021 <- full_join(t_2021, null)
 t_2021 <- t_2021 %>% 
   filter(observed > 0,
          sd > 0) %>% 
-  group_by(depth, variable) %>% 
+  group_by(depth, variable, doy) %>% 
   mutate(crps = crps.numeric(y = observed, family = "normal", 
                               mean = mean, sd = sd),
          logs = logs.numeric(y = observed, family = "normal", 
-                             mean = mean, sd = sd))
+                             mean = mean, sd = sd),
+         rmse = Metrics::rmse(observed, mean))
 
 ggplot(t_2021[t_2021$variable=='oxygen',], aes(x = doy, y = crps)) +
   geom_line() +
@@ -78,7 +85,7 @@ ggplot(t_2021[t_2021$variable=='temperature',], aes(x = doy, y = crps)) +
 
 ggplot(t_2021, aes(x = doy, y = logs)) +
   geom_line() +
-  facet_grid(variable~depth, scales = 'free') 
+  facet_grid(depth~variable, scales = 'free') 
 
 #######################
 # 2022 only
@@ -88,11 +95,12 @@ t_2022 <- full_join(t_2022, null)
 t_2022 <- t_2022 %>% 
   filter(observed > 0,
          sd > 0) %>% 
-  group_by(depth, variable) %>% 
+  group_by(depth, variable, doy) %>% 
   mutate(crps = crps.numeric(y = observed, family = "normal", 
                              mean = mean, sd = sd),
          logs = logs.numeric(y = observed, family = "normal", 
-                             mean = mean, sd = sd))
+                             mean = mean, sd = sd),
+         rmse = Metrics::rmse(observed, mean))
 
 ggplot(t_2022[t_2022$variable=='oxygen',], aes(x = doy, y = logs)) +
   geom_line() +
