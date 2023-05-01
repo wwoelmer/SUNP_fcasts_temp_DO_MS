@@ -75,7 +75,8 @@ uncert_sum <- sc %>%
   filter(model_id!='all_UC',
          depth!=0.1) %>% 
   group_by(model_id, variable, depth, datetime, horizon) %>% 
-  mutate(variance = sd^2) %>% 
+  mutate(variance = sd^2,
+         mo_day = format(datetime, "%m-%d")) %>% 
   distinct(variable, depth, datetime, horizon, .keep_all = TRUE) 
 
 y21 <- ggplot(uncert_sum[uncert_sum$year==2021 & uncert_sum$model_id!='observation',], aes(x = horizon, y = variance, fill = model_id)) +
@@ -99,48 +100,38 @@ y22
 ggarrange(y21, y22, common.legend = TRUE)
 
 # plot variance over day of year
-o_21 <- uncert_sum %>% 
-  filter(year==2021,
-         horizon==1,
-         variable=='oxygen (mg/L)',
-         model_id!='observation') %>% 
-ggplot(aes(x = doy, y = variance, fill = model_id)) +
-  geom_bar(stat = "identity", position = "stack", width = 1) +
-  facet_grid(cols = vars(variable), rows = vars(depth), scale = 'free') +
-  scale_fill_manual(values = c('#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
-  ggtitle('2021')
+brks <- seq.Date(as.Date('08-04', "%m-%d"), as.Date('10-17', '%m-%d'), by = "1 month")
 
 o_var <- uncert_sum %>% 
   filter(horizon==1,
          variable=='oxygen (mg/L)',
          model_id!='observation') %>% 
-  ggplot(aes(x = doy, y = variance*32/1000, fill = model_id)) +
+  ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = variance*32/1000, fill = model_id)) +
   geom_bar(stat = "identity", position = "stack", width = 1) +
   facet_grid(cols = vars(year), rows = vars(depth), scale = 'free') +
   scale_fill_manual(values = c('#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
-  ggtitle('Oxygen (mg/L)')
+  scale_x_date(breaks = brks, date_labels = '%b %d') +
+  ggtitle('Oxygen (mg/L)') +
+  xlab('Day of Year')
 
 t_var <- uncert_sum %>% 
   filter(horizon==1,
          variable=='temperature (C)',
          model_id!='observation') %>% 
-  ggplot(aes(x = doy, y = variance, fill = model_id)) +
+  ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = variance, fill = model_id)) +
   geom_bar(stat = "identity", position = "stack", width = 1) +
   facet_grid(cols = vars(year), rows = vars(depth), scale = 'free') +
   scale_fill_manual(values = c('#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
-  ggtitle('Temperature (C)')
-# day 231 is the weird high day in 2022
+  scale_x_date(breaks = brks, date_labels = '%b %d') +
+  ggtitle('Temperature (C)') +
+  xlab('Day of Year')
 
 ggarrange(t_var, o_var,
           common.legend = TRUE)
 
-## also look at patterns separated by variable
-ggplot(sc[sc$model_id=='all_UC' & sc$horizon==7,], aes(x = doy, y = mean, color = as.factor(year))) +
-  geom_line() +
-  geom_point(aes(x = doy, y = observation)) +
-  facet_grid(cols = vars(depth), rows = vars(variable), scale = 'free') 
 
-
+##################################################################
+### calculate proportional variance
 uncert_prop <- uncert_sum %>% 
   filter(model_id!='observation') %>% 
   group_by(variable, depth, datetime, horizon) %>% 
@@ -166,18 +157,20 @@ uncert_mean_year <- uncert_prop_year %>%
   distinct(horizon, variable, depth, year, .keep_all = TRUE)
 
 
-both <- ggplot(uncert_mean, aes(x = horizon, y = mean_prop, fill = model_id)) +
+ggplot(uncert_mean, aes(x = horizon, y = mean_prop, fill = model_id)) +
   geom_bar(stat = 'identity', position= 'stack', width = 1) +
-  #geom_line(data = uncert_mean_year, aes(x = horizon, y = total_var, color = as.factor(year))) +
+  geom_line(data = uncert_mean_year, aes(x = horizon, y = total_var/100000, color = as.factor(year))) +
   facet_grid(cols = vars(variable), rows = vars(depth)) +
   ggtitle('Both years')+
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   ylab('Proportion of Variance') +
   labs(fill = 'UC Type') +
+  scale_y_continuous(name = 'Total Var', sec.axis = sec_axis(trans = ~.*1000, name = 'observations')) +
   scale_fill_manual(values = c('#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 both
+
 
 ggplot(uncert_mean_year[uncert_mean_year$variable=='temperature (C)',], aes(x = horizon, y = total_var, color = as.factor(year))) +
   geom_line() +
