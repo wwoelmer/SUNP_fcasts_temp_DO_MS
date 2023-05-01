@@ -87,51 +87,56 @@ ggplot(sc2, aes(x = as.factor(year), y = crps, fill = as.factor(model_id))) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 
-o_crps <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)',], aes(x = as.factor(year), y = crps, fill = as.factor(model_id))) +
+o_crps <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)',], aes(x = as.factor(model_id), y = crps, fill = as.factor(model_id))) +
   geom_boxplot() +
   scale_fill_manual(values = c('#7D7C84', '#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   facet_wrap(~depth) +
-  xlab('Year') +
+  xlab('') +
   labs(fill = 'UC Type') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black")) +
+        panel.background = element_rect(fill = NA, color = "black"),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
   ggtitle('oxygen (mg/L)')
+o_crps
 
-t_crps <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(year), y = crps, fill = as.factor(model_id))) +
+t_crps <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(model_id), y = crps, fill = as.factor(model_id))) +
   geom_boxplot() +
   scale_fill_manual(values = c('#7D7C84', '#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   facet_wrap(~depth) +
-  xlab('Year') +
-  labs(fill = 'UC Type') +
+  xlab("") +
+  labs(fill = 'UC Type Included') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black")) +
+        panel.background = element_rect(fill = NA, color = "black"),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
   ggtitle('temperature (C)')
 
 ggarrange(t_crps, o_crps, common.legend = TRUE)
 
 ##########################################################
 # and log
-o_log <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)',], aes(x = as.factor(year), y = logs, fill = as.factor(model_id))) +
+o_log <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)',], aes(x = as.factor(model_id), y = logs, fill = as.factor(model_id))) +
   geom_boxplot() +
   scale_fill_manual(values = c('#7D7C84', '#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   facet_wrap(~depth) +
-  xlab('Year') +
+  xlab('') +
   labs(fill = 'UC Type') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black")) +
+        panel.background = element_rect(fill = NA, color = "black"),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
   ggtitle('oxygen (mg/L)') +
   stat_compare_means(method = 'anova',
                      label = 'p.signif')
 o_log
 
-t_log <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(year), y = logs, fill = as.factor(model_id))) +
+t_log <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(model_id), y = logs, fill = as.factor(model_id))) +
   geom_boxplot() +
   scale_fill_manual(values = c('#7D7C84', '#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   facet_wrap(~depth) +
-  xlab('Year') +
+  xlab('') +
   labs(fill = 'UC Type') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black")) +
+        panel.background = element_rect(fill = NA, color = "black"),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
   ggtitle('temperature (C)') +
   stat_compare_means(method = 'anova',
                      label = 'p.signif')
@@ -148,29 +153,31 @@ sc2 <- sc2 %>%
 
 ##########################################################
 # and rmse
-o_rmse <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)',], aes(x = as.factor(year), y = rmse*32/1000, fill = as.factor(model_id))) +
+o_rmse <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)',], aes(x = as.factor(model_id), y = rmse*32/1000, fill = as.factor(model_id))) +
   geom_boxplot() +
   scale_fill_manual(values = c('#7D7C84', '#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   facet_wrap(~depth) +
   ylab('RMSE (mg/L)') +
-  xlab('Year') +
+  xlab('') +
   labs(fill = 'UC Type') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black")) +
+        panel.background = element_rect(fill = NA, color = "black"),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
   ggtitle('oxygen (mg/L)') +
   stat_compare_means(method = 'anova',
                      label = 'p.signif')
 o_rmse
 
-t_rmse <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(year), y = rmse*32/1000, fill = as.factor(model_id))) +
+t_rmse <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(model_id), y = rmse*32/1000, fill = as.factor(model_id))) +
   geom_boxplot() +
   scale_fill_manual(values = c('#7D7C84', '#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   facet_wrap(~depth) +
-  xlab('Year') +
+  xlab('') +
   ylab('RMSE (C)') +
   labs(fill = 'UC Type') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black")) +
+        panel.background = element_rect(fill = NA, color = "black"),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
   ggtitle('temperature (C)') +
   stat_compare_means(method = 'anova',
                      label = 'p.signif')
