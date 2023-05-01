@@ -2,7 +2,7 @@ library(tidyverse)
 #install.packages('ggpubr')
 library(ggpubr)
 library(arrow)
-install.packages('lubridate')
+#install.packages('lubridate')
 library(lubridate)
 library(scales)
 
@@ -17,7 +17,7 @@ folders <- c('all_UC', 'initial_condition', 'observation', 'parameter', 'process
 
 ########################################################################
 # read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021", folders[1]))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021/start_06_30", folders[1]))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
@@ -25,7 +25,7 @@ sc <- arrow::open_dataset(score_dir) |>
   collect() 
 
 for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021", folders[i]))
+  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021/start_06_30", folders[i]))
   
   temp <- arrow::open_dataset(score_dir) |> 
     filter(variable %in% vars,
@@ -38,7 +38,7 @@ for(i in 1:length(folders)){
 
 # now read in 2022 data
 for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", folders[i]))
+  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2022", folders[i]))
   
   temp <- arrow::open_dataset(score_dir) |> 
     filter(variable %in% vars,
@@ -50,8 +50,8 @@ for(i in 1:length(folders)){
 }
 
 # make vector of dates when obs are available (before buoy is taken into harbor)
-buoy_dates <- c(seq.Date(as.Date('2021-08-04'), as.Date('2021-10-19'), by = 'day'),
-                     seq.Date(as.Date('2022-06-01'), as.Date('2022-10-17'), by = 'day'))
+buoy_dates <- c(seq.Date(as.Date('2021-08-04'), as.Date('2021-10-17'), by = 'day'),
+                seq.Date(as.Date('2022-08-04'), as.Date('2022-10-17'), by = 'day'))
 
 sc <- sc %>% 
   mutate(doy = yday(datetime),
@@ -413,16 +413,41 @@ uncert_mean <- uncert_prop %>%
   mutate(mean_prop = mean(var_prop)) %>% 
   distinct(horizon, variable, depth, model_id, .keep_all = TRUE)  
 
+# and calculate total var for each year
+uncert_prop_year <- uncert_sum %>% 
+  filter(model_id!='observation') %>% 
+  group_by(variable, depth, datetime, horizon, year) %>% 
+  mutate(total_var = sum(variance)) %>% 
+  mutate(var_prop = variance/total_var)
+
+uncert_mean_year <- uncert_prop_year %>% 
+  group_by(horizon, variable, depth, year) %>% 
+  mutate(mean_prop = mean(var_prop)) %>% 
+  distinct(horizon, variable, depth, year, .keep_all = TRUE)
+
+
 both <- ggplot(uncert_mean, aes(x = horizon, y = mean_prop, fill = model_id)) +
   geom_bar(stat = 'identity', position= 'stack', width = 1) +
+  #geom_line(data = uncert_mean_year, aes(x = horizon, y = total_var, color = as.factor(year))) +
   facet_grid(cols = vars(variable), rows = vars(depth)) +
   ggtitle('Both years')+
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   ylab('Proportion of Variance') +
   labs(fill = 'UC Type') +
   scale_fill_manual(values = c('#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 both
+
+ggplot(uncert_mean_year[uncert_mean_year$variable=='temperature (C)',], aes(x = horizon, y = total_var, color = as.factor(year))) +
+           geom_line() +
+           facet_wrap(~depth) 
+
+  
+ggplot(uncert_mean_year[uncert_mean_year$variable=='oxygen (mg/L)',], aes(x = horizon, y = total_var, color = as.factor(year))) +
+           geom_line() +
+           facet_wrap(~depth) 
+
 
 
 # look at proportional dynamics WITHOUT process UC
