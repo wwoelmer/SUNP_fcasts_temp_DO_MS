@@ -39,10 +39,15 @@ a
 b <- ggplot(data = obs_mgL, aes(x = as.factor(year), y = observed*32/1000)) +
   facet_wrap(~depth) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
-  geom_boxplot(aes(group = year, fill = as.factor(year))) +
+  geom_violin(aes(group = year, fill = as.factor(year))) +
+  stat_summary(fun = "mean",
+               geom = "crossbar",
+               color = "black", 
+               width = 0.5)  +
   ylab('DO (mg/L)') +
   xlab('Year') +
   labs(fill = 'Year')
+b
 
 ggarrange(a, b, common.legend = TRUE)
 
@@ -97,8 +102,11 @@ t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_d
 t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(year), y = observed)) +
   facet_wrap(~depth) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
-  geom_boxplot(aes(group = year, fill = as.factor(year))) +
-  ylab('Temp (C)') +
+  geom_violin(aes(group = year, fill = as.factor(year))) +
+  stat_summary(fun = "mean",
+               geom = "crossbar",
+               color = "black", 
+               width = 0.5)  +ylab('Temp (C)') +
   xlab('Year')
 ggarrange(t_a, t_b, common.legend = TRUE)
 
