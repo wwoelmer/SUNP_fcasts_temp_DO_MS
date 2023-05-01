@@ -16,8 +16,8 @@ obs <- obs %>%
          observed > 0) 
 
 # limit to the days that we will analyze for forecasts (i.e., when we have NOAA forecasts for)
-buoy_dates <- c(seq.Date(as.Date('2021-06-29'), as.Date('2021-10-19'), by = 'day'),
-                seq.Date(as.Date('2022-04-26'), as.Date('2022-10-17'), by = 'day'))
+buoy_dates <- c(seq.Date(as.Date('2021-08-04'), as.Date('2021-10-19'), by = 'day'),
+                seq.Date(as.Date('2022-08-04'), as.Date('2022-10-17'), by = 'day'))
 
 obs <- obs %>% 
   filter(as.Date(time) %in% buoy_dates) %>% 
@@ -67,7 +67,7 @@ temp <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
 temp <- temp %>% 
   select(time, depth, observed, variable) %>% 
   filter(variable=='temperature') %>% 
-#  filter(as.Date(time) %in% buoy_dates) %>% 
+  filter(as.Date(time) %in% buoy_dates) %>% 
   mutate(year = year(time),
          mo_day = format(as.Date(time), "%m-%d")) %>% 
   filter(year %in% years,
@@ -89,8 +89,8 @@ ggplot(data = temp, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, col
 
 ## limit to the same time duration between years
 temp <- temp %>% 
-  filter(mo_day > "06-08" & mo_day < '10-18')
-
+  filter(as.Date(time) %in% buoy_dates) 
+  
 t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
