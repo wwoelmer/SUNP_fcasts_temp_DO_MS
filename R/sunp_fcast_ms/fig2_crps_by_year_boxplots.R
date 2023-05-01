@@ -94,9 +94,10 @@ t <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='temperature (C)',], aes(x = 
   ggtitle('Temperature (°C)') + 
   labs(fill = 'Year') +
   xlab('Year') +
-  ylim(0, 3.6) +
+  #ylim(0, 3.6) +
   ylab ('CRPS (°C)') +
-  #stat_compare_means() +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  stat_compare_means() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 t
@@ -110,7 +111,8 @@ o <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='oxygen (mg/L)',], aes(x = as
   xlab('Year') +
   ylab ('CRPS (mg/L)') +
   ylim(0, 2.3) +
-  #stat_compare_means() +
+  stat_compare_means() +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 o
@@ -144,7 +146,8 @@ ggplot(sc[sc$depth%in%c(1, 10),], aes(x = as.factor(year), y = logs, fill = as.f
   ggtitle('all horizons') + 
   labs(fill = 'Year') +
   xlab('Year') +
-  #stat_compare_means() +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  stat_compare_means() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 
@@ -217,9 +220,45 @@ sat_p <- ggplot(sat, aes(x = as.factor(year), y = crps_sat, fill = as.factor(yea
   labs(fill = 'Year') +
   ylab('CRPS (%)') +
   xlab('Year') +
-  #stat_compare_means() +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  stat_compare_means() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 sat_p
 
 ggarrange(o, sat_p)
+
+####################################################################################
+# fig 2, add jitter, violin
+# temp
+t <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='temperature (C)',], aes(x = as.factor(year), y = crps, fill = as.factor(year))) +
+  geom_violin() +
+  facet_wrap(~depth, scale = 'free', ncol = 1) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  ggtitle('Temperature (°C)') + 
+  labs(fill = 'Year') +
+  xlab('Year') +
+  #ylim(0, 3.6) +
+  ylab ('CRPS (°C)') +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  stat_compare_means() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA, color = "black"))
+t
+
+o <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='oxygen (mg/L)',], aes(x = as.factor(year), y = crps, fill = as.factor(year))) +
+  geom_violin() +
+  facet_wrap(~depth, scale = 'free', ncol = 1) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  ggtitle('Oxygen (mg/L)') + 
+  labs(fill = 'Year') +
+  xlab('Year') +
+  ylab ('CRPS (mg/L)') +
+  ylim(0, 2.3) +
+  stat_compare_means() +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA, color = "black"))
+o
+
+ggarrange(t, o, common.legend = TRUE)
