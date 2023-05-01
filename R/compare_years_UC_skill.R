@@ -13,7 +13,6 @@ vars <- c('temperature', 'oxygen')
 depths <- c(0.1, 1.0, 10.0, 30.0)
 horizons <- c(1:35)
 folders <- c('all_UC', 'initial_condition', 'observation', 'parameter', 'process', 'weather')
-#folders <- c('initial_condition')
 
 ########################################################################
 # read in the scores and calculate variance
