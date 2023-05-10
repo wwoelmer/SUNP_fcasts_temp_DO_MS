@@ -63,7 +63,7 @@ sc <- sc %>%
          year = year(datetime)) %>% 
   select(-c(family, site_id)) %>% 
   filter(horizon > 0,#) %>% 
-         as.Date(datetime) %in% buoy_dates) %>% 
+         as.Date(reference_datetime) %in% buoy_dates) %>% 
   select(model_id, reference_datetime, datetime, horizon, depth, variable, everything()) 
 
 # convert oxy crps and obs to mg/L
@@ -87,34 +87,46 @@ ggplot(sc[sc$depth%in%c(1, 10),],
 ####################################################################################
 # fig 2
 # temp
-t <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='temperature (C)',], aes(x = as.factor(year), y = crps, fill = as.factor(year))) +
-  geom_boxplot() +
+t <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='temperature (C)'
+              # & sc$horizon==35
+               ,], aes(x = as.factor(year), y = crps, fill = as.factor(year))) +
+  geom_violin() +
   facet_wrap(~depth, scale = 'free', ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   ggtitle('Temperature (°C)') + 
   labs(fill = 'Year') +
   xlab('Year') +
   #ylim(0, 3.6) +
+  #ylim(0.25, 1.8) +
+ # ylim(0.4, 2.4) +
   ylab ('CRPS (°C)') +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-  stat_compare_means() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black"))
+  #scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  stat_summary(fun = "median",
+               geom = "point",
+               color = "black")  +
+ # stat_compare_means() +
+  theme_bw()
 t
 
-o <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='oxygen (mg/L)',], aes(x = as.factor(year), y = crps, fill = as.factor(year))) +
-  geom_boxplot() +
+o <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='oxygen (mg/L)'
+              # & sc$horizon==35
+               ,], aes(x = as.factor(year), y = crps, fill = as.factor(year))) +
+  geom_violin() +
   facet_wrap(~depth, scale = 'free', ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   ggtitle('Oxygen (mg/L)') + 
   labs(fill = 'Year') +
   xlab('Year') +
   ylab ('CRPS (mg/L)') +
-  ylim(0, 2.3) +
-  stat_compare_means() +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black"))
+  #ylim(0, 2.3) +
+  #ylim(0.3, 1) +
+  #ylim(0.4, 1.8) +
+  stat_summary(fun = "median",
+               geom = "point",
+               color = "black")  +
+   #stat_compare_means() +
+  #scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  theme_bw()
 o
 
 ggarrange(t, o, common.legend = TRUE)
@@ -125,6 +137,7 @@ summ_crps <- sc %>%
   filter(depth %in% c(1.0, 10.0)) %>% 
   group_by(year, depth, variable) %>% 
   dplyr::summarise(mean = mean(crps, na.rm = TRUE), 
+                   median = median(crps, na.rm = TRUE),
                    min = min(crps, na.rm = TRUE),
                    max = max(crps, na.rm = TRUE),
                    range = abs(min - max))
@@ -233,32 +246,36 @@ ggarrange(o, sat_p)
 # temp
 t <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='temperature (C)',], aes(x = as.factor(year), y = crps, fill = as.factor(year))) +
   geom_violin() +
-  facet_wrap(~depth, scale = 'free', ncol = 1) +
+  facet_wrap(~depth, ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   ggtitle('Temperature (°C)') + 
   labs(fill = 'Year') +
   xlab('Year') +
-  #ylim(0, 3.6) +
+  #ylim(0, 4) +
   ylab ('CRPS (°C)') +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
   stat_compare_means() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black"))
+  stat_summary(fun = "median",
+               geom = "crossbar",
+               color = "black", 
+               width = 0.3)  +  
+  theme_bw()
 t
 
 o <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='oxygen (mg/L)',], aes(x = as.factor(year), y = crps, fill = as.factor(year))) +
   geom_violin() +
-  facet_wrap(~depth, scale = 'free', ncol = 1) +
+  facet_wrap(~depth, ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   ggtitle('Oxygen (mg/L)') + 
   labs(fill = 'Year') +
   xlab('Year') +
   ylab ('CRPS (mg/L)') +
-  ylim(0, 2.3) +
+  stat_summary(fun = "median",
+               geom = "crossbar",
+               color = "black")  +  
   stat_compare_means() +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black"))
+  theme_bw()
 o
 
 ggarrange(t, o, common.legend = TRUE)
