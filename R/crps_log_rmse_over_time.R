@@ -352,37 +352,76 @@ roll_cv %>%
 #####################################################
 ### plot color with horizon, all years together
 
-roll_cv %>% 
+c_21 <- c( '#6EEEEB',  '#17BEBB', '#108E8B', '#0B6563')
+c_22 <- c('#E69A96', '#D34C45', '#9E2B25', '#76201C')
+
+t_21 <- roll_cv %>% 
   filter(variable=='temperature (C)',
          horizon %in% c(1, 10, 21, 35),
-         year==2022) %>% 
-  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps, shape = as.factor(year), color = as.factor(horizon))) +
+         year==2021) %>% 
+  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps,  color = as.factor(horizon))) +
   geom_point() +
   geom_smooth(method = 'lm') +
   ggtitle('temperature') +
-  facet_wrap(~depth, scales = 'free') +
-  #scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~depth, scales = 'free', ncol = 1) +
+  scale_color_manual(values =  c_21) +
   labs(color = 'year') +
-  stat_poly_eq()
+  stat_poly_eq() +
+  theme_bw()
 
-roll_cv %>% 
+o_21 <- roll_cv %>% 
   filter(variable=='oxygen (mg/L)',
          horizon %in% c(1, 10, 21, 35),
-         year==2022) %>% 
-  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps, shape = as.factor(year), color = as.factor(horizon))) +
+         year==2021) %>% 
+  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps, color = as.factor(horizon))) +
   geom_point() +
   geom_smooth(method = 'lm') +
   ggtitle('oxygen') +
-  facet_wrap(~depth, scales = 'free') +
-  #scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~depth, scales = 'free', ncol = 1) +
+  scale_color_manual(values =  c_21) +
   labs(color = 'year') +
-  stat_poly_eq()
+  stat_poly_eq() +
+  theme_bw()
+
+ggarrange(t_21, o_21, common.legend = TRUE)
+
+###
+t_22 <- roll_cv %>% 
+  filter(variable=='temperature (C)',
+         horizon %in% c(1, 10, 21, 35),
+         year==2022) %>% 
+  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps, color = as.factor(horizon))) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  ggtitle('temperature') +
+  facet_wrap(~depth, scales = 'free', ncol = 1) +
+  scale_color_manual(values =  c_22) +
+  labs(color = 'year') +
+  stat_poly_eq() +
+  theme_bw() 
+o_22 <- roll_cv %>% 
+  filter(variable=='oxygen (mg/L)',
+         horizon %in% c(1, 10, 21, 35),
+         year==2022) %>% 
+  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps, color = as.factor(horizon))) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  ggtitle('oxygen') +
+  facet_wrap(~depth, scales = 'free', ncol = 1) +
+  scale_color_manual(values =  c_22) +
+  labs(color = 'year') +
+  stat_poly_eq() +
+  theme_bw()
+
+ggarrange(t_22, o_22, common.legend = TRUE)
+
+
 
 ###### look at patterns without years separated
 
 roll_cv %>% 
   filter(horizon %in% c(1, 10, 21, 35)) %>% 
-  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps, shape = as.factor(year), color = as.factor(horizon))) +
+  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps,  color = as.factor(horizon))) +
   geom_point() +
   geom_smooth(method = 'lm') +
   facet_wrap(depth~variable, scales = 'free') +
@@ -544,4 +583,15 @@ ggarrange(plot_0,NULL,t, o,
           common.legend = TRUE)
 ggarrange(t, o, common.legend = TRUE)
 
-          
+
+roll_cv %>% 
+  ggplot(aes(x = as.factor(year), y = roll_cv_obs, fill = as.factor(year))) +
+  geom_violin() +
+  facet_wrap(depth~variable, scales = 'free') +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) 
+  
+roll_cv %>% 
+  ggplot(aes(x = as.factor(year), y = roll_cv_crps, fill = as.factor(year))) +
+  geom_violin() +
+  facet_wrap(depth~variable, scales = 'free') +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) 
