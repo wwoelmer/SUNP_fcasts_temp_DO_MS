@@ -96,7 +96,8 @@ o_crps <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)'
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"),
         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  ggtitle('oxygen (mg/L)')
+  ggtitle('CRPS, oxygen (mg/L)')+
+  theme(axis.text.x=element_text(vjust = 1))
 o_crps
 
 t_crps <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(model_id), y = crps, fill = as.factor(model_id))) +
@@ -108,7 +109,8 @@ t_crps <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"),
         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  ggtitle('temperature (C)')
+  ggtitle('CRPS, temperature (C)')+
+  theme(axis.text.x=element_text(vjust = 1))
 
 ggarrange(t_crps, o_crps, common.legend = TRUE)
 
@@ -123,9 +125,10 @@ o_log <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)',
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"),
         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  ggtitle('oxygen (mg/L)') +
+  ggtitle('Log, oxygen (mg/L)') +
   stat_compare_means(method = 'anova',
-                     label = 'p.signif')
+                     label = 'p.signif')+
+  theme(axis.text.x=element_text(vjust = 1))
 o_log
 
 t_log <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(model_id), y = logs, fill = as.factor(model_id))) +
@@ -137,9 +140,10 @@ t_log <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"),
         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  ggtitle('temperature (C)') +
+  ggtitle('Log, temperature (C)') +
   stat_compare_means(method = 'anova',
-                     label = 'p.signif')
+                     label = 'p.signif')+
+  theme(axis.text.x=element_text(vjust = 1))
 t_log
 
 ggarrange(t_log, o_log, common.legend = TRUE)
@@ -157,15 +161,16 @@ o_rmse <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='oxygen (mg/L)'
   geom_boxplot() +
   scale_fill_manual(values = c('#7D7C84', '#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   facet_wrap(~depth) +
-  ylab('RMSE (mg/L)') +
+  ylab('RSE (mg/L)') +
   xlab('') +
   labs(fill = 'UC Type') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"),
         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  ggtitle('oxygen (mg/L)') +
+  ggtitle('RSE, oxygen (mg/L)') +
   stat_compare_means(method = 'anova',
-                     label = 'p.signif')
+                     label = 'p.signif')+
+  theme(axis.text.x=element_text(vjust = 1))
 o_rmse
 
 t_rmse <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C)',], aes(x = as.factor(model_id), y = rmse*32/1000, fill = as.factor(model_id))) +
@@ -173,14 +178,20 @@ t_rmse <- ggplot(sc2[sc2$model_id!='observation' & sc2$variable=='temperature (C
   scale_fill_manual(values = c('#7D7C84', '#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   facet_wrap(~depth) +
   xlab('') +
-  ylab('RMSE (C)') +
+  ylab('RSE (C)') +
   labs(fill = 'UC Type') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"),
         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  ggtitle('temperature (C)') +
+  ggtitle('RSE, temperature (C)') +
   stat_compare_means(method = 'anova',
-                     label = 'p.signif')
+                     label = 'p.signif') +
+  theme(axis.text.x=element_text(vjust = 1)) 
 t_rmse
 
 ggarrange(t_rmse, o_rmse, common.legend = TRUE)
+
+ggarrange(t_log, t_crps, t_rmse,
+          o_log, o_crps, o_rmse,
+          align = "v",
+          common.legend = TRUE)
