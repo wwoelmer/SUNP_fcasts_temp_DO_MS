@@ -103,7 +103,7 @@ ggarrange(y21, y22, common.legend = TRUE)
 brks <- seq.Date(as.Date('08-04', "%m-%d"), as.Date('10-17', '%m-%d'), by = "1 month")
 
 o_var <- uncert_sum %>% 
-  filter(horizon==1,
+  filter(horizon==35,
          variable=='oxygen (mg/L)',
          model_id!='observation') %>% 
   ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = variance*32/1000, fill = model_id)) +
@@ -115,7 +115,7 @@ o_var <- uncert_sum %>%
   xlab('Day of Year')
 
 t_var <- uncert_sum %>% 
-  filter(horizon==1,
+  filter(horizon==35,
          variable=='temperature (C)',
          model_id!='observation') %>% 
   ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = variance, fill = model_id)) +
