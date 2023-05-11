@@ -131,6 +131,50 @@ o
 
 ggarrange(t, o, common.legend = TRUE)
 
+##############################
+# boxplots of the median forecast value to compare with obs
+tf1 <- sc %>% 
+  filter(depth %in% c(1,10),
+         variable=='temperature (C)',
+         horizon==1) %>% 
+  ggplot(aes(x = as.factor(year), y = median, fill = as.factor(year))) +
+  geom_violin() +
+  facet_wrap(~depth, scale = 'free', ncol = 1) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  ggtitle('Temperature (°C)') + 
+  labs(fill = 'Year') +
+  xlab('Year') +
+  ylim(12, 27) +
+  ylab ('CRPS (°C)') +
+  #scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  stat_summary(fun = "median",
+               geom = "point",
+               color = "black")  +
+  # stat_compare_means() +
+  theme_bw()
+
+of1 <- sc %>% 
+  filter(depth %in% c(1,10),
+         variable=='oxygen (mg/L)',
+         horizon==1) %>% 
+  ggplot(aes(x = as.factor(year), y = median*32/1000, fill = as.factor(year))) +
+  geom_violin() +
+  facet_wrap(~depth, scale = 'free', ncol = 1) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  ggtitle('Temperature (°C)') + 
+  labs(fill = 'Year') +
+  xlab('Year') +
+  ylim(7, 10) +
+  ylab ('CRPS (mg/L)') +
+  #scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  stat_summary(fun = "median",
+               geom = "point",
+               color = "black")  +
+  # stat_compare_means() +
+  theme_bw()
+
+ggarrange(tf1, of1, common.legend = TRUE)
+
 ###############################
 # mean, min, max by year
 summ_crps <- sc %>% 
