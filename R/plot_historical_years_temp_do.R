@@ -47,7 +47,8 @@ a <- ggplot(data = oxy, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*
   scale_color_manual(values = cols_oxy[,1]) +
   ylab('DO (mg/L)') +
   xlab('Date') +
-  labs(color = 'Year')
+  labs(color = 'Year') +
+  theme_bw()
 a
 ggplotly(a)
 
@@ -111,3 +112,27 @@ t_b
 
 ggarrange(t_a, t_b, common.legend = TRUE)
 
+##################################
+## LSPA POSTER
+a <- ggplot(data = oxy, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*32/1000, color = as.factor(year))) +
+  geom_line() +
+  facet_wrap(~depth, scales = 'free', ncol = 1) +
+  scale_x_date(date_labels = "%b") +
+  scale_color_manual(values = cols_oxy[,1]) +
+  ylab('DO (mg/L)') +
+  xlab('Date') +
+  labs(color = 'Year') +
+  theme_bw()
+a
+
+t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = cols_temp[,1]) +
+  facet_wrap(~depth, scales = 'free', ncol = 1) +
+  xlab('Date') +
+  ylab('Temp (C)') +
+  labs(color = 'Year') +
+  theme_bw()
+t_a
+
+ggarrange(t_a, a, common.legend = TRUE)
