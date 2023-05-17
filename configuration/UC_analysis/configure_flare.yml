@@ -30,14 +30,14 @@ metadata:
       id: INSERT ORCID
 da_setup:
     da_method: enkf
-    par_fit_method: inflate
+    par_fit_method: perturb_const
     ensemble_size:  200
     localization_distance: 2 #distance in meters were covariances in the model error are used
     no_negative_states: TRUE
     assimilate_first_step: FALSE
     use_obs_constraint: TRUE
 model_settings:
-   ncore: 2
+   ncore: 4
    model_name: glm_aed #other is "null"
    base_GLM_nml: glm3_wAED.nml
    base_AED_nml: aed2.nml
@@ -83,7 +83,7 @@ met:
    use_forecasted_met: TRUE
    forecast_met_model: noaa/NOAAGEFS_1hr #noaa-point/NOAAGEFS_1hr #NOAAGEFS_1hr-debias
 uncertainty:
-   use_obs_constraint: TRUE
+   use_obs_constraint: TRUE #no DA
    observation: TRUE
    process: TRUE
    weather: TRUE
@@ -96,7 +96,7 @@ output_settings:
 s3:
   drivers:
     endpoint: s3.flare-forecast.org
-    bucket: drivers
+    bucket: drivers/noaa/gefs-v12-reprocess
   analysis:
     endpoint: s3.flare-forecast.org
     bucket: analysis

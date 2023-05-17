@@ -42,3 +42,7 @@ workflows/default/sunp.log
 configuration/set_environment_sensitive.R
 sunp-2022-07-17-sunp_V3.nc
 WW_notesbok/*
+last_completed_index.txt
+all_uncertainty.csv
+last_completed_index_2021.txt
+all_obs_fcasts.csv

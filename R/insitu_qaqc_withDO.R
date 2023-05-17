@@ -106,12 +106,12 @@ insitu_qaqc <- function(realtime_file,
   # extract midnight measurements only and only observations when buoy is deployed
   field_oxy$datetime <- as.POSIXct(field_oxy$datetime, format = "%Y-%m-%d %H:%M:%S")
   field_noon_oxy <- field_oxy %>% 
-    mutate(day = day(datetime)) %>% 
-    mutate(hour = hour(datetime)) %>% 
-    mutate(minute = minute(datetime))
+    dplyr::mutate(day = day(datetime)) %>% 
+    dplyr::mutate(hour = hour(datetime)) %>% 
+    dplyr::mutate(minute = minute(datetime))
   field_noon_oxy <- field_noon_oxy[field_noon_oxy$hour=='0' & field_noon_oxy$minute=='0',]
   field_noon_oxy <- field_noon_oxy[field_noon_oxy$location=='loon',]  
-  field_noon_oxy <- field_noon_oxy %>% select(-location, -day, -minute, -hour)
+  field_noon_oxy <- field_noon_oxy %>% dplyr::select(-location, -day, -minute, -hour)
   
   # add depth column and remove from column name
   # DO upper is at 1.5m
@@ -128,20 +128,20 @@ insitu_qaqc <- function(realtime_file,
   oxy_2$Depth <- 10.5
   colnames(oxy_2) <- c('DateTime', 'DOSat', "DOppm", 'Flag', 'Depth')
   
-  field_format_oxy <- full_join(oxy, oxy_2)
+  field_format_oxy <- dplyr::full_join(oxy, oxy_2)
   
   
   # put depth as second column
-  field_format_oxy <- field_format_oxy %>% select( 'DateTime', 'Depth', 'DOppm', 'Flag')
+  field_format_oxy <- field_format_oxy %>% dplyr::select( 'DateTime', 'Depth', 'DOppm', 'Flag')
   field_format_oxy <- field_format_oxy %>% 
-    arrange(DateTime, Depth)
+    dplyr::arrange(DateTime, Depth)
   
   # round depths to match temp depths
   field_format_oxy <- field_format_oxy %>% 
   #  mutate(depth_cor = ifelse(Depth==1.5, 1.0, Depth)) %>% 
-    mutate(depth_cor = ifelse(Depth==10.5, 10.0, Depth)) %>% 
-    mutate(Depth = depth_cor) %>% 
-    select(-depth_cor)
+    dplyr::mutate(depth_cor = ifelse(Depth==10.5, 10.0, Depth)) %>% 
+    dplyr::mutate(Depth = depth_cor) %>% 
+    dplyr::select(-depth_cor)
   
   
   # remove some data with flags
@@ -149,11 +149,11 @@ insitu_qaqc <- function(realtime_file,
   field_format_oxy <- na.omit(field_format_oxy)
   field_format_oxy$Depth <- as.character(field_format_oxy$Depth)
   field_format_oxy <- field_format_oxy %>% 
-    select(-Flag) %>% 
-    mutate(DO_mmol_m3 = DOppm*1000/32) #to convert mg/L (or ppm) to molar units
+    dplyr::select(-Flag) %>% 
+    dplyr::mutate(DO_mmol_m3 = DOppm*1000/32) #to convert mg/L (or ppm) to molar units
   
   # combine historical temp and DO buoy data
-  buoy <- left_join(field_format, field_format_oxy)
+  buoy <- dplyr::left_join(field_format, field_format_oxy)
   buoy$DateTime <- as.POSIXct(buoy$DateTime)
   buoy$site <- as.character('210') # set up buoy site to 210?
   buoy$method <- 'buoy'
@@ -188,10 +188,10 @@ insitu_qaqc <- function(realtime_file,
   #  geom_line(aes(col = as.factor(Depth))) 
   
   data_nodups <- data_nodups %>% 
-    mutate(Temp = ifelse(is.na(Temp_manual), Temp_buoy, Temp_manual)) %>% 
-    mutate(DO = ifelse(is.na(DO_mmol_m3_manual), DO_mmol_m3_buoy, DO_mmol_m3_manual)) %>% 
-    select(DateTime, Depth, Temp, DO) %>% 
-    arrange(DateTime, Depth)
+    dplyr::mutate(Temp = ifelse(is.na(Temp_manual), Temp_buoy, Temp_manual)) %>% 
+    dplyr::mutate(DO = ifelse(is.na(DO_mmol_m3_manual), DO_mmol_m3_buoy, DO_mmol_m3_manual)) %>% 
+    dplyr::select(DateTime, Depth, Temp, DO) %>% 
+    dplyr::arrange(DateTime, Depth)
   
   
   write.csv(data_nodups, hist_all_file, row.names = FALSE)
@@ -303,37 +303,37 @@ insitu_qaqc <- function(realtime_file,
     #temp$DateTime <- as.POSIXct(temp$DateTime, tryFormats = c("%Y-%m-%d %T", "%Y-%m-%d"))
     temp$Depth <- depths[i]
     colnames(temp) <- c('DateTime', 'Temp', 'Depth')
-    temp_format <- full_join(temp, temp_format)
+    temp_format <- dplyr::full_join(temp, temp_format)
   }
 
   # put depth as second column and sort by date and depth
   temp_format <- temp_format %>% 
-    mutate(Depth = as.numeric(Depth)) %>% 
-    select( 'DateTime', 'Depth', 'Temp') %>% 
-    arrange(DateTime, Depth)
+    dplyr::mutate(Depth = as.numeric(Depth)) %>% 
+    dplyr::select( 'DateTime', 'Depth', 'Temp') %>% 
+    dplyr::arrange(DateTime, Depth)
   
   # pull out oxygen data from QAQC'ed current buoy file
   temp_oxy <- d %>% 
-    select(TIMESTAMP, doobs_1, doobs) %>% 
-    rename(DateTime = TIMESTAMP,
+    dplyr::select(TIMESTAMP, doobs_1, doobs) %>% 
+    dplyr::rename(DateTime = TIMESTAMP,
            DO_1 = doobs_1,
            DO_10 = doobs)
   oxy_1 <- temp_oxy %>% 
-    select(DateTime, DO_1) %>% 
-    mutate(Depth = 1.0) %>% 
-    rename(DO = DO_1)
+    dplyr::select(DateTime, DO_1) %>% 
+    dplyr::mutate(Depth = 1.0) %>% 
+    dplyr::rename(DO = DO_1)
   
   oxy_10 <- temp_oxy %>% 
-    select(DateTime, DO_10) %>% 
-    mutate(Depth = 10.0) %>% 
-    rename(DO = DO_10)
+    dplyr::select(DateTime, DO_10) %>% 
+    dplyr::mutate(Depth = 10.0) %>% 
+    dplyr::rename(DO = DO_10)
   
-  oxy_buoy <- full_join(oxy_1, oxy_10) %>% 
+  oxy_buoy <- dplyr::full_join(oxy_1, oxy_10) %>% 
     dplyr::mutate(DO = DO*1000/32) # convert from mg/L to mmol/m3
   
   # join with QAQC'ed current temp data from buoy
-  temp_oxy_buoy <- full_join(oxy_buoy, temp_format) %>% 
-    select(DateTime, Depth, Temp, DO)
+  temp_oxy_buoy <- dplyr::full_join(oxy_buoy, temp_format) %>% 
+    dplyr::select(DateTime, Depth, Temp, DO)
   
   
   
@@ -372,11 +372,11 @@ insitu_qaqc <- function(realtime_file,
   dh <- dh %>% 
     dplyr::select(-c(Depth, Temp)) %>% 
     tidyr::pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') %>% 
-    mutate(time = as.POSIXct(DateTime),
+    dplyr::mutate(time = as.POSIXct(DateTime),
            site_id = 'sunp') %>% 
-    ungroup() %>% 
-    select(time, site_id, depth, value, variable) %>% 
-    rename(observed = value)
+    dplyr::ungroup() %>% 
+    dplyr::select(time, site_id, depth, value, variable) %>% 
+    dplyr::rename(observed = value)
   
   dh <- na.omit(dh)
   attr(dh$time, "tzone") <- "UTC"
@@ -390,7 +390,7 @@ insitu_qaqc <- function(realtime_file,
     dir.create(dirname(cleaned_insitu_file), recursive = TRUE)
   }
   
-  write_csv(dh, cleaned_insitu_file)
+  readr::write_csv(dh, cleaned_insitu_file)
   
   return(cleaned_insitu_file)
 }
