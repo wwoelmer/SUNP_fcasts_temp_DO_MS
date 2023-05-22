@@ -63,7 +63,8 @@ sc <- sc %>%
          year = year(datetime)) %>% 
   select(-c(family, site_id)) %>% 
   filter(horizon > 0,#) %>% 
-         as.Date(reference_datetime) %in% buoy_dates) %>% 
+         as.Date(reference_datetime) %in% buoy_dates,
+         doy < 291) %>%
   select(model_id, reference_datetime, datetime, horizon, depth, variable, everything()) 
 
 # convert oxy crps and obs to mg/L
@@ -84,6 +85,11 @@ sc <- sc %>%
 # add month day
 sc <- sc %>% 
   mutate(mo_day = format(datetime, "%m-%d"))
+
+
+#####
+mtc <- sc %>% 
+  select(reference_datetime:mean, sd, year, rmse)
 
 
 ### select horizons for all metrics
@@ -161,7 +167,8 @@ sc %>%
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
   guides(linetype = "none") +
-  ggtitle('horizon = 1')
+  ggtitle('horizon = 1') +
+  theme_bw()
 
 sc %>% 
   filter(horizon %in% c(10)) %>% 
@@ -175,7 +182,8 @@ sc %>%
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
   guides(linetype = "none") +
-  ggtitle('horizon = 10')
+  ggtitle('horizon = 10')+
+  theme_bw()
 
 sc %>% 
   filter(horizon %in% c(21)) %>% 
@@ -189,7 +197,8 @@ sc %>%
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
   guides(linetype = "none") +
-  ggtitle('horizon = 21')
+  ggtitle('horizon = 21')+
+  theme_bw()
 
 sc %>% 
   filter(horizon %in% c(35)) %>% 
@@ -203,7 +212,8 @@ sc %>%
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
   guides(linetype = "none") +
-  ggtitle('horizon = 35')
+  ggtitle('horizon = 35')+
+  theme_bw()
   
 ##########################################################################
 ## calculate difference betwee years
@@ -308,15 +318,37 @@ ggplotly(ggplot(cv, aes(x = doy, y = observation, color = as.factor(horizon), gr
   geom_line() +
   facet_wrap(depth~variable, scales = 'free'))
 
-roll_cv <- cv %>% 
-  select(-c(rmse, logs)) %>% 
+#####
+# test that the rollmean is doing what I think it is
+tst <- cv %>% 
+  filter(depth==1,
+         variable=="oxygen (mg/L)",
+         year==2021,
+         horizon %in% c(1, 7)) %>% 
+  select(reference_datetime:mean, doy:mo_day) %>% 
   group_by(horizon, depth, variable, year) %>% 
-  mutate(roll_mean_obs = rollmean(observation, k = 7, fill = NA),
-         roll_sd_obs = rollapply(observation, width = 7, FUN = sd, fill = 0),
-         roll_mean_crps = rollmean(crps, k = 7, fill = NA),
-         roll_sd_crps = rollapply(crps, width = 7, FUN = sd, fill = 0)) %>% 
-  filter(doy > min(doy) + 7,
-         !is.na(roll_mean_obs)) %>% 
+  mutate(roll_mean_obs = zoo::rollmean(observation, k = 10, fill = NA),
+         roll_sd_obs = rollapply(observation, width = 10, FUN = sd, fill = NA),
+         roll_mean_crps = rollmean(crps, k = 10, fill = NA),
+         roll_sd_crps = rollapply(crps, width = 10, FUN = sd, fill = NA)) %>% 
+  filter(!is.na(roll_mean_obs),
+         doy > min(doy) + 7,
+         doy < max(doy) - 7) %>% 
+  mutate(roll_cv_crps = roll_sd_crps/roll_mean_crps,
+         roll_cv_obs = roll_sd_obs/roll_mean_obs) %>% 
+  distinct(horizon, depth, variable, year, doy, .keep_all = TRUE)
+
+
+roll_cv <- cv %>% 
+  select(reference_datetime:mean, doy:mo_day) %>% 
+  group_by(horizon, depth, variable, year) %>% 
+  mutate(roll_mean_obs = zoo::rollmean(observation, k = 10, fill = NA),
+         roll_sd_obs = rollapply(observation, width = 10, FUN = sd, fill = NA),
+         roll_mean_crps = rollmean(crps, k = 10, fill = NA),
+         roll_sd_crps = rollapply(crps, width = 10, FUN = sd, fill = NA)) %>% 
+  filter(!is.na(roll_mean_obs),
+         doy > min(doy) + 10,
+         doy < max(doy) - 10) %>% 
   mutate(roll_cv_crps = roll_sd_crps/roll_mean_crps,
          roll_cv_obs = roll_sd_obs/roll_mean_obs) %>% 
   distinct(horizon, depth, variable, year, doy, .keep_all = TRUE)
@@ -365,8 +397,9 @@ t_21 <- roll_cv %>%
   ggtitle('temperature') +
   facet_wrap(~depth, scales = 'free', ncol = 1) +
   scale_color_manual(values =  c_21) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
   labs(color = 'year') +
-  stat_poly_eq() +
+  stat_poly_eq(size = 2) +
   theme_bw()
 
 o_21 <- roll_cv %>% 
@@ -378,9 +411,10 @@ o_21 <- roll_cv %>%
   geom_smooth(method = 'lm') +
   ggtitle('oxygen') +
   facet_wrap(~depth, scales = 'free', ncol = 1) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
   scale_color_manual(values =  c_21) +
   labs(color = 'year') +
-  stat_poly_eq() +
+  stat_poly_eq(size = 2) +
   theme_bw()
 
 ggarrange(t_21, o_21, common.legend = TRUE)
@@ -397,8 +431,9 @@ t_22 <- roll_cv %>%
   facet_wrap(~depth, scales = 'free', ncol = 1) +
   scale_color_manual(values =  c_22) +
   labs(color = 'year') +
-  stat_poly_eq() +
+  stat_poly_eq(size = 2) +
   theme_bw() 
+
 o_22 <- roll_cv %>% 
   filter(variable=='oxygen (mg/L)',
          horizon %in% c(1, 10, 21, 35),
@@ -410,7 +445,7 @@ o_22 <- roll_cv %>%
   facet_wrap(~depth, scales = 'free', ncol = 1) +
   scale_color_manual(values =  c_22) +
   labs(color = 'year') +
-  stat_poly_eq() +
+  stat_poly_eq(size = 2) +
   theme_bw()
 
 ggarrange(t_22, o_22, common.legend = TRUE)
@@ -421,7 +456,7 @@ ggarrange(t_22, o_22, common.legend = TRUE)
 
 roll_cv %>% 
   filter(horizon %in% c(1, 10, 21, 35)) %>% 
-  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps,  color = as.factor(horizon))) +
+  ggplot(aes(x = roll_cv_obs, y = roll_cv_crps)) +
   geom_point() +
   geom_smooth(method = 'lm') +
   facet_wrap(depth~variable, scales = 'free') +
