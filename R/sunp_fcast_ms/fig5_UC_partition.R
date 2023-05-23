@@ -186,8 +186,8 @@ uncert_mean_year %>%
          depth %in% c(1, 10)) %>% 
 ggplot(aes(x = horizon, y = mean_prop, fill = as.factor(year))) +
   geom_bar(stat = 'identity', position= 'dodge', width = 1) +
-  #facet_grid(cols = vars(variable), rows = vars(depth)) +
-  ggtitle('Both years')+
+  facet_grid(scales = 'free', cols = vars(variable), rows = vars(depth)) +
+  ggtitle('Parameter uncertainty')+
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   ylab('Proportion of Variance') +
   labs(fill = 'UC Type') +
