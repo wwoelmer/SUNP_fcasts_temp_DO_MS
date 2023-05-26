@@ -68,7 +68,7 @@ realtime_inflow_data_location: .na
 insitu_obs_fname:
     - sunp-buoy-data/SUNP_buoy_wq.csv #realtime buoy data from git
     - hist-data/hist_buoy_temp.csv # historical buoy data from edi
-    - hist-data/LSPA_LMP/LSPALMP_1986-2020_v2021-03-29.csv # historical manual obs from SUNP
+    - hist-data/LSPA_LMP/LSPALMP_1986-2022_v2023-01-22.csv # historical manual obs from SUNP
     - hist-data/manual_buoy_temp.csv # combined manual and high frequency data at buoy site
     # this file combines manual observations and buoy data from 1985 to 2020, created in Sunpee-GLM repo in 'combine_manual_hf_temp.R' 
     #  field_temp_noon_obs.csv #created file from historical buoy data on EDI (see Sunapee-GLM repo, 'create_noon_temp_file_obs.R')
