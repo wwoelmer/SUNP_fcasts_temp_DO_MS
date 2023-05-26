@@ -4,7 +4,7 @@ lake_directory <- here::here()
 
 # some subsetting variables
 vars <- c('temperature', 'oxygen')
-depths <- c(1.0, 10.0)
+depths <- c(1.0, 10.0, 30)
 horizons <- c(1:35)
 folders <- c('all_UC')
 
