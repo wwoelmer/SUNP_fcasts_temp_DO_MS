@@ -335,7 +335,12 @@ insitu_qaqc <- function(realtime_file,
   temp_oxy_buoy <- dplyr::full_join(oxy_buoy, temp_format) %>% 
     dplyr::select(DateTime, Depth, Temp, DO)
   
+  # remove data from when the buoy is in the harbor and the 10m DO
+  # remains connected (obs show up but are not 10m obs bc buoy is in the harbor)
+  temp_oxy_buoy <- temp_oxy_buoy %>% 
+    mutate(DO = ifelse(is.na(Temp) & !is.na(DO), NA, DO))
   
+  temp_oxy_buoy <- na.omit(temp_oxy_buoy)
   
   # combine with historical data
   h <- read.csv(hist_all_file)
