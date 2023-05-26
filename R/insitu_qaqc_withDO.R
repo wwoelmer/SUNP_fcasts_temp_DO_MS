@@ -26,11 +26,17 @@ insitu_qaqc <- function(realtime_file,
   #df$manual_name <- c("temp_C", "DO_mgl")
   
   manual <- manual %>% 
-    dplyr::filter(parameter %in% c("temp_C", "DO_mgl", "DO_pctsat")) %>% 
+    dplyr::filter(parameter %in% c("waterTemperature_degC", "oxygenDissolved_mgl", "oxygenDissolvedPercentOfSaturation_pct")) %>% 
     dplyr::mutate(date = as.Date(date)) %>% 
     dplyr::select(date, depth_m, parameter, value, station) %>% 
     tidyr::pivot_wider(names_from = parameter, values_from = value) %>% 
     tidyr::unchop(everything()) # do this bc of strange formatting with pivot wider
+  
+  # rename to old names
+  manual <- manual %>% 
+    rename(temp_C = waterTemperature_degC,
+           DO_mgl = oxygenDissolved_mgl,
+           DO_pctsat = oxygenDissolvedPercentOfSaturation_pct)
   
   manual <- manual %>% 
     dplyr::filter(station == 210) %>%  # this is the deep hole site
