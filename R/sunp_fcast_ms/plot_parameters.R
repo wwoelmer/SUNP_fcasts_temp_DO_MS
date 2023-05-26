@@ -73,13 +73,6 @@ p$variable <-
                   "zone1temp",
                   "zone2temp",
                   "zone3temp",
-                  "lw_factor"), 
-       labels = c("fsed_18_33",
-                  "fsed_10_18",
-                  "fsed_0_10",
-                  "tempsed_18_33",
-                  "tempsed_10_18",
-                  "tempsed_0_10",
                   "lw_factor")) 
 
 p %>% 
@@ -94,9 +87,9 @@ ggplot(aes(x = doy, y = mean, color = as.factor(year))) +
 
 p %>% 
   filter(horizon==1,
-         variable %in% c("fsed_18_33",
-                         "fsed_10_18",
-                         "fsed_0_10")) %>% 
+         variable %in% c("Fsed_oxy_zone1",
+                         "Fsed_oxy_zone2",
+                         "Fsed_oxy_zone3")) %>% 
   ggplot(aes(x = doy, y = mean, color = as.factor(variable))) +
   geom_line() +
   geom_ribbon(aes(ymin = mean - sd, ymax = mean + sd, fill = as.factor(variable)), alpha = 0.3) +
