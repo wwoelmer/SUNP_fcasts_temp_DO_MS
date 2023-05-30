@@ -17,11 +17,11 @@ lake_directory <- here::here()
 vars <- c('temperature', 'oxygen')
 depths <- c(1.0, 10.0)
 horizons <- c(1:35)
-folders <- c('all_UC')
+sim_name <- 'SUNP_fsed_deep_DA' # UC_analysis_2021/start_06_30
+folders <- c('all_UC_fsed_deep_DA')
 
-########################################################################
 # read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021/start_06_30", folders[1]))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folders[1]))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
@@ -29,7 +29,7 @@ sc <- arrow::open_dataset(score_dir) |>
   collect() 
 
 for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021/start_06_30", folders[i]))
+  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folders[1]))
   
   temp <- arrow::open_dataset(score_dir) |> 
     filter(variable %in% vars,
@@ -40,18 +40,6 @@ for(i in 1:length(folders)){
   
 }
 
-# now read in 2022 data
-for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2022", folders[i]))
-  
-  temp <- arrow::open_dataset(score_dir) |> 
-    filter(variable %in% vars,
-           depth %in% depths) %>% 
-    collect() 
-  
-  sc <- rbind(sc, temp)
-  
-}
 
 # vector of dates when obs are available (before buoy is taken into harbor)
 ##### make these the same dates for each year for equal comparison
@@ -121,40 +109,106 @@ sc %>%
 brks <- seq.Date(as.Date('08-04', "%m-%d"), as.Date('10-17', '%m-%d'), by = "1 month")
 
 ################################################3
-## LSPA POSTER
+# CRPS over time for select horizons
 
-t <- sc %>% 
+md <- read.csv(file.path(lake_directory, 'mixing_dates.csv'))
+md$time <- as.Date(md$time)
+md$crps <- NA
+md <- md %>% 
+  select(-observed)
+scjoin <- sc %>% 
+  select(datetime, variable, depth, crps, horizon) %>% 
+  mutate(time = as.Date(datetime)) %>% 
+  ungroup() %>% 
+  select(time, depth, horizon, variable, crps)
+
+md21 <- scjoin %>% 
+  filter(time %in% md$time,
+         horizon==21) %>% 
+  distinct(time, depth, horizon, variable, .keep_all = TRUE) %>% 
+  mutate(mix_day = format(as.Date(time), "%m-%d"))
+
+t21 <- sc %>% 
   filter(horizon %in% c(21),
          variable=='temperature (C)',
          doy > 238) %>% 
   ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = crps, color = as.factor(year), linetype = 'crps')) +
   geom_line() +
+  geom_point(data = md21[md21$variable=='temperature (C)',], size = 3, color = 'black', shape = 8, aes(x = as.Date(mix_day, format = "%m-%d"), y = crps))  +
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
   labs(color = 'Year') +
-  facet_wrap(~depth, ncol = 1, scales = 'free') +
-  ylab('Forecast Performance (°C)') +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (°C)') +
+  ggtitle('Temperature, 21 Days') +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
   guides(linetype = "none") +
   theme_bw()
-o <- sc %>% 
+t21
+o21 <- sc %>% 
   filter(horizon %in% c(21),
          variable=='oxygen (mg/L)',
          doy > 238) %>% 
   ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = crps, color = as.factor(year), linetype = 'crps')) +
   geom_line() +
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  geom_point(data = md21[md21$variable=='oxygen (mg/L)',], size = 3, color = 'black', shape = 8, aes(x = as.Date(mix_day, format = "%m-%d"), y = crps))  +
   labs(color = 'Year') +
-  facet_wrap(~depth, ncol = 1, scales = 'free') +
-  ylab('Forecast Performance (mg/L)') +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (mg/L)') +
+  scale_x_date(breaks = brks, date_labels = '%b %d') +
+  xlab('Day of Year') +
+  guides(linetype = "none") +
+  theme_bw() +
+  ggtitle('Oxygen, 21 Days')
+ggarrange(t21, o21, common.legend = TRUE)
+
+#########################################################
+md7 <- scjoin %>% 
+  filter(time %in% md$time,
+         horizon==7) %>% 
+  distinct(time, depth, horizon, variable, .keep_all = TRUE) %>% 
+  mutate(mix_day = format(as.Date(time), "%m-%d"))
+
+t7 <- sc %>% 
+  filter(horizon %in% c(7),
+         variable=='temperature (C)',
+         doy > 238) %>% 
+  ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = crps, color = as.factor(year), linetype = 'crps')) +
+  geom_line() +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  labs(color = 'Year') +
+  geom_point(data = md7[md7$variable=='temperature (C)',], size = 3, color = 'black', shape = 8, aes(x = as.Date(mix_day, format = "%m-%d"), y = crps))  +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (°C)') +
+  ggtitle('Temperature, 7 Days') +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
   guides(linetype = "none") +
   theme_bw()
-ggarrange(t, o, common.legend = TRUE)
 
-#########################################################
+o7 <- sc %>% 
+  filter(horizon %in% c(7),
+         variable=='oxygen (mg/L)',
+         doy > 238) %>% 
+  ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = crps, color = as.factor(year), linetype = 'crps')) +
+  geom_line() +
+  geom_point(data = md7[md7$variable=='oxygen (mg/L)',], size = 3, color = 'black', shape = 8, aes(x = as.Date(mix_day, format = "%m-%d"), y = crps))  +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  labs(color = 'Year') +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (mg/L)') +
+  scale_x_date(breaks = brks, date_labels = '%b %d') +
+  xlab('Day of Year') +
+  guides(linetype = "none") +
+  theme_bw() +
+  ggtitle('Oxygen, 7 Days')
+ggarrange(t7, o7, common.legend = TRUE)
+ggarrange(t21, o21, common.legend = TRUE)
 
+
+
+#################################################################################################################
 sc %>% 
   filter(horizon %in% c(1)) %>% 
   ggplot(aes(x = as.Date(mo_day, format = "%m-%d"), y = crps, color = as.factor(year), linetype = 'crps')) +
@@ -214,6 +268,15 @@ sc %>%
   guides(linetype = "none") +
   ggtitle('horizon = 35')+
   theme_bw()
+
+##########################################################################
+## bias
+sc %>% 
+  filter(horizon == 1) %>% 
+ggplot(aes(x =  as.Date(mo_day, format = "%m-%d"), y = observation - mean, color = as.factor(year))) +
+  geom_line() +
+  geom_hline(yintercept = 0) +
+  facet_grid(depth~variable, scales = 'free')
   
 ##########################################################################
 ## calculate difference betwee years
