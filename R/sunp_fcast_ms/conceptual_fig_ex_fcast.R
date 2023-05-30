@@ -1,37 +1,28 @@
 ### extract example forecasts of each archetype (accuracy and precision axes)
+library(Metrics)
+library(tidyverse)
 
 lake_directory <- here::here()
 
 # some subsetting variables
 vars <- c('temperature', 'oxygen')
-depths <- c(1.0, 10.0, 30)
+depths <- c(1.0, 10.0)
 horizons <- c(1:35)
-folders <- c('all_UC')
+folder <- 'SUNP_fsed_deep_DA'
+sim_name <- 'all_UC_fsed_deep_DA'
+site_id <- 'sunp'
 
 ########################################################################
-# read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021/start_06_30", folders[1]))
+# read in the scores 
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", folder, sim_name))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
          depth %in% depths) %>% 
   collect() 
 
-for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021/start_06_30", folders[i]))
-  
-  temp <- arrow::open_dataset(score_dir) |> 
-    filter(variable %in% vars,
-           depth %in% depths) %>% 
-    collect() 
-  
-  sc <- rbind(sc, temp)
-  
-}
-
-# now read in 2022 data
-for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2022", folders[i]))
+for(i in 1:length(folder)){
+  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", folder, sim_name))
   
   temp <- arrow::open_dataset(score_dir) |> 
     filter(variable %in% vars,
@@ -62,8 +53,6 @@ sc <- sc %>%
          mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
          sd = ifelse(variable=='temperature', sd, (sd*32/1000)))
 
-sc$variable <- factor(sc$variable, levels = c('temperature', 'oxygen'), 
-                      ordered = TRUE, labels = c('temperature (C)', 'oxygen (mg/L)'))
 
 ### calculate rmse
 sc <- sc %>% 
@@ -71,96 +60,66 @@ sc <- sc %>%
   mutate(rmse = rmse(observation, mean)) 
 
 
-lp_la <- read.csv(paste0(lake_directory, '/forecasts/sunp/UC_analysis_2021/start_06_30/all_UC/sunp-2021-10-04-all_UC.csv.gz'))
-lp_la <- lp_la %>% 
-  mutate(horizon = difftime(as.POSIXct(datetime), as.POSIXct(reference_datetime), units = 'days')) %>% 
-  filter(
-    depth==10.0,
-    variable=='oxygen')
+##### look at just oxygen forecasts
+sc2 <- sc %>% 
+  filter(variable=='oxygen') %>% 
+  select(reference_datetime, datetime:logs, rmse, mean, sd, everything())
 
-obs <- sc %>% 
-  filter(reference_datetime=='2021-10-04 00:00:00',
-    depth==10.0,
-    variable=='oxygen (mg/L)',
-    horizon ==1)
+####################################################################################
+density_fcast <- function(fdate, fhorizon, fdepth, fvariable, scores_df, title = NULL){
+  fcast <- read.csv(file.path(lake_directory, 'forecasts/sunp', folder, sim_name, paste0('sunp-', fdate, "-", sim_name, '.csv.gz')))
+  
+  fcast <- fcast %>% 
+    mutate(horizon = difftime(as.POSIXct(datetime), as.POSIXct(reference_datetime), units = 'days')) %>% 
+    filter(depth==fdepth,
+           variable==fvariable)
+  
+  obs <- scores_df %>% 
+    filter(reference_datetime==paste0(fdate, " 00:00:00"),
+           depth==fdepth,
+           variable==fvariable,
+           horizon==fhorizon)
+  
+  all_obs <- scores_df %>% 
+    filter(reference_datetime==paste0(fdate, " 00:00:00"),
+           depth==fdepth,
+           variable==fvariable)
+  
+  a <- ggplot(all_obs, aes(x = as.POSIXct(datetime), y = mean)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = quantile97.5*32/1000, ymax = quantile02.5*32/1000), alpha = 0.5) +
+    geom_point(data = all_obs, aes(x = as.POSIXct(datetime), y = observation, color = '')) +
+    geom_point(data = obs, aes(x = datetime, y = observation, color = 'Observation')) +
+    scale_color_manual(values = c('black', 'red')) +
+    #scale_x_date(breaks = date_breaks('1 week')) +
+    labs(color = "", alpha = "") +
+    ylab('Forecast') +
+    xlab('Date') +
+    theme_bw() +
+    ggtitle(title)
+  print(a)
+  
+  b <- fcast %>% 
+    filter(horizon==fhorizon) %>% 
+    ggplot(aes(x = prediction*32/1000, linetype = 'forecast')) +
+    geom_density() +
+    geom_point(data = obs, aes(x = observation, y = 0.01, color = 'Observation'), size = 3) +
+    theme_bw() +
+    scale_color_manual(values = c('red')) +
+    xlab('Prediction (mg/L)') +
+    ylab('Density')  +
+    labs(color = "", linetype = "") +
+    ggtitle(title)
+  print(b)
+  
+}
+####################################################################################
+#low precision high accuracy 
+density_fcast('2021-09-04', fhorizon = 29, fdepth = 10, fvariable = "oxygen", scores_df = sc2, title = 'low accuracy, high precision')
 
-score <- sc %>% 
-  filter(reference_datetime=='2021-10-04 00:00:00',
-         depth==10.0,
-         variable=='oxygen (mg/L)')
+# currently when saved as object, only the last figure is saved, need to figure out how to export both
+# high precision, high accuracy
+density_fcast('2022-08-27', fhorizon = 1, fdepth = 1, fvariable = "oxygen", scores_df = sc2, title = 'high precision, high accuracy')
 
-a <- ggplot(score, aes(x = as.POSIXct(datetime), y = mean)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = quantile97.5*32/1000, ymax = quantile02.5*32/1000), alpha = 0.5) +
-  geom_point(data = score, aes(x = as.POSIXct(datetime), y = observation, color = '')) +
-  geom_point(data = obs, aes(x = datetime, y = observation, color = 'Observation')) +
-  scale_color_manual(values = c('black', 'red')) +
-  #scale_x_date(breaks = date_breaks('1 week')) +
-  labs(color = "", alpha = "") +
-  ylab('Forecast') +
-  xlab('Date') +
-  theme_bw()
-a
+# high precision, high accuracy
 
-b <- lp_la %>% 
-  filter(horizon==1) %>% 
-  ggplot(aes(x = prediction*32/1000, linetype = 'forecast')) +
-  geom_density() +
-  geom_point(data = obs, aes(x = observation, y = 0.01, color = 'Observation'), size = 3) +
-  theme_bw() +
-  scale_color_manual(values = c('red')) +
-  xlab('Prediction (mg/L)') +
-  ylab('Density')  +
-  labs(color = "", linetype = "")
-b
-ggarrange(a, b, common.legend = TRUE, widths = c(0.75, 0.5))
-
-###########################################################################################
-lp_ha <- read.csv(paste0(lake_directory, '/forecasts/sunp/UC_analysis_2021/start_06_30/all_UC/sunp-2021-08-24-all_UC.csv.gz'))
-
-lp_ha <- lp_ha %>% 
-  mutate(horizon = difftime(as.POSIXct(datetime), as.POSIXct(reference_datetime), units = 'days')) %>% 
-  filter(
-    depth==10.0,
-    variable=='temperature')
-
-obs <- sc %>% 
-  filter(reference_datetime=='2021-08-24 00:00:00',
-         depth==10.0,
-         variable=='temperature (C)',
-         horizon ==24)
-
-score <- sc %>% 
-  filter(reference_datetime=='2021-08-24 00:00:00',
-         depth==10.0,
-         variable=='temperature (C)')
-
-a <- ggplot(score, aes(x = as.POSIXct(datetime), y = mean)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = quantile97.5, ymax = quantile02.5), alpha = 0.5) +
-  geom_point(data = score, aes(x = as.POSIXct(datetime), y = observation, color = '')) +
-  geom_point(data = obs, aes(x = datetime, y = observation, color = 'Observation')) +
-  scale_color_manual(values = c('black', 'red')) +
-  #scale_x_date(breaks = date_breaks('1 week')) +
-  labs(color = "", alpha = "") +
-  ylab('Forecast') +
-  xlab('Date') +
-  theme_bw()
-a
-
-b <- lp_ha %>% 
-  filter(horizon==24) %>% 
-  ggplot(aes(x = prediction, linetype = 'forecast')) +
-  geom_density() +
-  geom_point(data = obs, aes(x = observation, y = 0, color = 'Observation'), size = 3) +
-  theme_bw() +
-  scale_color_manual(values = c('red')) +
-  xlab('Prediction (C)') +
-  ylab('Density')  +
-  labs(color = "", linetype = "")
-b
-ggarrange(a, b, common.legend = TRUE)
-###########################################################################################
-
-hp_la
-hp_ha
