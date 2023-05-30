@@ -73,7 +73,7 @@ sims
 ###########################################################
 message("Generating targets")
 
-source(file.path(lake_directory, "R", "insitu_qaqc_withDO_2023.R"))
+source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
 
 #' Generate the `config_obs` object and create directories if necessary
 message('read config')
@@ -146,7 +146,7 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 1
+starting_index <- 122
 set.seed(24)
 # index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
 # no NOAA forecasts on 2022-08-10
