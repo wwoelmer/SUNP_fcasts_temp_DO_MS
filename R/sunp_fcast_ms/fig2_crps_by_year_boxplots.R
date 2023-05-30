@@ -17,11 +17,12 @@ lake_directory <- here::here()
 vars <- c('temperature', 'oxygen')
 depths <- c(1.0, 10.0)
 horizons <- c(1:35)
-folders <- c('all_UC')
+sim_name <- 'SUNP_fsed_deep_DA' # UC_analysis_2021/start_06_30
+folders <- c('all_UC_fsed_deep_DA')
 
 ########################################################################
 # read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021/start_06_30", folders[1]))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folders[1]))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
@@ -29,20 +30,7 @@ sc <- arrow::open_dataset(score_dir) |>
   collect() 
 
 for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2021/start_06_30", folders[i]))
-  
-  temp <- arrow::open_dataset(score_dir) |> 
-    filter(variable %in% vars,
-           depth %in% depths) %>% 
-    collect() 
-  
-  sc <- rbind(sc, temp)
-  
-}
-
-# now read in 2022 data
-for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/UC_analysis_2022", folders[i]))
+  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folders[1]))
   
   temp <- arrow::open_dataset(score_dir) |> 
     filter(variable %in% vars,
@@ -96,7 +84,7 @@ t <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='temperature (C)'
   ggtitle('Temperature (°C)') + 
   labs(fill = 'Year') +
   xlab('Year') +
-  #ylim(0, 3.6) +
+  ylim(0, 3.0) +
   #ylim(0.25, 1.8) +
  # ylim(0.4, 2.4) +
   ylab ('CRPS (°C)') +
@@ -118,7 +106,7 @@ o <- ggplot(sc[sc$depth%in%c(1, 10) & sc$variable=='oxygen (mg/L)'
   labs(fill = 'Year') +
   xlab('Year') +
   ylab ('CRPS (mg/L)') +
-  #ylim(0, 2.3) +
+  ylim(0, 2.3) +
   #ylim(0.3, 1) +
   #ylim(0.4, 1.8) +
   stat_summary(fun = "median",
@@ -184,7 +172,29 @@ summ_crps <- sc %>%
                    median = median(crps, na.rm = TRUE),
                    min = min(crps, na.rm = TRUE),
                    max = max(crps, na.rm = TRUE),
-                   range = abs(min - max))
+                   range = abs(min - max),
+                   cv = sd(crps, na.rm = TRUE)/mean)
+
+summ_obs <- sc %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(year, depth, variable) %>% 
+  dplyr::summarise(mean = mean(observation, na.rm = TRUE), 
+                   median = median(observation, na.rm = TRUE),
+                   min = min(observation, na.rm = TRUE),
+                   max = max(observation, na.rm = TRUE),
+                   range = abs(min - max),
+                   cv = sd(observation, na.rm = TRUE)/mean)
+
+ggplot(summ_crps, aes(x = as.factor(year), y = cv)) +
+  geom_point() +
+  geom_point(data = summ_obs, aes(x = as.factor(year), y = cv, color = 'red')) +
+  facet_grid(depth~variable)
+
+ggplot(summ_crps, aes(x = as.factor(year), y = cv)) +
+  geom_point() +
+  geom_point(data = summ_obs, aes(x = as.factor(year), y = cv, color = 'red')) +
+  facet_grid(depth~variable)
+
 
 summ_depth <- sc %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
