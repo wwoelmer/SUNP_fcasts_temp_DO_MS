@@ -62,8 +62,9 @@ sc <- sc %>%
 
 ##### look at just oxygen forecasts
 sc2 <- sc %>% 
-  filter(variable=='oxygen') %>% 
-  select(reference_datetime, datetime:logs, rmse, mean, sd, everything())
+  filter(variable=='temperature') %>% 
+  mutate(diff = abs(observation - mean)) %>% 
+  select(reference_datetime, datetime:logs, rmse, mean, sd, diff, everything())
 
 ####################################################################################
 density_fcast <- function(fdate, fhorizon, fdepth, fvariable, scores_df, title = NULL){
@@ -85,12 +86,19 @@ density_fcast <- function(fdate, fhorizon, fdepth, fvariable, scores_df, title =
            depth==fdepth,
            variable==fvariable)
   
+  convf <- 1
+  
+  if(fvariable=='oxygen'){
+    convf <- 32/1000
+  }
+  
   a <- ggplot(all_obs, aes(x = as.POSIXct(datetime), y = mean)) +
     geom_line() +
-    geom_ribbon(aes(ymin = quantile97.5*32/1000, ymax = quantile02.5*32/1000), alpha = 0.5) +
+    geom_ribbon(aes(ymin = quantile97.5*convf, ymax = quantile02.5*convf), alpha = 0.5) +
     geom_point(data = all_obs, aes(x = as.POSIXct(datetime), y = observation, color = '')) +
     geom_point(data = obs, aes(x = datetime, y = observation, color = 'Observation')) +
     scale_color_manual(values = c('black', 'red')) +
+    ylim(0, 27) +
     #scale_x_date(breaks = date_breaks('1 week')) +
     labs(color = "", alpha = "") +
     ylab('Forecast') +
@@ -101,11 +109,12 @@ density_fcast <- function(fdate, fhorizon, fdepth, fvariable, scores_df, title =
   
   b <- fcast %>% 
     filter(horizon==fhorizon) %>% 
-    ggplot(aes(x = prediction*32/1000, linetype = 'forecast')) +
+    ggplot(aes(x = prediction*convf, linetype = 'forecast')) +
     geom_density() +
     geom_point(data = obs, aes(x = observation, y = 0.01, color = 'Observation'), size = 3) +
     theme_bw() +
     scale_color_manual(values = c('red')) +
+    xlim(5, 30) +
     xlab('Prediction (mg/L)') +
     ylab('Density')  +
     labs(color = "", linetype = "") +
@@ -114,12 +123,18 @@ density_fcast <- function(fdate, fhorizon, fdepth, fvariable, scores_df, title =
   
 }
 ####################################################################################
+#low precision low accuracy 
+density_fcast('2021-08-24', fhorizon = 24, fdepth = 10, fvariable = "temperature", scores_df = sc2, title = 'low precision, low accuracy')
+
 #low precision high accuracy 
-density_fcast('2021-09-04', fhorizon = 29, fdepth = 10, fvariable = "oxygen", scores_df = sc2, title = 'low accuracy, high precision')
+density_fcast('2022-08-14', fhorizon = 35, fdepth = 10, fvariable = "temperature", scores_df = sc2, title = 'low precision, high accuracy')
+density_fcast(fdate = '2021-09-10', fhorizon = 20, fdepth = 1, fvariable = "temperature", scores_df = sc2, title = 'low precision, high accuracy')
+
 
 # currently when saved as object, only the last figure is saved, need to figure out how to export both
 # high precision, high accuracy
-density_fcast('2022-08-27', fhorizon = 1, fdepth = 1, fvariable = "oxygen", scores_df = sc2, title = 'high precision, high accuracy')
+density_fcast(fdate = '2022-08-27', fhorizon = 1, fdepth = 1, fvariable = "temperature", scores_df = sc2, title = 'high precision, high accuracy')
 
-# high precision, high accuracy
+# high precision, low accuracy
+density_fcast(fdate = '2021-10-04', fhorizon = 1, fdepth = 10, fvariable = "temperature", scores_df = sc2, title = 'high precision, low accuracy')
 
