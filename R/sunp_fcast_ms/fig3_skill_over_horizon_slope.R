@@ -173,6 +173,15 @@ t
 
 ggarrange(t, o, common.legend = TRUE)
 
+log_df <- mean_skill %>% 
+  select(year:depth, mean_log)
+
+log_diff <- plyr::ddply(log_df, c("variable", "depth"), function(x){
+  diff = max(x$mean_log) - min(x$mean_log)
+  return(diff = diff)
+})
+
+
 ###########################################################################
 ## CRPS
 
