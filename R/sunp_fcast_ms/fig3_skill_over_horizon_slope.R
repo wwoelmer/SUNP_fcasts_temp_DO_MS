@@ -242,6 +242,14 @@ ggplot(means, aes(x = mean_crps, y = mean_rmse)) +
 ggplot(means, aes(x = mean_log, y = mean_rmse)) +
   geom_point()
 
+ggplot(means, aes(x = as.factor(year), y = mean_crps, color = as.factor(year))) +
+  geom_point() +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(depth~variable, scales = 'free') +
+  ggtitle('Climatology Skill') +
+  xlab('Year') +
+  ylab('Climatology CRPS') +
+  labs(color = 'Year')
 
 diff_null <- mean_skill
 diff_null$diff_crps <- NA
@@ -256,6 +264,11 @@ for(i in 1:nrow(diff_null)){
   diff_null$diff_log[i] <- means$mean_log[idx] - diff_null$mean_log[i]
   diff_null$diff_rmse[i] <- means$mean_rmse[idx] - diff_null$mean_rmse[i]
 }
+
+ggplot(diff_null, aes(x = horizon, y = mean_crps, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(depth~variable, scales = 'free')
 
 t_c <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon, y = diff_crps, color = as.factor(year))) +
   geom_line() +
