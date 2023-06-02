@@ -167,6 +167,7 @@ ggarrange(tf1, of1, common.legend = TRUE)
 # mean, min, max by year
 summ_crps <- sc %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
+  mutate(crps_K = ifelse(variable=='temperature (C)', crps + 273.15, crps)) %>% 
   group_by(year, depth, variable) %>% 
   dplyr::summarise(mean = mean(crps, na.rm = TRUE), 
                    median = median(crps, na.rm = TRUE),
@@ -177,13 +178,14 @@ summ_crps <- sc %>%
 
 summ_obs <- sc %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
+  mutate(obs_K = ifelse(variable=='temperature (C)', observation + 273.15, observation)) %>% 
   group_by(year, depth, variable) %>% 
-  dplyr::summarise(mean = mean(observation, na.rm = TRUE), 
-                   median = median(observation, na.rm = TRUE),
-                   min = min(observation, na.rm = TRUE),
-                   max = max(observation, na.rm = TRUE),
+  dplyr::summarise(mean = mean(obs_K, na.rm = TRUE), 
+                   median = median(obs_K, na.rm = TRUE),
+                   min = min(obs_K, na.rm = TRUE),
+                   max = max(obs_K, na.rm = TRUE),
                    range = abs(min - max),
-                   cv = sd(observation, na.rm = TRUE)/mean)
+                   cv = sd(obs_K, na.rm = TRUE)/mean)
 
 ggplot(summ_crps, aes(x = as.factor(year), y = cv)) +
   geom_point() +
