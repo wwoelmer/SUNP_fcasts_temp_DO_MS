@@ -58,16 +58,16 @@ PE <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
 PE
 
 
-ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(year), shape = as.factor(variable))) +
+ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(depth), shape = as.factor(variable))) +
   geom_point(size = 3) +
   #geom_jitter(size = 3) +
   #ylim(0.5, 0.9) +
-  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~depth, ncol = 1) +
+  scale_color_manual(values =  c('green', 'orange')) +
+  #facet_wrap(~depth, ncol = 1) +
   theme_bw() +
   xlab('Year') +
   ylab('Permutation Entropy') +
-  labs(color = 'Year',
+  labs(color = 'Depth',
        shape = 'Variable')
 
 ###########################################################################
@@ -149,6 +149,16 @@ ggplot(both, aes(x = pe, y = median, color = horizon, shape = as.factor(depth)))
   labs(color = 'Horizon',
        shape = 'Depth')
 
+ggplot(both_mean, aes(x = pe, y = median)) +
+  geom_point(size = 3) +
+  geom_smooth(method = 'lm') +
+  # scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = y ~ x),  geom = 'text', 
+                  aes(label = paste("p-value=", signif(..p.value.., digits = 4))),
+                  size = 5)
+
 ggplot(both, aes(x = pe, y = sd, group = horizon, color = horizon, shape = as.factor(depth))) +
   geom_smooth(method = 'lm') +
   geom_point() +
@@ -216,8 +226,49 @@ names(summary(lmo_median))
 lmt_sd <- lm(pe~sd, data = both[both$variable=='temperature',])
 summary(lmt_sd)
 ##############################################################################################
+## calculate PE of the forecast prediction
+PE_fcast <- plyr::ddply(sc, c("depth", "year", "variable", "horizon"), \(x) {
+  print(head(x))
+  data = x$mean
+  pe <- sapply(4, \(i) {
+    opd = ordinal_pattern_distribution(x = data, ndemb = i)
+    permutation_entropy(opd)
+  })
+  data.frame(ndemb = 4, pe = pe)
+})
 
-PE_fcast <- plyr::ddply(sc, c("depth", "year", "variable"), \(x) {
+ggplot(PE_fcast, aes(x = as.factor(year), y = pe, color = as.factor(horizon))) +
+  geom_point() +
+  #geom_point(data = PE, aes(x = as.factor(year), y = pe, color = 'obs')) +
+  facet_grid(depth ~ fct_rev(variable)) +
+  theme_bw() 
+
+ggplot(PE_fcast, aes(x = horizon, y = pe, color = as.factor(year))) +
+  geom_line() +
+  geom_hline(data = PE, aes(color = as.factor(year), yintercept = pe), size = 2) +
+  geom_smooth() +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  facet_grid(depth ~ fct_rev(variable)) +
+  theme_bw() +
+  ylab('PE of fcast at each horizon') +
+  labs(color = 'Year',
+       shape = ' ') +
+  guides(size = FALSE)
+
+## recreate the PE obs figure
+ggplot(PE_fcast, aes(x = as.factor(year), y = pe, color = (horizon), shape = as.factor(variable))) +
+  geom_jitter(size = 3) +
+  #scale_color_manual(values =  c('green', 'orange')) +
+  facet_wrap(~depth, ncol = 1) +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Permutation Entropy') +
+  labs(color = 'Horizon',
+       shape = 'Variable')
+
+##############################################################################################
+## calculate PE of CRPS over time
+PE_crps <- plyr::ddply(sc, c("depth", "year", "variable", "horizon"), \(x) {
   print(head(x))
   data = x$crps
   pe <- sapply(4, \(i) {
@@ -227,12 +278,81 @@ PE_fcast <- plyr::ddply(sc, c("depth", "year", "variable"), \(x) {
   data.frame(ndemb = 4, pe = pe)
 })
 
+
+ggplot(PE_crps, aes(x = horizon, y = pe, color = as.factor(year))) +
+  geom_line() +
+  geom_smooth() +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  facet_grid(depth ~ fct_rev(variable)) +
+  theme_bw() +
+  ylab('PE of CRPS at each horizon') +
+  labs(color = 'Year',
+       shape = ' ') +
+  guides(size = FALSE)
+
+## recreate the PE obs figure
+ggplot(PE_fcast, aes(x = as.factor(year), y = pe, color = (horizon), shape = as.factor(variable))) +
+  geom_jitter(size = 3) +
+  #scale_color_manual(values =  c('green', 'orange')) +
+  facet_wrap(~depth, ncol = 1) +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Permutation Entropy') +
+  labs(color = 'Horizon',
+       shape = 'Variable')
+
+
+
+###########################################################################################
+
+###########################################################################################
+## add in climatology scores to compare to PE
+scores <- read.csv(file.path(lake_directory, 'scores/sunp/climatology_scores.csv'))
+
+means <- scores %>% 
+  filter(as.Date(time) %in% buoy_dates) %>% 
+  group_by(variable, depth, year) %>% 
+  mutate(mean_crps = mean(crps),
+         sd_crps = sd(crps),
+         range_crps = abs(min(crps) - max(crps))) %>% 
+  distinct(variable, year, depth, .keep_all = TRUE) %>% 
+  dplyr::select(variable, depth, year, mean_crps:range_crps)
+
+PE_null <- left_join(PE, means)
+
+
+ggplot(PE_null, aes(x = pe, y = mean_crps, color = as.factor(year), shape = as.factor(depth))) +
+  geom_point(size = 3) +
+  facet_wrap(~fct_rev(variable), scales = 'free') +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  labs(color = 'Horizon',
+       shape = 'Depth') +
+  ggtitle('Mean skill of null')
+
+ggplot(PE_null, aes(x = pe, y = sd_crps, color = as.factor(year), shape = as.factor(depth))) +
+  geom_point(size = 3) +
+  facet_wrap(~fct_rev(variable), scales = 'free') +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  labs(color = 'Horizon',
+       shape = 'Depth') +
+  ggtitle('SD of null skill')
+
+ggplot(PE_null, aes(x = pe, y = range_crps, color = as.factor(year), shape = as.factor(depth))) +
+  geom_point(size = 3) +
+  facet_wrap(~fct_rev(variable), scales = 'free') +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  labs(color = 'Horizon',
+       shape = 'Depth') +
+  ggtitle('Range of null skill')
+
+
+
 ggplot(PE_fcast, aes(x = as.factor(year), y = pe, color = 'fcast')) +
   geom_point() +
   geom_point(data = PE, aes(x = as.factor(year), y = pe, color = 'obs')) +
+  geom_point(data = mean, aes(x = as.factor(year), y = pe, color = 'obs')) +
   facet_grid(depth ~ fct_rev(variable)) +
   theme_bw() 
-
-pe_both <- left_join(PE, PE_fcast)
-ggplot()
-  
