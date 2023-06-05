@@ -163,6 +163,14 @@ o21 <- sc %>%
   ggtitle('Oxygen, 21 Days')
 ggarrange(t21, o21, common.legend = TRUE)
 
+minmax <-  sc %>% 
+  filter(horizon %in% c(21),
+         doy > 238) %>% 
+  select(reference_datetime:crps, doy, year) %>% 
+  group_by(variable, year, depth) %>% 
+  mutate(change = max(crps) - min(crps)) %>% 
+  distinct(variable, depth, year, .keep_all = TRUE)
+
 #########################################################
 md7 <- scjoin %>% 
   filter(time %in% md$time,
