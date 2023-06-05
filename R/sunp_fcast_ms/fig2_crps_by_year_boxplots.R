@@ -168,7 +168,7 @@ ggarrange(tf1, of1, common.legend = TRUE)
 summ_crps <- sc %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
   mutate(crps_K = ifelse(variable=='temperature (C)', crps + 273.15, crps)) %>% 
-  group_by(year, depth, variable) %>% 
+  group_by(depth, variable) %>% 
   dplyr::summarise(mean = mean(crps, na.rm = TRUE), 
                    median = median(crps, na.rm = TRUE),
                    min = min(crps, na.rm = TRUE),
