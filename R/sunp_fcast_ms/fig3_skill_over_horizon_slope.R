@@ -136,7 +136,7 @@ ggarrange(t_r, o_r, common.legend = TRUE)
 
 ################################################################################
 # log score over horizon figures
-o <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_log, color = as.factor(year))) +
+o_log <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_log, color = as.factor(year))) +
   geom_line() +
   geom_ribbon(aes(ymax = mean_log + sd_log, ymin = mean_log - sd_log, 
                   col = as.factor(year),
@@ -144,34 +144,34 @@ o <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = horizon, 
               alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~depth) +
-  xlab('horizon (days into future)') +
+  facet_wrap(~depth, ncol = 1) +
+  xlab('horizon') +
   ylab('IGN Score') +
   ylim(4, 7) +
   ggtitle('Oxygen') +
   labs(color = 'Year', fill = 'Year') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
-o
 
-t <- ggplot(mean_skill[mean_skill$variable=='temperature (C)',], aes(x = horizon, y = mean_log, color = as.factor(year))) +
+t_log <- ggplot(mean_skill[mean_skill$variable=='temperature (C)',], aes(x = horizon, y = mean_log, color = as.factor(year))) +
   geom_line() +
   geom_ribbon(aes(ymax = mean_log + sd_log, ymin = mean_log - sd_log, 
                   col = as.factor(year),
                   fill = as.factor(year)),
               alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +  facet_wrap(~depth) +
-  xlab('horizon (days into future)') +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +  
+  facet_wrap(~depth, ncol = 1) +
+  xlab('horizon') +
   ylab('IGN Score') +
   ylim(0, 3) +
   ggtitle('Temperature') +
   labs(color = 'Year', fill = 'Year') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
-t
 
-ggarrange(t, o, common.legend = TRUE)
+
+ggarrange(t_log, o_log, common.legend = TRUE)
 
 log_df <- mean_skill %>% 
   select(year:depth, mean_log)
@@ -181,6 +181,7 @@ log_diff <- plyr::ddply(log_df, c("variable", "depth"), function(x){
   return(diff = diff)
 })
 
+log_diff
 
 ###########################################################################
 ## CRPS
@@ -193,8 +194,9 @@ o_crps <- ggplot(mean_skill[mean_skill$variable=='oxygen (mg/L)',], aes(x = hori
                   fill = as.factor(year)),
               alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +   facet_wrap(~depth) +
-  xlab('horizon (days into future)') +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +   
+  facet_wrap(~depth, ncol = 1) +
+  xlab('horizon') +
   ylab('CRPS (mg/L)') +
   ggtitle('Oxygen (mg/L)') +
   labs(color = 'Year', fill = 'Year') +
@@ -211,8 +213,8 @@ t_crps <- ggplot(mean_skill[mean_skill$variable=='temperature (C)',], aes(x = ho
               alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) + 
-  facet_wrap(~depth) +
-  xlab('horizon (days into future)') +
+  facet_wrap(~depth, ncol = 1) +
+  xlab('horizon') +
   ylab('CRPS (°C)') +
   ggtitle('Temperature (°C)') +
   labs(color = 'Year', fill = 'Year') +
@@ -222,11 +224,15 @@ t_crps
 
 ggarrange(t_crps, o_crps, common.legend = TRUE)
 
-ggarrange(t, t_crps, t_r,
-          o, o_crps, o_r,
+ggarrange(t_log, t_crps, t_r,
+          o_log, o_crps, o_r,
           common.legend = TRUE,
           align = 'v')
 
+ggarrange(t_log, t_crps, 
+          o_log, o_crps, 
+          common.legend = TRUE,
+          align = 'v')
 ##################################################################################
 # diff between flare forecast and climatology
 
@@ -281,7 +287,7 @@ ggplot(diff_null, aes(x = horizon, y = mean_crps, color = as.factor(year))) +
 
 t_c <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon, y = diff_crps, color = as.factor(year))) +
   geom_line() +
-  facet_wrap(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   geom_hline(yintercept = 0, linetype = 'dashed') +
   ylab('Diff from Null (°C)') +
   ylim(-1.5, 1.5) +
@@ -292,7 +298,7 @@ t_c <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon
   
 o_c <- ggplot(diff_null[diff_null$variable=='oxygen (mg/L)',], aes(x = horizon, y = diff_crps, color = as.factor(year))) +
   geom_line() +
-  facet_wrap(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   geom_hline(yintercept = 0, linetype = 'dashed') +
   ylab('Diff from Null (mg/L)') +
   #ylim(-1.5, 1.5) +
@@ -303,10 +309,10 @@ o_c <- ggplot(diff_null[diff_null$variable=='oxygen (mg/L)',], aes(x = horizon, 
 
 t_l <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon, y = diff_log, color = as.factor(year))) +
   geom_line() +
-  facet_grid(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   geom_hline(yintercept = 0, linetype = 'dashed') +
   ylab('Diff from Null') +
-  ggtitle('Temperature, IGN Score') +
+  ggtitle('Temperature, IGN') +
  # ylim(-1.5, 1.5) +
   labs(color = 'Year') +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -314,10 +320,10 @@ t_l <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon
 
 o_l <- ggplot(diff_null[diff_null$variable=='oxygen (mg/L)',], aes(x = horizon, y = diff_log, color = as.factor(year))) +
   geom_line() +
-  facet_grid(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   geom_hline(yintercept = 0, linetype = 'dashed') +
   ylab('Diff from Null') +
-  ggtitle('Oxygen, IGN Score') +
+  ggtitle('Oxygen, IGN') +
   labs(color = 'Year') +
   # ylim(-1.5, 1.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -325,7 +331,7 @@ o_l <- ggplot(diff_null[diff_null$variable=='oxygen (mg/L)',], aes(x = horizon, 
 
 t_r <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon, y = diff_rmse, color = as.factor(year))) +
   geom_line() +
-  facet_grid(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   geom_hline(yintercept = 0, linetype = 'dashed') +
   ylab('Diff from Null (°C)') +
   ggtitle('Temperature, RMSE') +
@@ -336,7 +342,7 @@ t_r <- ggplot(diff_null[diff_null$variable=='temperature (C)',], aes(x = horizon
 
 o_r <- ggplot(diff_null[diff_null$variable=='oxygen (mg/L)',], aes(x = horizon, y = diff_rmse, color = as.factor(year))) +
   geom_line() +
-  facet_grid(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   geom_hline(yintercept = 0, linetype = 'dashed') +
   ylab('Diff from Null (mg/L)') +
   ggtitle('Oxygen, RMSE') +
@@ -349,6 +355,10 @@ ggarrange(t_l, t_c, t_r,
           o_l, o_c, o_r,
           common.legend = TRUE)
 
+ggarrange(t_l, t_c, 
+          o_l, o_c,
+          common.legend = TRUE,
+          align = "v")
 ######################################################################################
 ### LSPA Poster
 
