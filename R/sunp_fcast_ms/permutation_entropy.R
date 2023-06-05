@@ -11,16 +11,6 @@ d <- d %>%
   filter(doy > 246,
          depth %in% c(1, 10),
          year %in% c(2021, 2022))
-  
-
-o_10_21 <- d %>% 
-  filter(depth==10,
-         variable=="oxygen",
-         year==2022)
-
-x = o_10_21$observed
-opd = ordinal_pattern_distribution(x = x, ndemb = 3)
-permutation_entropy(opd)
 
 df <- matrix(ncol = 5, nrow = 10)
 colnames(df) <- c('year', 'variable', 'depth', 'PE', 'demb')
@@ -150,14 +140,27 @@ ggplot(both, aes(x = pe, y = median, color = horizon, shape = as.factor(depth)))
        shape = 'Depth')
 
 ggplot(both_mean, aes(x = pe, y = median)) +
-  geom_point(size = 3) +
-  geom_smooth(method = 'lm') +
-  # scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  geom_point() +
+  geom_smooth(method = 'lm', color = 'black') +
+  geom_point(aes(color = as.factor(depth), shape = as.factor(variable)), size = 3) +
+  xlab('PE') +
+  ylab('Median CRPS') +
+  scale_color_manual(values =  c('green', 'orange')) +
   theme_bw() +
-  stat_fit_glance(method = 'lm',
-                  method.args = list(formula = y ~ x),  geom = 'text', 
-                  aes(label = paste("p-value=", signif(..p.value.., digits = 4))),
-                  size = 5)
+  labs(shape = 'Variable',
+       color = 'Depth')
+
+ggplot(both_mean, aes(x = pe, y = sd)) +
+  geom_point() +
+  geom_smooth(method = 'lm', color = 'black') +
+  geom_point(aes(color = as.factor(depth), shape = as.factor(variable)), size = 3) +
+  xlab('PE') +
+  ylab('SD CRPS') +
+  scale_color_manual(values =  c('green', 'orange')) +
+  theme_bw() +
+  labs(shape = 'Variable',
+       color = 'Depth')
+
 
 ggplot(both, aes(x = pe, y = sd, group = horizon, color = horizon, shape = as.factor(depth))) +
   geom_smooth(method = 'lm') +
