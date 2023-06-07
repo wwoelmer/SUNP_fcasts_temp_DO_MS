@@ -1,6 +1,7 @@
 library(lubridate)
 library(tidyverse)
 library(rLakeAnalyzer)
+library(patchwork)
 
 lake_directory <- here::here()
 
@@ -12,7 +13,11 @@ dat <- dat %>%
 
 ts <- ggplot(dat, aes(x = as.Date(time), y = observed, color = as.factor(depth))) +
   geom_line() +
-  facet_wrap(~year, scales = 'free_x')
+  facet_wrap(~year, scales = 'free_x') +
+  xlab('Date') +
+  ylab('Temperature (°C)') +
+  labs(color = 'Depth (m)') +
+  theme_bw()
 
 dat <- dat %>% 
   group_by(time, year) %>% 
@@ -20,8 +25,10 @@ dat <- dat %>%
 
 td <- ggplot(dat, aes(x = as.Date(time), y = therm)) +
   geom_line() +
-  facet_wrap(~year, scales = 'free_x')
+  facet_wrap(~year, scales = 'free_x') +
+  xlab('Date') +
+  ylab('Thermocline Depth (m)') +
+  theme_bw()
 
 
-library(patchwork)
-ts + td
+ggarrange(ts, td, labels = 'auto')
