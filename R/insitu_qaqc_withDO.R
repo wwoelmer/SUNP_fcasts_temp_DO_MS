@@ -344,7 +344,7 @@ insitu_qaqc <- function(realtime_file,
   temp_oxy_buoy <- temp_oxy_buoy %>% 
     mutate(DO = ifelse(is.na(Temp) & !is.na(DO), NA, DO))
   
-  temp_oxy_buoy <- na.omit(temp_oxy_buoy)
+
   
   # combine with historical data
   h <- read.csv(hist_all_file)
