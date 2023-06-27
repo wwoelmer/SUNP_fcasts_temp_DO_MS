@@ -71,7 +71,7 @@ head(sims)
 
 ###########################################################
 message("Generating targets")
-  source(file.path(lake_directory, "R", "insitu_qaqc_withDO_2023.R"))
+  source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
   
   #' Generate the `config_obs` object and create directories if necessary
   message('read config')
@@ -99,11 +99,11 @@ message("Generating targets")
   
   # manually collected data
   if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'))){
-    download.file(url = 'https://zenodo.org/record/7559434/files/Lake-Sunapee-Protective-Association/LMP-v2023.1.zip?download=1',
+    download.file(url = 'https://zenodo.org/record/8003784/files/Lake-Sunapee-Protective-Association/LMP-v2023.2.zip?download=1',
                   destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
                   mode = 'wb')
     unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
-          files = file.path('Lake-Sunapee-Protective-Association-LMP-d34c6a0', 'primary files', 'LSPALMP_1986-2022_v2023-01-22.csv'),
+          files = file.path('Lake-Sunapee-Protective-Association-LMP-42d9cc5', 'primary files', 'LSPALMP_1986-2022_v2023-06-04.csv'),
           exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
           junkpaths = TRUE)
   }
@@ -144,7 +144,7 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 78
+starting_index <- 1
 set.seed(24)
 
 for(i in starting_index:nrow(sims)){
