@@ -5,11 +5,15 @@ library(patchwork)
 
 lake_directory <- here::here()
 
-dat <- read.csv(file.path(lake_directory, "targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv"))
+dat <- read.csv(file.path(lake_directory, "targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv"))
+
 dat <- dat %>% 
   mutate(year = year(time)) %>% 
   filter(variable=='temperature',
-         year %in% c(2021, 2022))
+         year %in% c(2021, 2022),
+         depth < 11) 
+
+unique(dat$depth)
 
 ts <- ggplot(dat, aes(x = as.Date(time), y = observed, color = as.factor(depth))) +
   geom_line() +
