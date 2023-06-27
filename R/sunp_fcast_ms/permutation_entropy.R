@@ -48,7 +48,19 @@ PE <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
 PE
 
 
-ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(depth), shape = as.factor(variable))) +
+ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(depth), color = as.factor(variable))) +
+  geom_point(size = 3) +
+  #geom_jitter(size = 3) +
+  #ylim(0.5, 0.9) +
+  scale_color_manual(values =  c('darkgrey', 'tan4')) +
+  #facet_wrap(~depth, ncol = 1) +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Permutation Entropy') +
+  labs(color = 'Variable',
+       shape = 'Depth')
+
+ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(variable), color = as.factor(depth))) +
   geom_point(size = 3) +
   #geom_jitter(size = 3) +
   #ylim(0.5, 0.9) +
@@ -57,8 +69,8 @@ ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(depth), shape = as
   theme_bw() +
   xlab('Year') +
   ylab('Permutation Entropy') +
-  labs(color = 'Depth',
-       shape = 'Variable')
+  labs(color = 'Variable',
+       shape = 'Depth')
 
 ###########################################################################
 ## calculate PE on fcast time series?
@@ -139,71 +151,25 @@ ggplot(both, aes(x = pe, y = median, color = horizon, shape = as.factor(depth)))
   labs(color = 'Horizon',
        shape = 'Depth')
 
-ggplot(both_mean, aes(x = pe, y = median)) +
-  geom_point() +
-  geom_smooth(method = 'lm', color = 'black') +
-  geom_point(aes(color = as.factor(depth), shape = as.factor(variable)), size = 3) +
-  xlab('PE') +
-  ylab('Median CRPS') +
-  scale_color_manual(values =  c('green', 'orange')) +
-  theme_bw() +
-  labs(shape = 'Variable',
-       color = 'Depth')
+ggplot(both, aes(x = pe, y = median, group = pe)) +
+  geom_jitter(size = 3, aes(color = horizon, shape = as.factor(depth))) +
+  geom_boxplot(alpha = 0.7)  +
+  facet_wrap(~fct_rev(variable), scales = 'free') 
+  
 
-ggplot(both_mean, aes(x = pe, y = sd)) +
-  geom_point() +
-  geom_smooth(method = 'lm', color = 'black') +
-  geom_point(aes(color = as.factor(depth), shape = as.factor(variable)), size = 3) +
-  xlab('PE') +
-  ylab('SD CRPS') +
-  scale_color_manual(values =  c('green', 'orange')) +
-  theme_bw() +
-  labs(shape = 'Variable',
-       color = 'Depth')
-
-
-ggplot(both, aes(x = pe, y = sd, group = horizon, color = horizon, shape = as.factor(depth))) +
-  geom_smooth(method = 'lm') +
-  geom_point() +
-  facet_wrap(~fct_rev(variable), scales = 'free') +
-  #scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
-  theme_bw() +
-  labs(color = 'Horizon',
-       shape = 'Depth') +
-  ggtitle('SD across skill')
-
-ggplot(both, aes(x = pe, y = range, group = horizon, color = horizon, shape = as.factor(depth))) +
-  geom_smooth(method = 'lm') +
-  geom_point() +
-  facet_wrap(~fct_rev(variable), scales = 'free') +
-  #scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
-  theme_bw() +
-  labs(color = 'Horizon',
-       shape = 'Depth') +
-  ggtitle('Range across skill')
-
-ggplot(both, aes(x = pe, y = median, group = horizon, color = horizon, shape = as.factor(depth))) +
-  geom_smooth(method = 'lm') +
-  geom_point() +
-  facet_wrap(~fct_rev(variable), scales = 'free') +
-  #scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
-  theme_bw() +
-  #stat_fit_glance(method = 'lm',
-  #                method.args = list(formula = y ~ x),  geom = 'text', 
-  #                aes(label = paste("p-value=", signif(..p.value.., digits = 4))),
-  #                size = 5) +
-  labs(color = 'Horizon',
-       shape = 'Depth') +
-  ggtitle('Median skill')
-
+# calculate linear model
 lm_df <- both %>% 
   select(pe, variable, median, range, sd) %>% 
   pivot_longer(c(median, range, sd),
                names_to = 'summ_var',
                values_to = 'value')
 
+lm_median <- lm_df %>%
+  filter(summ_var=='median')
+summary(lm(lm_median$pe ~ lm_median$value))
 
-lm_out <- plyr::ddply(lm_df, c("summ_var", "variable"), \(x) {
+
+lm_out <- plyr::ddply(lm_df, c("summ_var"), \(x) {
   print(head(x))
   data = x
   lm <- lm(data$pe ~ data$value)
@@ -213,6 +179,62 @@ lm_out <- plyr::ddply(lm_df, c("summ_var", "variable"), \(x) {
 
 lm_out
 
+
+all <- ggplot(both_mean, aes(x = pe, y = median)) +
+  geom_point() +
+  geom_smooth(method = 'lm', color = 'black', se = F) +
+  geom_point(aes(shape = as.factor(depth), color = as.factor(variable)), size = 3) +
+  xlab('PE') +
+  ylab('Median CRPS') +
+  scale_color_manual(values =  c('darkgrey', 'tan4')) +
+  theme_bw() +
+  ggplot2::annotate("text", x = 0.6, y = 0.8, label = 'p = 0.002') +
+  labs(shape = 'Depth',
+       color = 'Variable')
+all
+
+######################################################
+# pe vs metrics of forecast performance
+ggplot(both, aes(x = pe, y = sd, group = horizon, color = horizon, shape = as.factor(depth))) +
+  geom_smooth(method = 'lm', se = F) +
+  geom_point() +
+  #geom_line() +
+  facet_wrap(~fct_rev(variable), scales = 'free') +
+  #scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  labs(color = 'Horizon',
+       shape = 'Depth') +
+  ggtitle('SD across skill')
+
+ggplot(both, aes(x = pe, y = median, group = horizon, color = horizon, shape = as.factor(depth))) +
+  geom_smooth(method = 'lm', se = F) +
+  #geom_line() +
+  geom_point() +
+  facet_wrap(~fct_rev(variable), scales = 'free') +
+  #scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  labs(color = 'Horizon',
+       shape = 'Depth') +
+  ggtitle('Median skill')
+
+
+med_bp <- ggplot(both, aes(x = pe, y = median, group = pe)) +
+  geom_boxplot(width = 0.05, outlier.shape = NA) +
+  geom_jitter(aes(x = pe, y = median, group = horizon, color = horizon, shape = as.factor(depth))) +
+  facet_wrap(~fct_rev(variable), scales = 'free') +
+  scale_fill_manual(values =  c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  ylab('Median CRPS') +
+  xlab('PE') +
+  labs(color = 'Horizon',
+       shape = 'Depth',
+       fill = 'Year')
+med_bp
+
+ggarrange(all, med_bp, labels = 'auto')
+
+
+
 PE <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
   print(head(x))
   data = x$observed
@@ -220,19 +242,14 @@ PE <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
   pe <- permutation_entropy(opd)
   data.frame(ndemb = 4, pe = pe)
 })
+PE
 
 
-lmo_sd <- lm(pe~sd, data = both[both$variable=='oxygen',])
-summary(lmo_sd)
-names(summary(lmo_median))
-
-lmt_sd <- lm(pe~sd, data = both[both$variable=='temperature',])
-summary(lmt_sd)
 ##############################################################################################
 ## calculate PE of the forecast prediction
 PE_fcast <- plyr::ddply(sc, c("depth", "year", "variable", "horizon"), \(x) {
   print(head(x))
-  data = x$mean
+  data = x$median
   pe <- sapply(4, \(i) {
     opd = ordinal_pattern_distribution(x = data, ndemb = i)
     permutation_entropy(opd)
@@ -247,15 +264,13 @@ ggplot(PE_fcast, aes(x = as.factor(year), y = pe, color = as.factor(horizon))) +
   theme_bw() 
 
 ggplot(PE_fcast, aes(x = horizon, y = pe, color = as.factor(year))) +
-  geom_line() +
-  geom_hline(data = PE, aes(color = as.factor(year), yintercept = pe), size = 2) +
-  geom_smooth() +
+  geom_point() +
+  geom_hline(data = PE, aes(color = as.factor(year), yintercept = pe), size = 1) +
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
   facet_grid(depth ~ fct_rev(variable)) +
   theme_bw() +
   ylab('PE of fcast at each horizon') +
-  labs(color = 'Year',
-       shape = ' ') +
+  labs(color = 'Year') +
   guides(size = FALSE)
 
 ## recreate the PE obs figure
