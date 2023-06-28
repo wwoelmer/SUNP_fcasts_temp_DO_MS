@@ -90,12 +90,22 @@ mean_hzon_var <- sc_clim %>%
   select(variable, horizon, depth, mean_crps:sd_crps)
 
 ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = variable)) +
-  geom_line() +
+  geom_line(size = 1) +
   geom_hline(aes(yintercept = 0)) +
-  geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = variable), alpha = 0.2) +
-  ylab("nCRPS") +
-  theme_bw() +
-  ggtitle('CRPS/CRPSclim')
+  #geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = variable), alpha = 0.2) +
+  ylab("Forecast Skill") +
+  theme_bw() 
+
+skill_diff <- plyr::ddply(mean_hzon_var, c("variable"), function(x){
+  diff = max(x$mean_crps, na.rm = TRUE) - min(x$mean_crps, na.rm = TRUE)
+  return(diff = diff)
+})
+
+skill_diff
+pct_increase <- skill_diff$V1[skill_diff$variable=='oxygen']/skill_diff$V1[skill_diff$variable=='temperature']
+pct_increase
+
+(skill_diff$V1[skill_diff$variable=='oxygen'] - skill_diff$V1[skill_diff$variable=='temperature'])/skill_diff$V1[skill_diff$variable=='oxygen']
 
 #### look across depth
 #### aggregate across horizon
@@ -111,10 +121,8 @@ ggplot(mean_hzon_var_depth, aes(x = horizon, y = mean_crps, linetype = variable)
   geom_line() +
   facet_wrap(~depth) +
   geom_hline(aes(yintercept = 0)) +
-  ylab("nCRPS") +
-  theme_bw() +
-  ggtitle('1 - CRPS/CRPSclim')
-
+  ylab("Forecast Skill") +
+  theme_bw() 
 
 #### look across depth
 #### aggregate across horizon
@@ -166,4 +174,4 @@ pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = variable, color
   theme_bw() +
   labs(linetype = 'Variable', color = 'Year')
 
-ggarrange(skill_fig, pct_fig, labels = 'auto', common.legend = TRUE)
+ggarrange(skill_fig, pct_fig, labels = 'auto', common.legend = TRUE, nrow = 1)
