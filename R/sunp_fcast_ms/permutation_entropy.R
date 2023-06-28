@@ -72,6 +72,15 @@ ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(variable), color =
   labs(color = 'Variable',
        shape = 'Depth')
 
+ggplot(PE, aes(x = fct_rev(as.factor(variable)), y = pe, shape = as.factor(depth), color = as.factor(year))) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Permutation Entropy') +
+  labs(color = 'Variable',
+       shape = 'Depth')
+
 ###########################################################################
 ## calculate PE on fcast time series?
 lake_directory <- here::here()
