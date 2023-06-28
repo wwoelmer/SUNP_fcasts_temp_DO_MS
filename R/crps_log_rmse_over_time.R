@@ -115,6 +115,7 @@ t21 <- sc %>%
   geom_vline(data = md21[md21$variable=='temperature (C)',],  aes(xintercept = as.Date(mix_day, format = "%m-%d"), color = as.factor(year)))  +
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
   labs(color = 'Year') +
+  ylim(0, 2.2) +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (°C)') +
   ggtitle('Temperature, 21 Days') +
@@ -135,6 +136,7 @@ o21 <- sc %>%
   labs(color = 'Year') +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (mg/L)') +
+  ylim(0, 2.3) +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
   guides(linetype = "none") +
@@ -174,6 +176,7 @@ t7 <- sc %>%
   #geom_point(data = md7[md7$variable=='temperature (C)',], size = 3, color = 'black', shape = 8, aes(x = as.Date(mix_day, format = "%m-%d"), y = crps))  +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (°C)') +
+  ylim(0, 2.2) +
   ggtitle('Temperature, 7 Days') +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
@@ -190,6 +193,7 @@ o7 <- sc %>%
   geom_vline(data = md7[md7$variable=='oxygen (mg/L)',],  aes(xintercept = as.Date(mix_day, format = "%m-%d"), color = as.factor(year)))  +
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values =  c('#17BEBB', '#9E2B25')) +
+  ylim(0, 2.3) +
   labs(color = 'Year') +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (mg/L)') +
@@ -222,6 +226,7 @@ t1 <- sc %>%
   #geom_vline(data = md1[md1$variable=='temperature (C)',],  aes(xintercept = as.Date(mix_day, format = "%m-%d"), color = as.factor(year)))  +
   geom_point(data = md1[md1$variable=='temperature (C)',], size = 3, color = 'black', shape = 8, aes(x = as.Date(mix_day, format = "%m-%d"), y = crps))  +
   facet_wrap(~depth, ncol = 1) +
+  ylim(0, 2.2) +
   ylab('CRPS (°C)') +
   ggtitle('Temperature, 1 Day') +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
@@ -239,6 +244,7 @@ o1 <- sc %>%
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values =  c('#17BEBB', '#9E2B25')) +
   labs(color = 'Year') +
+  ylim(0, 2.3) +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (mg/L)') +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
@@ -250,6 +256,9 @@ o1
 
 ggarrange(t1, o1, common.legend = TRUE)
 
+# all figs
+ggarrange(t1, t7, t21, common.legend = TRUE, nrow = 1, align = "v")
+ggarrange(o1, o7, o21, common.legend = TRUE, nrow = 1, align = "v")
 ###############################################################################################
 ## misc figs below, not in MS
 #################################################################################################################
