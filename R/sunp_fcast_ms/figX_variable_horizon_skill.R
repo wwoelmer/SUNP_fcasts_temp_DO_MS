@@ -125,7 +125,7 @@ ggplot(mean_hzon_var_depth, aes(x = horizon, y = mean_crps, linetype = variable)
   theme_bw() 
 
 #### look across depth
-#### aggregate across horizon
+#### and across horizon
 #### and year
 mean_hzon_var_depth_yr <- sc_clim %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
@@ -148,6 +148,20 @@ skill_fig <- ggplot(mean_hzon_var_depth_yr, aes(x = horizon, y = mean_crps, line
   theme_bw() +
   labs(color = 'Year', linetype = 'Variable') +
   guides(fill = FALSE)
+
+# look at mean differences across depth for each year
+mean_overall <- sc_clim %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(variable, depth, year) %>% 
+  mutate(mean_crps = mean(nCRPS, na.rm = TRUE),
+         sd_crps = sd(nCRPS, na.rm = TRUE)) %>% 
+  distinct(variable, depth, .keep_all = TRUE) %>% 
+  select(variable, depth, mean_crps:sd_crps)
+
+ggplot(mean_overall, aes(x = as.factor(depth), y = mean_crps)) +
+  geom_point() +
+  facet_grid(year~variable)
 
 #######################################################################################################################
 ## for each horizon, calculate the percent of forecasts better than null (above 0)
@@ -173,5 +187,61 @@ pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = variable, color
   ylab("% of Forecasts Better than Null") +
   theme_bw() +
   labs(linetype = 'Variable', color = 'Year')
+pct_fig
+
+pct_null %>% 
+  group_by(variable, year, depth) %>% 
+  mutate(mean_pct = mean(pct)) %>% 
+ggplot(aes(x = variable, y = mean_pct, shape = as.factor(depth), color = as.factor(year))) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  #facet_wrap(~depth, ncol = 1) +
+  ylab("% of Forecasts Better than Null") +
+  theme_bw() +
+  labs(linetype = 'Variable', color = 'Year')
 
 ggarrange(skill_fig, pct_fig, labels = 'auto', common.legend = TRUE, nrow = 1)
+
+#############################################################
+## add the PE panel
+
+library(statcomp)
+library(ggpmisc)
+
+lake_directory <- here::here()
+
+d <- read.csv(file.path(lake_directory, "targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv"))
+
+d <- d %>% 
+  mutate(doy = yday(time),
+         year = year(time)) %>% 
+  filter(doy > 246,
+         depth %in% c(1, 10),
+         year %in% c(2021, 2022))
+
+## go with demb = 4
+PE <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
+  print(head(x))
+  data = x$observed
+  opd = ordinal_pattern_distribution(x = data, ndemb = 4)
+  pe <- permutation_entropy(opd)
+  data.frame(ndemb = 4, pe = pe)
+})
+PE
+
+PE_wide <- PE %>% 
+  pivot_wider(names_from = year, values_from = pe)
+
+ggplot(PE_wide) +
+  geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
+  geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), color = '2021'), size=3 ) +
+  geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022'), size=3 ) +
+  coord_flip()+
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~fct_rev(variable), ncol = 1) +
+  theme_bw() +
+  xlab('Depth') +
+  ylab('Permutation Entropy') +
+  labs(color = 'Year')
+
