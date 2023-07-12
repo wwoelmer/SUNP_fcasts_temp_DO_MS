@@ -3,6 +3,8 @@
 library(statcomp)
 library(ggpmisc)
 
+lake_directory <- here::here()
+
 d <- read.csv(file.path(lake_directory, "targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv"))
 
 d <- d %>% 
@@ -62,9 +64,10 @@ ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(depth), color = as
 
 ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(variable), color = as.factor(depth))) +
   geom_point(size = 3) +
+  geom_line(aes(x = as.factor(year), group = as.factor(variable))) +
   #geom_jitter(size = 3) +
   #ylim(0.5, 0.9) +
-  scale_color_manual(values =  c('green', 'orange')) +
+  #scale_color_manual(values =  c('lightblue', 'darkblue')) +
   #facet_wrap(~depth, ncol = 1) +
   theme_bw() +
   xlab('Year') +
@@ -72,7 +75,36 @@ ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(variable), color =
   labs(color = 'Variable',
        shape = 'Depth')
 
-ggplot(PE, aes(x = fct_rev(as.factor(variable)), y = pe, shape = as.factor(depth), color = as.factor(year))) +
+
+ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(year))) +
+  geom_point(size = 3) +
+  #geom_jitter(size = 3) +
+  #ylim(0.5, 0.9) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_grid(depth~fct_rev(variable)) +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Permutation Entropy') +
+  labs(color = 'Variable',
+       shape = 'Depth')
+
+PE_wide <- PE %>% 
+  pivot_wider(names_from = year, values_from = pe)
+
+ggplot(PE_wide) +
+  geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
+  geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), color = '2021'), size=3 ) +
+  geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022'), size=3 ) +
+  coord_flip()+
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~fct_rev(variable), ncol = 1) +
+  theme_bw() +
+  xlab('Depth') +
+  ylab('Permutation Entropy') +
+  labs(color = 'Year')
+
+
+PE_fig <- ggplot(PE, aes(x = fct_rev(as.factor(variable)), y = pe, shape = as.factor(depth), color = as.factor(year))) +
   geom_point(size = 3) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   theme_bw() +
@@ -80,7 +112,7 @@ ggplot(PE, aes(x = fct_rev(as.factor(variable)), y = pe, shape = as.factor(depth
   ylab('Permutation Entropy') +
   labs(color = 'Variable',
        shape = 'Depth')
-
+PE_fig
 ###########################################################################
 ## calculate PE on fcast time series?
 lake_directory <- here::here()
@@ -120,6 +152,84 @@ buoy_dates <- c(seq.Date(as.Date('2021-08-04'), as.Date('2021-10-17'), by = 'day
 sc <- sc %>% 
   mutate(doy = yday(datetime),
          year = year(datetime)) %>% 
+  select(-c(family, site_id)) %>% 
+  filter(horizon > 0,
+         as.Date(reference_datetime) %in% buoy_dates) %>% 
+  select(model_id, reference_datetime, datetime, horizon, depth, variable, everything()) 
+
+# convert oxy crps and obs to mg/L
+sc <- sc %>% 
+  mutate(crps = ifelse(variable=='temperature', crps, (crps*32/1000)),
+         mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
+         observation = ifelse(variable=='temperature', observation, (observation*32/1000)))
+
+
+
+
+###############################################################################################
+## read in climatology
+# read in climatology and calculate mean scores
+clim <- read.csv(file.path(lake_directory, 'scores/sunp/climatology_scores.csv'))
+clim <- clim %>% 
+  select(time, depth, variable, crps) %>% 
+  rename(crps_clim = crps,
+         datetime = time) %>% 
+  mutate(datetime = as.Date(datetime),
+         depth = as.numeric(depth))
+
+sc <- sc %>% 
+  select(datetime:variable, crps) %>% 
+  mutate(datetime = as.Date(datetime))
+
+sc_clim <- full_join(sc, clim, by = c('datetime', 'depth', 'variable'))
+sc_clim <- sc_clim %>% 
+  mutate(nCRPS = (crps/crps_clim),
+         year = year(datetime))
+
+sc_clim <- na.omit(sc_clim)
+
+summ_crps <- sc_clim %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(year, depth, variable, horizon) %>% 
+  dplyr::summarise(mean = mean(nCRPS, na.rm = TRUE), 
+                   median = median(nCRPS, na.rm = TRUE),
+                   min = min(nCRPS, na.rm = TRUE),
+                   max = max(nCRPS, na.rm = TRUE),
+                   range = abs(min - max),
+                   sd = sd(nCRPS, na.rm = TRUE),
+                   cv = sd(nCRPS, na.rm = TRUE)/mean)
+
+mean_crps <- sc_clim %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(year, depth, variable) %>% 
+  dplyr::summarise(mean = mean(nCRPS, na.rm = TRUE), 
+                   median = median(nCRPS, na.rm = TRUE),
+                   min = min(nCRPS, na.rm = TRUE),
+                   max = max(nCRPS, na.rm = TRUE),
+                   range = abs(min - max),
+                   sd = sd(nCRPS, na.rm = TRUE),
+                   cv = sd(nCRPS, na.rm = TRUE)/mean)
+
+both <- left_join(PE, summ_crps)
+both_mean <- left_join(PE, mean_crps)
+
+ggplot(both, aes(x = pe, y = median, color = horizon, shape = as.factor(depth))) +
+  geom_point(size = 3) +
+  facet_wrap(~fct_rev(variable), scales = 'free') +
+  #  geom_smooth() +
+  # scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  theme_bw() +
+  labs(color = 'Horizon',
+       shape = 'Depth')
+
+
+
+###################################################################################################
+#######################################################################################################
+#### OLD
+sc <- sc %>% 
+  mutate(doy = yday(datetime),
+         year = year(datetime)) %>% 
   mutate(crps = ifelse(variable=='temperature', crps, (crps*32/1000))) %>% 
   select(-c(family, site_id)) %>% 
   filter(horizon > 0,
@@ -137,16 +247,16 @@ summ_crps <- sc %>%
                    sd = sd(crps, na.rm = TRUE),
                    cv = sd(crps, na.rm = TRUE)/mean)
 
-mean_crps <- sc %>% 
+mean_crps <- sc_clim %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
   group_by(year, depth, variable) %>% 
-  dplyr::summarise(mean = mean(crps, na.rm = TRUE), 
-                   median = median(crps, na.rm = TRUE),
-                   min = min(crps, na.rm = TRUE),
-                   max = max(crps, na.rm = TRUE),
+  dplyr::summarise(mean = mean(nCRPS, na.rm = TRUE), 
+                   median = median(nCRPS, na.rm = TRUE),
+                   min = min(nCRPS, na.rm = TRUE),
+                   max = max(nCRPS, na.rm = TRUE),
                    range = abs(min - max),
-                   sd = sd(crps, na.rm = TRUE),
-                   cv = sd(crps, na.rm = TRUE)/mean)
+                   sd = sd(nCRPS, na.rm = TRUE),
+                   cv = sd(nCRPS, na.rm = TRUE)/mean)
 
 both <- left_join(PE, summ_crps)
 both_mean <- left_join(PE, mean_crps)
@@ -194,10 +304,10 @@ all <- ggplot(both_mean, aes(x = pe, y = median)) +
   geom_smooth(method = 'lm', color = 'black', se = F) +
   geom_point(aes(shape = as.factor(depth), color = as.factor(variable)), size = 3) +
   xlab('PE') +
-  ylab('Median CRPS') +
+  ylab('nCRPS') +
   scale_color_manual(values =  c('darkgrey', 'tan4')) +
   theme_bw() +
-  ggplot2::annotate("text", x = 0.6, y = 0.8, label = 'p = 0.002') +
+ # ggplot2::annotate("text", x = 0.6, y = 0.8, label = 'p = 0.002') +
   labs(shape = 'Depth',
        color = 'Variable')
 all
