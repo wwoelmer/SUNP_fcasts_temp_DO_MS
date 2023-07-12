@@ -9,17 +9,20 @@ library(plotly)
 
 setwd(here::here())
 
-tgts <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
+tgts <- read.csv('./targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv')
+depths <- c(1.0, 10.0)
 
 oxy <- tgts %>% 
   select(time, depth, observed, variable) %>% 
   filter(variable=='oxygen',
-         observed > 0) 
+         observed > 0,
+         depth %in% depths) 
 
 oxy <- oxy %>% 
   mutate(year = year(time),
          mo_day = format(as.Date(time), "%m-%d")) %>% 
-  filter(mo_day > "06-29" & mo_day < '10-18')
+  filter(mo_day > "06-29" & mo_day < '10-18',
+         year > 2006)
 
 # round 1.5 data to 1.0m
 oxy <- oxy %>% 
@@ -50,7 +53,7 @@ a <- ggplot(data = oxy, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*
   labs(color = 'Year') +
   theme_bw()
 a
-ggplotly(a)
+#ggplotly(a)
 
 b <- ggplot(data = oxy, aes(x = as.factor(year), y = observed*32/1000)) +
   facet_wrap(~depth) +
@@ -64,6 +67,29 @@ b
 
 ggarrange(a, b, common.legend = TRUE)
 
+hist_o <- oxy %>% 
+  filter(depth %in% c(1.0, 10.0),
+         year < 2021) %>% 
+  mutate(obs_mgL = observed*32/1000) %>% 
+  group_by(depth) %>% 
+  dplyr::summarise(mean = mean(obs_mgL, na.rm = TRUE), 
+                   median = median(obs_mgL, na.rm = TRUE),
+                   min = min(obs_mgL, na.rm = TRUE),
+                   max = max(obs_mgL, na.rm = TRUE),
+                   range = abs(min - max))
+hist_o
+
+hist_o_yrly <- oxy %>% 
+  filter(depth %in% c(1.0, 10.0),
+         year < 2021) %>% 
+  mutate(obs_mgL = observed*32/1000) %>% 
+  group_by(depth, year) %>% 
+  dplyr::summarise(mean = mean(obs_mgL, na.rm = TRUE), 
+                   median = median(obs_mgL, na.rm = TRUE),
+                   min = min(obs_mgL, na.rm = TRUE),
+                   max = max(obs_mgL, na.rm = TRUE),
+                   range = abs(min - max))
+hist_o_yrly
 #################################################################################################################
 temp <- tgts %>% 
   select(time, depth, observed, variable) %>% 
@@ -111,6 +137,17 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
 t_b
 
 ggarrange(t_a, t_b, common.legend = TRUE)
+
+hist_t <- temp %>% 
+  filter(depth %in% c(1.0, 10.0),
+         year < 2021) %>% 
+  group_by(depth) %>% 
+  dplyr::summarise(mean = mean(observed, na.rm = TRUE), 
+                   median = median(observed, na.rm = TRUE),
+                   min = min(observed, na.rm = TRUE),
+                   max = max(observed, na.rm = TRUE),
+                   range = abs(min - max))
+hist_t
 
 ##################################
 ## LSPA POSTER
