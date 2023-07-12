@@ -119,10 +119,11 @@ mean_hzon_var_depth <- sc_clim %>%
 
 ggplot(mean_hzon_var_depth, aes(x = horizon, y = mean_crps, linetype = variable)) +
   geom_line() +
-  facet_wrap(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   geom_hline(aes(yintercept = 0)) +
   ylab("Forecast Skill") +
   theme_bw() 
+
 
 #### look across depth
 #### and across horizon
@@ -135,6 +136,16 @@ mean_hzon_var_depth_yr <- sc_clim %>%
          sd_crps = sd(nCRPS, na.rm = TRUE)) %>% 
   distinct(variable, horizon, depth, .keep_all = TRUE) %>% 
   select(variable, horizon, depth, mean_crps:sd_crps)
+
+
+ggplot(mean_hzon_var_depth_yr, aes(x = as.factor(fct_rev(variable)), y = mean_crps, color = as.factor(year))) +
+  geom_boxplot() +
+  facet_wrap(~depth, ncol = 1) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  ylab("Forecast Skill") +
+  theme_bw()  +
+  xlab('Variable') +
+  labs(color = 'Year')
 
 skill_fig <- ggplot(mean_hzon_var_depth_yr, aes(x = horizon, y = mean_crps, linetype = variable, color = as.factor(year))) +
   geom_line() +
@@ -184,7 +195,7 @@ pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = variable, color
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   #facet_wrap(~depth, ncol = 1) +
   facet_grid(depth~fct_rev(variable)) +
-  ylab("% of Forecasts Better than Null") +
+  ylab("% of Forecasts \n Better than Null") +
   theme_bw() +
   labs(linetype = 'Variable', color = 'Year')
 pct_fig
@@ -197,7 +208,7 @@ ggplot(aes(x = variable, y = mean_pct, shape = as.factor(depth), color = as.fact
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   #facet_wrap(~depth, ncol = 1) +
-  ylab("% of Forecasts Better than Null") +
+  ylab("% Forecasts Above Null") +
   theme_bw() +
   labs(linetype = 'Variable', color = 'Year')
 
@@ -233,7 +244,7 @@ PE
 PE_wide <- PE %>% 
   pivot_wider(names_from = year, values_from = pe)
 
-ggplot(PE_wide) +
+PE_fig <- ggplot(PE_wide) +
   geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
   geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), color = '2021'), size=3 ) +
   geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022'), size=3 ) +
@@ -244,4 +255,6 @@ ggplot(PE_wide) +
   xlab('Depth') +
   ylab('Permutation Entropy') +
   labs(color = 'Year')
+
+ggarrange(skill_fig, pct_fig, PE_fig, labels = 'auto', common.legend = TRUE, nrow = 1)
 
