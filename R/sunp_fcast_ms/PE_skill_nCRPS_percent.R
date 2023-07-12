@@ -102,8 +102,11 @@ sc <- sc %>%
 
 sc_clim <- full_join(sc, clim, by = c('datetime', 'depth', 'variable'))
 sc_clim <- sc_clim %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(variable, horizon, depth, year) %>% 
   mutate(nCRPS = 1 - (crps/crps_clim),
-         year = year(datetime))
+         nCRPS2 = crps/(max(crps, na.rm = TRUE) - min(crps, na.rm = TRUE)))
+         
 
 sc_clim <- na.omit(sc_clim)
 
