@@ -66,7 +66,7 @@ sc <- sc %>%
   mutate(rmse = rmse(observation, mean)) 
 
 #### aggregate across horizon
-mean_skill_horizon <- sc %>% 
+mean_skill_horizon_depth_year <- sc %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
   group_by(variable, horizon, depth, year) %>% 
   mutate(mean_crps = mean(crps, na.rm = TRUE),
@@ -77,6 +77,33 @@ mean_skill_horizon <- sc %>%
          sd_rmse = sd(rmse, na.rm = TRUE)) %>% 
   distinct(variable, horizon, depth, .keep_all = TRUE) %>% 
   select(variable, horizon, depth, mean_crps:sd_rmse)
+
+mean_skill_horizon <- sc %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(variable, horizon) %>% 
+  mutate(mean_crps = mean(crps, na.rm = TRUE),
+         mean_log = mean(logs, na.rm = TRUE),
+         mean_rmse = mean(rmse, na.rm = TRUE),
+         sd_crps = sd(crps, na.rm = TRUE),
+         sd_log = sd(logs, na.rm = TRUE),
+         sd_rmse = sd(rmse, na.rm = TRUE)) %>% 
+  distinct(variable, horizon, .keep_all = TRUE) %>% 
+  select(variable, horizon, mean_crps:sd_rmse)
+
+ggplot(mean_skill_horizon, aes(x = horizon, y = mean_crps, linetype = as.factor(variable))) +
+  geom_line() +
+  #geom_jitter(size = 3) +
+  #ylim(0.5, 0.9) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  #geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps),
+  #            alpha = 0.5) +facet_wrap(~variable, ncol = 2, scales = 'free') +
+  #theme(legend.position = "none") +
+  facet_wrap(~variable, scales = 'free') +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Forecast Performance (CRPS)') +
+  guides(linetype = "none")
+
 
 mean_skill_year <- sc %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
@@ -102,6 +129,51 @@ ggplot(mean_skill_year, aes(x = as.factor(year), y = mean_crps, color = as.facto
   labs(color = 'Variable',
        shape = 'Depth')
 
+perf_wide <- mean_skill_year %>% 
+  pivot_wider(names_from = year, values_from = mean_crps)
+
+ggplot(perf_wide) +
+  geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
+  geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), color = '2021'), size=3 ) +
+  geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022'), size=3 ) +
+  scale_y_reverse() +
+  coord_flip()+
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~fct_rev(variable), ncol = 1, scales = 'free_x') +
+  theme_bw() +
+  xlab('Depth') +
+  ylab('Performance') +
+  labs(color = 'Year')
+
+perf_wide$metric <- "Performance"
+
+#write.csv(perf_wide, './data_processed/performance.csv', row.names = FALSE)
+
+
+mean_skill_depth <- sc %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(variable, year) %>% 
+  mutate(mean_crps = mean(crps, na.rm = TRUE),
+         mean_log = mean(logs, na.rm = TRUE),
+         mean_rmse = mean(rmse, na.rm = TRUE),
+         sd_crps = sd(crps, na.rm = TRUE),
+         sd_log = sd(logs, na.rm = TRUE),
+         sd_rmse = sd(rmse, na.rm = TRUE)) %>% 
+  distinct(variable, depth, .keep_all = TRUE) %>% 
+  select(variable, depth, mean_crps)
+
+ggplot(mean_skill_depth, aes(x = as.factor(year), y = mean_crps, color = as.factor(year))) +
+  geom_point(size = 3) +
+  #geom_jitter(size = 3) +
+  #ylim(0.5, 0.9) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~fct_rev(variable)) +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Mean CRPS') +
+  labs(color = 'Variable',
+       shape = 'Depth')
+
 mean_skill <- sc %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
   group_by(variable, depth) %>% 
@@ -114,14 +186,6 @@ mean_skill <- sc %>%
   distinct(variable, depth, .keep_all = TRUE) %>% 
   select(variable, depth, mean_crps:sd_rmse)
 
-out <- plyr::ddply(mean_skill_horizon, c("variable", "depth", "year"), function(x){
-  
-  slope <- coef(lm(x$mean_crps ~ x$horizon))[2]
-  return(slope)
-})
-colnames(out) <- c('variable', 'depth', 'year', 'slope')
-out$y <- c(1.7, 1.5, 1.7, 1.5, 1.4, 1.2, 1.4, 1.2)
-out$x <- rep(12, 8)  
 
 #################################################################################
 # plot rmse over horizon
@@ -131,7 +195,7 @@ rmse <- sc %>%
   distinct(depth, variable, horizon, year, .keep_all = TRUE) %>% 
   select(year, depth, variable, horizon, rmse)
 
-o_r <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
+o_r <- ggplot(mean_skill_horizon_depth_year[mean_skill_horizon_depth_year$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
   geom_line() +
   geom_ribbon(aes(ymax = mean_rmse + sd_rmse, ymin = mean_rmse - sd_rmse, 
                   col = as.factor(year),
@@ -152,7 +216,7 @@ o_r <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen (mg/L)',],
         panel.background = element_rect(fill = NA, color = "black"))
 o_r
 
-t_r <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='temperature (C)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
+t_r <- ggplot(mean_skill_horizon_depth_year[mean_skill_horizon_depth_year$variable=='temperature (C)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
   geom_line() +
   geom_ribbon(aes(ymax = mean_rmse + sd_rmse, ymin = mean_rmse - sd_rmse, 
                   col = as.factor(year),
@@ -174,7 +238,7 @@ ggarrange(t_r, o_r, common.legend = TRUE)
 
 ################################################################################
 # log score over horizon figures
-o_log <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_log, color = as.factor(year))) +
+o_log <- ggplot(mean_skill_horizon_depth_year[mean_skill_horizon_depth_year$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_log, color = as.factor(year))) +
   geom_line() +
   geom_ribbon(aes(ymax = mean_log + sd_log, ymin = mean_log - sd_log, 
                   col = as.factor(year),
@@ -191,7 +255,7 @@ o_log <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen (mg/L)',
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
 
-t_log <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='temperature (C)',], aes(x = horizon, y = mean_log, color = as.factor(year))) +
+t_log <- ggplot(mean_skill_horizon_depth_year[mean_skill_horizon_depth_year$variable=='temperature (C)',], aes(x = horizon, y = mean_log, color = as.factor(year))) +
   geom_line() +
   geom_ribbon(aes(ymax = mean_log + sd_log, ymin = mean_log - sd_log, 
                   col = as.factor(year),
@@ -211,7 +275,7 @@ t_log <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='temperature (C)
 
 ggarrange(t_log, o_log, common.legend = TRUE)
 
-log_df <- mean_skill_horizon %>% 
+log_df <- mean_skill_horizon_depth_year %>% 
   select(year:depth, mean_log)
 
 log_diff <- plyr::ddply(log_df, c("variable", "depth"), function(x){
@@ -224,7 +288,7 @@ log_diff
 ###########################################################################
 ## CRPS
 
-o_crps <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
+o_crps <- ggplot(mean_skill_horizon_depth_year[mean_skill_horizon_depth_year$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
   geom_line() +
   #stat_smooth(method = "lm") +
   geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, 
@@ -238,11 +302,10 @@ o_crps <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen (mg/L)'
   ylab('CRPS (mg/L)') +
   ggtitle('Oxygen (mg/L)') +
   labs(color = 'Year', fill = 'Year') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black"))
+  theme_bw()
 o_crps
 
-t_crps <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='temperature (C)',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
+t_crps <- ggplot(mean_skill_horizon_depth_year[mean_skill_horizon_depth_year$variable=='temperature (C)',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
   geom_line() +
   #stat_smooth(method = "lm") +
   geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, 
@@ -256,12 +319,13 @@ t_crps <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='temperature (C
   ylab('CRPS (°C)') +
   ggtitle('Temperature (°C)') +
   labs(color = 'Year', fill = 'Year') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black"))
+  theme_bw()
 t_crps
 
 ggarrange(t_crps, o_crps, common.legend = TRUE)
 
+
+#############################################################################################################
 ggarrange(t_log, t_crps, t_r,
           o_log, o_crps, o_r,
           common.legend = TRUE,
@@ -319,11 +383,11 @@ means2 <- means %>%
   select(variable:mean_crps) %>% 
   rename(Clim = mean_crps)
 
-mean_skill_horizon2 <- mean_skill_horizon %>%
+mean_skill_horizon_depth_year2 <- mean_skill_horizon_depth_year %>%
   select(year:mean_crps) %>% 
   rename(Flare = mean_crps)
 
-fl_clim <- left_join(mean_skill_horizon2, means2)
+fl_clim <- left_join(mean_skill_horizon_depth_year2, means2)
 fl_clim <- fl_clim %>% 
   pivot_longer(c(Flare, Clim), names_to = 'model', values_to = 'crps')
 
@@ -340,6 +404,17 @@ ggplot(fl_clim, aes(x = horizon, y = crps, color = as.factor(year), linetype = a
   labs(color = 'Year',
        linetype = 'Model')
 
+horizon_wide <- fl_clim %>% 
+  filter(horizon %in% c(1, 35),
+         model=="Flare") %>% 
+  pivot_wider(names_from = horizon, values_from = crps)
+
+diff_horizon <- plyr::ddply(horizon_wide, c("variable", "depth", "year"), function(x){
+  diff <- x$`1` - x$`35`
+
+})
+diff_horizon
+
 fl_clim %>% 
   group_by(variable, depth, year, model) %>% 
   mutate(mean = mean(crps)) %>% 
@@ -355,7 +430,7 @@ ggplot(aes(x = as.factor(year), y = mean, color = as.factor(year), shape = as.fa
   labs(color = 'Year',
        shape = 'Model')
 
-diff_null <- mean_skill_horizon
+diff_null <- mean_skill_horizon_depth_year
 diff_null$diff_crps <- NA
 diff_null$diff_log <- NA
 diff_null$diff_rmse <- NA
