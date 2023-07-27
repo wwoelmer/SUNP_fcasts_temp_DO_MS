@@ -14,28 +14,28 @@ d <- d %>%
          depth %in% c(1, 10),
          year %in% c(2021, 2022))
 
-df <- matrix(ncol = 5, nrow = 10)
-colnames(df) <- c('year', 'variable', 'depth', 'PE', 'demb')
+#df <- matrix(ncol = 5, nrow = 10)
+#colnames(df) <- c('year', 'variable', 'depth', 'PE', 'demb')
         
-out <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
-  print(head(x))
-  data = x$observed
-  pe <- sapply(3:10, \(i) {
-    opd = ordinal_pattern_distribution(x = data, ndemb = i)
-    permutation_entropy(opd)
-  })
-  data.frame(ndemb = 3:10, pe = pe)
-})
-out           
+#out <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
+#  print(head(x))
+#  data = x$observed
+#  pe <- sapply(3:10, \(i) {
+#    opd = ordinal_pattern_distribution(x = data, ndemb = i)
+#    permutation_entropy(opd)
+#  })
+#  data.frame(ndemb = 3:10, pe = pe)
+#})
+#out           
 
-ggplot(out, aes(x = ndemb, y = pe, color = as.factor(year))) +
-  geom_line() +
-  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
-  facet_grid(depth ~ fct_rev(variable)) +
-  theme_bw() +
-  xlab('Embedding Distance') +
-  ylab('Permutation Entropy') +
-  labs(color = 'Year')
+#ggplot(out, aes(x = ndemb, y = pe, color = as.factor(year))) +
+#  geom_line() +
+#  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+#  facet_grid(depth ~ fct_rev(variable)) +
+#  theme_bw() +
+#  xlab('Embedding Distance') +
+#  ylab('Permutation Entropy') +
+#  labs(color = 'Year')
 
 ###########################################################3
 ## go with demb = 4
@@ -62,20 +62,6 @@ ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(depth), color = as
   labs(color = 'Variable',
        shape = 'Depth')
 
-ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(variable), color = as.factor(depth))) +
-  geom_point(size = 3) +
-  geom_line(aes(x = as.factor(year), group = as.factor(variable))) +
-  #geom_jitter(size = 3) +
-  #ylim(0.5, 0.9) +
-  #scale_color_manual(values =  c('lightblue', 'darkblue')) +
-  #facet_wrap(~depth, ncol = 1) +
-  theme_bw() +
-  xlab('Year') +
-  ylab('Permutation Entropy') +
-  labs(color = 'Variable',
-       shape = 'Depth')
-
-
 ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(year))) +
   geom_point(size = 3) +
   #geom_jitter(size = 3) +
@@ -89,6 +75,7 @@ ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(year))) +
        shape = 'Depth')
 
 PE_wide <- PE %>% 
+  select(-ndemb) %>% 
   pivot_wider(names_from = year, values_from = pe)
 
 ggplot(PE_wide) +
@@ -97,11 +84,67 @@ ggplot(PE_wide) +
   geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022'), size=3 ) +
   coord_flip()+
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  ylim(0.3, 1) +
   facet_wrap(~fct_rev(variable), ncol = 1) +
   theme_bw() +
   xlab('Depth') +
   ylab('Permutation Entropy') +
   labs(color = 'Year')
+
+PE_wide$metric <- 'PE'
+
+write.csv(PE_wide, './data_processed/PE.csv', row.names = FALSE)
+
+
+
+################################################################################################################
+## compare to weighted PE
+
+PE_w <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
+  print(head(x))
+  data = x$observed
+  opd =weighted_ordinal_pattern_distribution(x = data, ndemb = 4)
+  pe <- permutation_entropy(opd)
+  data.frame(ndemb = 4, pe = pe)
+})
+PE_w
+
+PE_wide_w <- PE_w %>% 
+  select(-ndemb) %>% 
+  pivot_wider(names_from = year, values_from = pe) %>% 
+  mutate(method = 'w_PE')
+
+ggplot(PE_wide_w) +
+  geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
+  geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), shape = method, color = '2021'), size=3 ) +
+  geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022', shape = method), size=3 ) +
+  coord_flip()+
+  ylim(0.3, 1) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~fct_rev(variable), ncol = 1) +
+  theme_bw() +
+  xlab('Depth') +
+  ylab('Weighted Permutation Entropy') +
+  labs(color = 'Year')
+
+PE_wide <- PE_wide %>% 
+  mutate(method = 'PE')
+
+PE_compare <- full_join(PE_wide, PE_wide_w)
+
+ggplot(PE_compare) +
+  geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
+  geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), shape = method, color = '2021'), size=3 ) +
+  geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022', shape = method), size=3 ) +
+  coord_flip()+
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~fct_rev(variable), ncol = 1) +
+  theme_bw() +
+  xlab('Depth') +
+  ylab('Weighted Permutation Entropy') +
+  labs(color = 'Year')
+
+##############################################################################################################
 
 
 PE_fig <- ggplot(PE, aes(x = fct_rev(as.factor(variable)), y = pe, shape = as.factor(depth), color = as.factor(year))) +
