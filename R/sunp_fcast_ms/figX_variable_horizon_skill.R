@@ -96,6 +96,15 @@ ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = variable)) +
   ylab("Forecast Skill") +
   theme_bw() 
 
+####### calculate the mean across all horizons
+mean_var <- sc_clim %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(variable) %>% 
+  mutate(mean_crps = mean(nCRPS, na.rm = TRUE),
+         sd_crps = sd(nCRPS, na.rm = TRUE)) %>% 
+  distinct(variable, .keep_all = TRUE) %>% 
+  select(variable, mean_crps:sd_crps)
+
 skill_diff <- plyr::ddply(mean_hzon_var, c("variable"), function(x){
   diff = max(x$mean_crps, na.rm = TRUE) - min(x$mean_crps, na.rm = TRUE)
   return(diff = diff)
@@ -157,6 +166,7 @@ skill_fig <- ggplot(mean_hzon_var_depth_yr, aes(x = horizon, y = mean_crps, line
   geom_hline(aes(yintercept = 0)) +
   ylab("Forecast Skill") +
   theme_bw() +
+  theme(panel.spacing = unit(0.5, "cm")) +
   labs(color = 'Year', linetype = 'Variable') +
   guides(fill = FALSE)
 
@@ -174,6 +184,25 @@ ggplot(mean_overall, aes(x = as.factor(depth), y = mean_crps)) +
   geom_point() +
   facet_grid(year~variable)
 
+skill_wide <- mean_overall %>% 
+  select(-sd_crps) %>% 
+  pivot_wider(names_from = year, values_from = mean_crps)
+
+ggplot(skill_wide) +
+  geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
+  geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), color = '2021'), size=3 ) +
+  geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022'), size=3 ) +
+  coord_flip()+
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~fct_rev(variable), ncol = 1) +
+  theme_bw() +
+  xlab('Depth') +
+  ylab('Skill') +
+  labs(color = 'Year')
+
+skill_wide$metric <- "Skill"
+
+#write.csv(skill_wide, './data_processed/skill.csv', row.names = FALSE)
 #######################################################################################################################
 ## for each horizon, calculate the percent of forecasts better than null (above 0)
 sc_clim$year <- year(sc_clim$datetime)
@@ -197,6 +226,7 @@ pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = variable, color
   facet_grid(depth~fct_rev(variable)) +
   ylab("% of Forecasts \n Better than Null") +
   theme_bw() +
+  theme(panel.spacing = unit(0.5, "cm")) +
   labs(linetype = 'Variable', color = 'Year')
 pct_fig
 
@@ -212,7 +242,15 @@ ggplot(aes(x = variable, y = mean_pct, shape = as.factor(depth), color = as.fact
   theme_bw() +
   labs(linetype = 'Variable', color = 'Year')
 
-ggarrange(skill_fig, pct_fig, labels = 'auto', common.legend = TRUE, nrow = 1)
+
+pct_by_depth <- pct_null %>% 
+  group_by(variable, depth, year) %>% 
+  mutate(mean_pct = mean(pct)) %>% 
+  distinct(variable, depth, year, .keep_all = TRUE)
+pct_by_depth
+
+
+ggarrange(skill_fig, pct_fig, common.legend = TRUE, nrow = 1)
 
 #############################################################
 ## add the PE panel
