@@ -69,6 +69,18 @@ summ_o <- obs_mgL %>%
                    range = abs(min - max))
 
 summ_o
+
+summ_o_depth <- obs_mgL %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  mutate(obs_mgL = observed*32/1000) %>% 
+  group_by(depth) %>% 
+  dplyr::summarise(mean = mean(obs_mgL, na.rm = TRUE), 
+                   median = median(obs_mgL, na.rm = TRUE),
+                   min = min(obs_mgL, na.rm = TRUE),
+                   max = max(obs_mgL, na.rm = TRUE),
+                   range = abs(min - max))
+
+summ_o_depth
 #################################################################################################################
 temp <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
 temp <- temp %>% 
@@ -138,6 +150,14 @@ summ_t <- temp %>%
                    max = max(observed, na.rm = TRUE),
                    range = abs(min - max))
 
+summ_t_depth <- temp %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(depth) %>% 
+  dplyr::summarise(mean = mean(observed, na.rm = TRUE), 
+                   min = min(observed, na.rm = TRUE),
+                   max = max(observed, na.rm = TRUE),
+                   range = abs(min - max))
+summ_t_depth
 
 temp <- temp %>% 
   distinct()
