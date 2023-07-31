@@ -42,6 +42,8 @@ a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = obser
   labs(color = 'Year') +
   theme_bw()
 a
+ggsave('./figures/timeseries_obs_oxy.tiff', a, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
+
 b <- ggplot(data = obs_mgL, aes(x = as.factor(year), y = observed*32/1000)) +
   facet_wrap(~depth, ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -118,6 +120,8 @@ t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_d
   ylab('Temp (C)') +
   labs(color = 'Year') +
   theme_bw()
+ggsave('./figures/timeseries_obs_temp.tiff', t_a, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
+
 
 t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(year), y = observed)) +
   facet_wrap(~depth, ncol = 1) +
@@ -134,11 +138,14 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
 
 ggarrange(t_a, t_b, common.legend = TRUE)
 
-ggarrange(t_a, t_b, 
+ss <- ggarrange(t_a, t_b, 
           a, b,
           common.legend = TRUE)
+ggsave('./figures/timeseries_violin_obs.tiff', ss, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 250)
+  
+ts <- ggarrange(t_a, a, common.legend = TRUE)
+ggsave('./figures/timeseries_obs.tiff', ts, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 190)
 
-ggarrange(t_a, a, common.legend = TRUE)
 ggarrange(t_b, b, common.legend = TRUE)
 
 # mean, min, max by year
