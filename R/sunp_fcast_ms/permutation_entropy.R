@@ -50,7 +50,7 @@ PE <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
 PE
 
 
-ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(depth), color = as.factor(variable))) +
+other_PE <- ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(depth), color = as.factor(variable))) +
   geom_point(size = 3) +
   #geom_jitter(size = 3) +
   #ylim(0.5, 0.9) +
@@ -61,6 +61,9 @@ ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(depth), color = as
   ylab('Permutation Entropy') +
   labs(color = 'Variable',
        shape = 'Depth')
+
+ggsave('./figures/PE_obs_other.tiff', other_PE, scale = 0.5, dpi = 300, unit = "mm", width = 220, height = 150)
+
 
 ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(year))) +
   geom_point(size = 3) +
@@ -78,7 +81,7 @@ PE_wide <- PE %>%
   select(-ndemb) %>% 
   pivot_wider(names_from = year, values_from = pe)
 
-ggplot(PE_wide) +
+PE_fig <- ggplot(PE_wide) +
   geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
   geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), color = '2021'), size=3 ) +
   geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022'), size=3 ) +
@@ -90,6 +93,9 @@ ggplot(PE_wide) +
   xlab('Depth') +
   ylab('Permutation Entropy') +
   labs(color = 'Year')
+
+ggsave('./figures/PE_obs.tiff', PE_fig, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
+
 
 PE_wide$metric <- 'PE'
 
