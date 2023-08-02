@@ -94,7 +94,7 @@ PE_fig <- ggplot(PE_wide) +
   ylab('Permutation Entropy') +
   labs(color = 'Year')
 
-ggsave('./figures/PE_obs.tiff', PE_fig, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
+ggsave('./figures/PE_obs.tiff', PE_fig, scale = 0.3, dpi = 300, unit = "mm", width = 225, height = 220)
 
 
 PE_wide$metric <- 'PE'
