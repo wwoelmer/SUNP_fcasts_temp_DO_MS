@@ -322,7 +322,8 @@ t_crps <- ggplot(mean_skill_horizon_depth_year[mean_skill_horizon_depth_year$var
   theme_bw()
 t_crps
 
-ggarrange(t_crps, o_crps, common.legend = TRUE)
+perf <- ggarrange(t_crps, o_crps, common.legend = TRUE)
+ggsave('./figures/performance.tiff', perf, scale = 0.8, dpi = 300, unit = "mm", width = 220, height = 150)
 
 
 #############################################################################################################
