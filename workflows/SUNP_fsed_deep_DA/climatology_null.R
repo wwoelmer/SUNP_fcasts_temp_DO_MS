@@ -38,26 +38,24 @@ null <- tgts %>%
   distinct(depth, variable, doy, .keep_all = TRUE) %>% 
   dplyr::select(doy, variable, depth, mean, sd, n)
 
-# convert oxy into mg/L
-#null <- null %>% 
-#  mutate(mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
-#         sd = ifelse(variable=='temperature', sd, (sd*32/1000)))
-
-
-#null$variable <- factor(null$variable, levels = c('temperature', 'oxygen'), 
-#                      ordered = TRUE, labels = c('temperature (C)', 'oxygen (mg/L)'))
-
-  
-ggplot(null, aes(as.factor(n))) +
+histfig <- ggplot(null, aes(as.factor(n))) +
   geom_histogram(stat = 'count') +
-  facet_grid(depth~variable) +
-  xlab('N (obs) across all DOYs')
+  facet_grid(depth~fct_rev(variable)) +
+  xlab('N (obs) across all DOYs') +
+  theme_bw()
 
-
-ggplot(null, aes(x = doy, y = mean, color = as.factor(depth))) +
+climfig <- ggplot(null, aes(x = doy, y = mean, color = as.factor(depth))) +
   geom_line() +
   geom_ribbon(aes(ymin = mean-sd, ymax = mean + sd, alpha = 0.3, fill = as.factor(depth))) +
-  facet_grid(depth~variable, scales = 'free')
+  facet_grid(depth~fct_rev(variable), scales = 'free') +
+  ylab('Climatology Prediction') +
+  xlab('Day of Year') +
+  labs(fill = 'Depth', 
+       color = 'Depth') +
+  guides(alpha = 'none') +
+  theme_bw()
+
+ggarrange(histfig, climfig, labels = 'auto')
 
 t_2021 <- tgts %>% 
   filter(year==2021,
