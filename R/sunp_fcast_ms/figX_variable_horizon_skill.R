@@ -89,12 +89,15 @@ mean_hzon_var <- sc_clim %>%
   distinct(variable, horizon, depth, .keep_all = TRUE) %>% 
   select(variable, horizon, depth, mean_crps:sd_crps)
 
-ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = variable)) +
+skill_fig <- ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = variable)) +
   geom_line(size = 1) +
   geom_hline(aes(yintercept = 0)) +
   #geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = variable), alpha = 0.2) +
   ylab("Forecast Skill") +
   theme_bw() 
+ggsave('./figures/skill_temp_oxy.tiff', skill_fig, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 150)
+
+
 
 ####### calculate the mean across all horizons
 mean_var <- sc_clim %>% 
@@ -229,6 +232,8 @@ pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = variable, color
   theme(panel.spacing = unit(0.5, "cm")) +
   labs(linetype = 'Variable', color = 'Year')
 pct_fig
+ggsave('./figures/pct_null.tiff', pct_fig, scale = 0.5, dpi = 300, unit = "mm", width = 250, height = 150)
+
 
 pct_null %>% 
   group_by(variable, year, depth) %>% 
