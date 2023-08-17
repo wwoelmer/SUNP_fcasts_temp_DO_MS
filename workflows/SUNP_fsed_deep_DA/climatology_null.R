@@ -29,6 +29,13 @@ tgts <- tgts %>%
   mutate(doy = yday(time),
          year = year(time)) 
 
+
+tgts %>% 
+  filter(variable=="temperature",
+         depth==1) %>% 
+ggplot(aes(x = doy, y = observed, color = as.factor(year))) +
+  geom_line()
+
 null <- tgts %>% 
   filter(year < 2021) %>% 
   group_by(depth, variable, doy) %>% 
