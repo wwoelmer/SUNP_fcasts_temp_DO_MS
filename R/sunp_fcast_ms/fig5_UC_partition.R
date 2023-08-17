@@ -151,12 +151,7 @@ uncert_prop_year <- uncert_sum %>%
   mutate(total_var = sum(variance)) %>% 
   mutate(var_prop = variance/total_var)
 
-uncert_mean_year <- uncert_prop_year %>% 
-  group_by(horizon, variable, depth, year) %>% 
-  mutate(mean_prop = mean(var_prop)) %>% 
-  distinct(horizon, variable, depth, year, .keep_all = TRUE)
-
-
+#####################
 ggplot(uncert_mean, aes(x = horizon, y = mean_prop, fill = model_id)) +
   geom_bar(stat = 'identity', position= 'stack', width = 1) +
   geom_line(data = uncert_mean_year, aes(x = horizon, y = total_var/100000, color = as.factor(year))) +
@@ -169,8 +164,6 @@ ggplot(uncert_mean, aes(x = horizon, y = mean_prop, fill = model_id)) +
   scale_fill_manual(values = c('#DBD56E', '#88AB75', '#2D93AD', '#DE8F6E'))+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
-both
-
 
 ggplot(uncert_mean_year[uncert_mean_year$variable=='temperature (C)',], aes(x = horizon, y = total_var, color = as.factor(year))) +
   geom_line() +
@@ -181,4 +174,23 @@ ggplot(uncert_mean_year[uncert_mean_year$variable=='oxygen (mg/L)',], aes(x = ho
   geom_line() +
   facet_wrap(~depth) 
 
+####### 
+# plot just parameter uncertainty between the two years
+uncert_mean_year <- uncert_prop %>% 
+  group_by(horizon, variable, depth, year, model_id) %>% 
+  mutate(mean_prop = mean(var_prop)) %>% 
+  distinct(horizon, variable, depth, year, .keep_all = TRUE)
+
+uncert_mean_year %>% 
+  filter(model_id=='parameter',
+         depth %in% c(1, 10)) %>% 
+ggplot(aes(x = horizon, y = mean_prop, fill = as.factor(year))) +
+  geom_bar(stat = 'identity', position= 'dodge', width = 1) +
+  facet_grid(scales = 'free', cols = vars(variable), rows = vars(depth)) +
+  ggtitle('Parameter uncertainty')+
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  ylab('Proportion of Variance') +
+  labs(fill = 'UC Type') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA, color = "black"))
 

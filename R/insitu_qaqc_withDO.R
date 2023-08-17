@@ -15,49 +15,53 @@ insitu_qaqc <- function(realtime_file,
   
   sim_folder <- lake_directory
   
-  # download manual data from zenodo: https://zenodo.org/record/4652076#.YKKBbqhKg2x
+  # download manual data from zenodo: https://zenodo.org/record/7559434
   manual <- read.csv(hist_manual_file)
   manual_names <- unique(manual$parameter)
   variables
   
-  #df <- data.frame(matrix(ncol = 2, nrow = length(variables)))
-  #colnames(df) <- c("var_name", "manual_name")
-  #df$var_name <- variables
-  #df$manual_name <- c("temp_C", "DO_mgl")
-  
   manual <- manual %>% 
-    dplyr::filter(parameter %in% c("temp_C", "DO_mgl", "DO_pctsat")) %>% 
+    dplyr::filter(parameter %in% c("waterTemperature_degC", "oxygenDissolved_mgl", "oxygenDissolvedPercentOfSaturation_pct")) %>% 
     dplyr::mutate(date = as.Date(date)) %>% 
     dplyr::select(date, depth_m, parameter, value, station) %>% 
     tidyr::pivot_wider(names_from = parameter, values_from = value) %>% 
     tidyr::unchop(everything()) # do this bc of strange formatting with pivot wider
   
+  # rename to old names
+  manual <- manual %>% 
+    rename(temp_C = waterTemperature_degC,
+           DO_mgl = oxygenDissolved_mgl,
+           DO_pctsat = oxygenDissolvedPercentOfSaturation_pct)
+  
   manual <- manual %>% 
     dplyr::filter(station == 210) %>%  # this is the deep hole site
     dplyr::mutate(time = hms("00:00:00")) %>% 
-    dplyr::mutate(DateTime = as.POSIXct(date, format = "%Y-%m-%d %H:%M:%S", tz = 'UTC+5') + 60*60*16) %>% 
+    dplyr::mutate(DateTime = as.POSIXct(date, format = "%Y-%m-%d %H:%M:%S", tz = 'UTC+5') + 60*60*4) %>% 
     dplyr::select(DateTime, depth_m, temp_C, DO_mgl, DO_pctsat, station) %>% 
     dplyr::mutate(method = 'manual') %>% 
     dplyr::mutate(DO_mmol_m3 = DO_mgl*1000/32) %>% #to convert mg/L (or ppm) to molar units
     dplyr::select(DateTime, depth_m, temp_C, DO_mmol_m3, station, method)
   
-    
+  
   colnames(manual) <- c('DateTime', 'Depth', 'Temp_manual', 'DO_mmol_m3_manual',  'site', 'method')  
   manual$site <- as.character(manual$site)
   manual$DateDepth <- paste0(manual$DateTime, " ", manual$Depth)
   
+  # remove manual observations from depths where buoy obs exist
+  manual <- manual %>% 
+    filter(ifelse(DateTime > as.Date('2007-01-01'), Depth > 12, Depth >0))
   
   # and historical high frequency buoy temp data
-  # extract noon measurements only and only observations when buoy is deployed
+  # extract midnight measurements only and only observations when buoy is deployed
   field_all <- read.csv(hist_buoy_file[1])
   field_all$datetime <- as.POSIXct(field_all$datetime, format = "%Y-%m-%d %H:%M:%S")
-  field_noon <- field_all %>% 
+  field_midn <- field_all %>% 
     dplyr::mutate(day = day(datetime)) %>% 
     dplyr::mutate(hour = hour(datetime)) %>% 
     dplyr::mutate(minute = minute(datetime))
-  field_noon <- field_noon[field_noon$hour=='0' & field_noon$minute=='0',]
-  field_noon <- field_noon[field_noon$location=='loon',]  
-  field_noon <- field_noon %>% dplyr::select(-location, -day, -minute, -hour)
+  field_midn <- field_midn[field_midn$hour=='0' & field_midn$minute=='0',]
+  field_midn <- field_midn[field_midn$location=='loon',]  
+  field_midn <- field_midn %>% dplyr::select(-location, -day, -minute, -hour)
   
   # add depth column and remove from column name
   field_format <- data.frame("DateTime" = as.Date(NA),
@@ -70,7 +74,7 @@ insitu_qaqc <- function(realtime_file,
               '9.5', '9.75', '9.85', '10.5', '11.5', '13.5')
   
   for (i in 1:length(depths)) {
-    temp <- field_noon[,c(1, i+1)]
+    temp <- field_midn[,c(1, i+1)]
     temp$Depth <- depths[i]
     colnames(temp) <- c('DateTime', 'Temp', 'Depth')
     field_format <- full_join(temp, field_format)
@@ -94,7 +98,7 @@ insitu_qaqc <- function(realtime_file,
     }else if(field_format$Depth[i] > 1 & field_format$Depth[i] < 2){
       field_format$Depth[i] <- 1.5
     }
-      else(field_format$Depth[i] <- ceiling(field_format$Depth[i]))
+    else(field_format$Depth[i] <- ceiling(field_format$Depth[i]))
   }
   
   field_format$Depth <- as.character(field_format$Depth)
@@ -105,13 +109,13 @@ insitu_qaqc <- function(realtime_file,
   
   # extract midnight measurements only and only observations when buoy is deployed
   field_oxy$datetime <- as.POSIXct(field_oxy$datetime, format = "%Y-%m-%d %H:%M:%S")
-  field_noon_oxy <- field_oxy %>% 
+  field_midn_oxy <- field_oxy %>% 
     dplyr::mutate(day = day(datetime)) %>% 
     dplyr::mutate(hour = hour(datetime)) %>% 
     dplyr::mutate(minute = minute(datetime))
-  field_noon_oxy <- field_noon_oxy[field_noon_oxy$hour=='0' & field_noon_oxy$minute=='0',]
-  field_noon_oxy <- field_noon_oxy[field_noon_oxy$location=='loon',]  
-  field_noon_oxy <- field_noon_oxy %>% dplyr::select(-location, -day, -minute, -hour)
+  field_midn_oxy <- field_midn_oxy[field_midn_oxy$hour=='0' & field_midn_oxy$minute=='0',]
+  field_midn_oxy <- field_midn_oxy[field_midn_oxy$location=='loon',]  
+  field_midn_oxy <- field_midn_oxy %>% dplyr::select(-location, -day, -minute, -hour)
   
   # add depth column and remove from column name
   # DO upper is at 1.5m
@@ -120,11 +124,11 @@ insitu_qaqc <- function(realtime_file,
   
   depths <- c('1.5', '10.5')
   
-  oxy <- field_noon_oxy[,c(1, 2, 3, 5)]
+  oxy <- field_midn_oxy[,c(1, 2, 3, 5)]
   oxy$Depth <- 1.5
   colnames(oxy) <- c('DateTime', 'DOSat', "DOppm", 'Flag', 'Depth')
   
-  oxy_2 <- field_noon_oxy[,c(1, 6, 7, 9)]
+  oxy_2 <- field_midn_oxy[,c(1, 6, 7, 9)]
   oxy_2$Depth <- 10.5
   colnames(oxy_2) <- c('DateTime', 'DOSat', "DOppm", 'Flag', 'Depth')
   
@@ -138,7 +142,7 @@ insitu_qaqc <- function(realtime_file,
   
   # round depths to match temp depths
   field_format_oxy <- field_format_oxy %>% 
-  #  mutate(depth_cor = ifelse(Depth==1.5, 1.0, Depth)) %>% 
+    #  mutate(depth_cor = ifelse(Depth==1.5, 1.0, Depth)) %>% 
     dplyr::mutate(depth_cor = ifelse(Depth==10.5, 10.0, Depth)) %>% 
     dplyr::mutate(Depth = depth_cor) %>% 
     dplyr::select(-depth_cor)
@@ -287,10 +291,10 @@ insitu_qaqc <- function(realtime_file,
     }
     # replace relevant data with NAs and set "all" flag while maintenance was in effect
     d[d$TIMESTAMP >= start & d$TIMESTAMP <= end, maintenance_cols] <- NA
-}
+  }
   
   # convert depth columns into long format
-
+  
   temp_format <- data.frame(matrix(ncol=length(variables) + 1), nrow = 0)
   colnames(temp_format) <- c('DateTime', 'Depth', variables)
   #temp_format$DateTime <- as.POSIXct(temp_format$DateTime)
@@ -305,7 +309,7 @@ insitu_qaqc <- function(realtime_file,
     colnames(temp) <- c('DateTime', 'Temp', 'Depth')
     temp_format <- dplyr::full_join(temp, temp_format)
   }
-
+  
   # put depth as second column and sort by date and depth
   temp_format <- temp_format %>% 
     dplyr::mutate(Depth = as.numeric(Depth)) %>% 
@@ -316,8 +320,8 @@ insitu_qaqc <- function(realtime_file,
   temp_oxy <- d %>% 
     dplyr::select(TIMESTAMP, doobs_1, doobs) %>% 
     dplyr::rename(DateTime = TIMESTAMP,
-           DO_1 = doobs_1,
-           DO_10 = doobs)
+                  DO_1 = doobs_1,
+                  DO_10 = doobs)
   oxy_1 <- temp_oxy %>% 
     dplyr::select(DateTime, DO_1) %>% 
     dplyr::mutate(Depth = 1.0) %>% 
@@ -335,7 +339,12 @@ insitu_qaqc <- function(realtime_file,
   temp_oxy_buoy <- dplyr::full_join(oxy_buoy, temp_format) %>% 
     dplyr::select(DateTime, Depth, Temp, DO)
   
+  # remove data from when the buoy is in the harbor and the 10m DO
+  # remains connected (obs show up but are not 10m obs bc buoy is in the harbor)
+  temp_oxy_buoy <- temp_oxy_buoy %>% 
+    mutate(DO = ifelse(is.na(Temp) & !is.na(DO), NA, DO))
   
+
   
   # combine with historical data
   h <- read.csv(hist_all_file)
@@ -357,23 +366,13 @@ insitu_qaqc <- function(realtime_file,
     dplyr::mutate(temperature = mean(Temp, na.rm = TRUE)) %>% # take the average for each hour, data is every ten minutes
     dplyr::mutate(oxygen = mean(DO, na.rm = TRUE)) %>%   
     dplyr::distinct(date, depth, .keep_all = TRUE)
-    
-  # take hourly average
-  #dh <- dh %>% 
-  #  dplyr::mutate(date = lubridate::date(DateTime),
-  #         hour = lubridate::hour(DateTime),
-  #         depth = Depth) %>% 
-  #  dplyr::group_by(date, depth) %>% 
-  #  mutate(temperature = mean(Temp, na.rm = TRUE)) %>% # take the average for each hour, data is every ten minutes
-  #  mutate(oxygen = mean(DO, na.rm = TRUE)) %>% 
-  #  distinct(date, depth, .keep_all = TRUE)
   
   # put into FLARE format
   dh <- dh %>% 
     dplyr::select(-c(Depth, Temp)) %>% 
     tidyr::pivot_longer(cols = variables, names_to = 'variable', values_to = 'value') %>% 
     dplyr::mutate(time = as.POSIXct(DateTime),
-           site_id = 'sunp') %>% 
+                  site_id = 'sunp') %>% 
     dplyr::ungroup() %>% 
     dplyr::select(time, site_id, depth, value, variable) %>% 
     dplyr::rename(observed = value)
@@ -382,10 +381,12 @@ insitu_qaqc <- function(realtime_file,
   attr(dh$time, "tzone") <- "UTC"
   dh$time <- dh$time - 60*60*4
   
+  # combine historial and real-time data
+  
   
   # quick fix to set all hours to 0 to match with `FLAREr::combine_forecast_observations` function
   #dh$hour <- as.numeric(0)
-
+  
   if(!dir.exists(dirname(cleaned_insitu_file))){
     dir.create(dirname(cleaned_insitu_file), recursive = TRUE)
   }

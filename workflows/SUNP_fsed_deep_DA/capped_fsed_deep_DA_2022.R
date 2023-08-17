@@ -2,7 +2,7 @@
 
 #remotes::install_github("rqthomas/FLAREr")
 #remotes::install_github("FLARE-forecast/FLAREr", force = TRUE)
-#remotes::install_github("FLARE-forecast/GLM3r")
+#remotes::install_github("FLARE-forecast/GLM3r", force = TRUE)
 #install.packages('gsheet')
 library(tidyverse)
 library(lubridate)
@@ -13,7 +13,7 @@ lake_directory <- here::here()
 forecast_site <- "sunp"
 configure_run_file <- "configure_run.yml"
 config_files <- "configure_flare.yml"
-config_set_name <- "UC_analysis_2020"
+config_set_name <- "SUNP_fsed_deep_DA"
 use_archive <- FALSE
 
 if(use_archive){
@@ -25,12 +25,12 @@ if(use_archive){
   use_s3 <- FALSE
 }
 
-# set up date vectors for each year # 2021-06-30 is first day EXO had DO sensor
-days_20 <- seq.Date(as.Date('2020-05-04'), as.Date('2020-10-05'), by = 1) 
-num_forecasts <- c(length(days_20)) # addin 2021, 2020, 2020
+# set up date vectors for each year
+days_22 <- seq.Date(as.Date('2022-04-27'), as.Date('2022-10-07'), by = 1) ## do again for 2021, 2020, 2019 and make list of the years
+num_forecasts <- c(length(days_22)) # addin 2021, 2020, 2019
 days_between_forecasts <- 1
 forecast_horizon <- 35
-starting_date <- as.Date(days_20[1]) # addin 2021, 2020, 2020
+starting_date <- as.Date(days_22[1]) # addin 2021, 2020, 2019
 second_date <- starting_date + months(1) + lubridate::days(5) # lubridate::days(1) 
 #spin_up <- seq.Date(starting_date, starting_date + months(1) + lubridate::days(5), by = "day")
 
@@ -46,8 +46,8 @@ for(i in 2:(num_forecasts+1)){
 
 
 # UC analysis vectors
-#UC_names <- c('all_UC', 'parameter', 'initial_condition', 'process', 'weather', 'observation')
-UC_names <- c("all_UC")
+UC_names <- c('all_UC_fsed_deep_DA')
+
 
 # create dataframe with both
 sims <- expand.grid(paste0(start_dates,"_",end_dates,"_", forecast_horizon), UC_names)
@@ -68,64 +68,65 @@ sims <- sims |>
 #spin_length <- length(UC_names)*length(spin_up)
 #sims$horizon[1:spin_length] <- 1
 sims$horizon[1:length(UC_names)] <- 0
-head(sims)
+sims
 
 ###########################################################
 message("Generating targets")
-  source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
-  
-  #' Generate the `config_obs` object and create directories if necessary
-  message('read config')
-  config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
-  dir.create(file.path(lake_directory, "targets", config_obs$site_id, config_set_name), showWarnings = FALSE)
-  
-  #' Clone or pull from data repositories
-  message('download git')
-  FLAREr::get_git_repo(lake_directory,
-                       directory = config_obs$realtime_insitu_location,
-                       git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
-  
-  #' Download files from EDI and Zenodo
-  dir.create(file.path(config_obs$file_path$data_directory, "hist-data"),showWarnings = FALSE)
-  
-  # high frequency buoy data
-  message('download edi')
-  FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/f4d3535cebd96715c872a7d3ca45c196",
-                       file = file.path("hist-data", "hist_buoy_do.csv"),
-                       lake_directory)
-  
-  FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/1f903796efc8d79e263a549f8b5aa8a6",
-                       file = file.path("hist-data", "hist_buoy_temp.csv"),
-                       lake_directory)
-  
-  # manually collected data
-  if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'))){
-    download.file(url = 'https://zenodo.org/record/4652076/files/Lake-Sunapee-Protective-Association/LMP-v2020.1.zip?download=1',
-                  destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
-                  mode = 'wb')
-    unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
-          files = file.path('Lake-Sunapee-Protective-Association-LMP-271fcb0', 'master files', 'LSPALMP_1986-2020_v2021-03-29.csv'),
-          exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
-          junkpaths = TRUE)
-  }
-  
-  # QAQC insitu buoy data
-  message('run insitu qaqc')
-  if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
-    dir.create(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))
-  }
-  cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
-                                     hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
-                                     hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
-                                     hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
-                                     maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
-                                     variables = c("temperature", "oxygen"),
-                                     cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, paste0(config_obs$site_id,"-targets-insitu.csv")),
-                                     config = config_obs,
-                                     lake_directory = lake_directory)
-  message("Successfully generated targets")
-  
 
+source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
+
+#' Generate the `config_obs` object and create directories if necessary
+message('read config')
+config_obs <- FLAREr::initialize_obs_processing(lake_directory, 
+                                                observation_yml = "observation_processing.yml", 
+                                                config_set_name = config_set_name)
+dir.create(file.path(lake_directory, "targets", config_obs$site_id), showWarnings = FALSE)
+
+#' Clone or pull from data repositories
+message('download git')
+FLAREr::get_git_repo(lake_directory,
+                     directory = config_obs$realtime_insitu_location,
+                     git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
+
+#' Download files from EDI and Zenodo
+dir.create(file.path(config_obs$file_path$data_directory, "hist-data"),showWarnings = FALSE)
+
+# high frequency buoy data
+message('download edi')
+FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/f4d3535cebd96715c872a7d3ca45c196",
+                     file = file.path("hist-data", "hist_buoy_do.csv"),
+                     lake_directory)
+
+FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/1f903796efc8d79e263a549f8b5aa8a6",
+                     file = file.path("hist-data", "hist_buoy_temp.csv"),
+                     lake_directory)
+
+# manually collected data
+if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'))){
+  download.file(url = 'https://zenodo.org/record/8003784/files/Lake-Sunapee-Protective-Association/LMP-v2023.2.zip?download=1',
+                destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
+                mode = 'wb')
+  unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
+        files = file.path('Lake-Sunapee-Protective-Association-LMP-42d9cc5', 'primary files', 'LSPALMP_1986-2022_v2023-06-04.csv'),
+        exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
+        junkpaths = TRUE)
+}
+
+# QAQC insitu buoy data
+message('run insitu qaqc')
+if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
+  dir.create(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))
+}
+cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
+                                   hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
+                                   hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
+                                   hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
+                                   maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
+                                   variables = c("temperature", "oxygen"),
+                                   cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, paste0(config_obs$site_id,"-targets-insitu.csv")),
+                                   config = config_obs,
+                                   lake_directory = lake_directory)
+message("Successfully generated targets")
 
 
 # create directories with the UC sim name
@@ -145,10 +146,14 @@ for(i in 1:length(UC_names)){
   
 }
 
-starting_index <- 1
+starting_index <- 122
 set.seed(24)
+# index 415 failed, only 16-day forecasts for some ensembles on 2022-08-09
+# no NOAA forecasts on 2022-08-10
+# need to fix restart file issue for these days
 
 for(i in starting_index:nrow(sims)){
+  
   
   message(paste0("     index: ", i, " of ", nrow(sims)))
   message(paste0("     Running mode: ", sims$UC_type[i], ", start date: ", sims$start_dates[i]))
@@ -204,23 +209,7 @@ for(i in starting_index:nrow(sims)){
   
   run_config <- config$run_config
   yaml::write_yaml(run_config, file = file.path(lake_directory, "restart", forecast_site, config_set_name, sims$UC_type[i], configure_run_file))
-  
-  # set UC mode within config file
-  # the WRONG WAY
-  #id_uc <- which(names(config$uncertainty) == sims$UC_type[i]) 
-  #config$uncertainty[id_uc] <- FALSE 
-  id_uc <- which(names(config$uncertainty) != sims$UC_type[i])
-  
-  if(sims$UC_type[i] != 'all_UC'){
-    for(t in 1:length(id_uc)){
-      config$uncertainty[id_uc[t]] <- FALSE 
-    }
-  }
-  
-  
-  # but not met_downscale UC ?
-  #config$uncertainty$met_downscale <- TRUE
-  
+ 
   print(config$uncertainty)
   print(sims$UC_type[i])
   
@@ -240,39 +229,26 @@ for(i in starting_index:nrow(sims)){
   
   FLAREr::get_stacked_noaa(lake_directory, config, averaged = TRUE)
   
-  
-  met_out <- FLAREr::generate_glm_met_files(obs_met_file = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
-                                            out_dir = config$file_path$execute_directory,
-                                            forecast_dir = forecast_dir,
-                                            config = config)
+  source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
+  met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
+                output_dir = file.path(config$file_path$qaqc_data_directory, config_set_name),
+                config = config)
+  met_out <- FLAREr::generate_met_files_arrow(obs_met_file = NULL,
+                                              out_dir = config$file_path$execute_directory,
+                                              start_datetime = config$run_config$start_datetime,
+                                              end_datetime = config$run_config$end_datetime,
+                                              forecast_start_datetime = config$run_config$forecast_start_datetime,
+                                              forecast_horizon =  config$run_config$forecast_horizon,
+                                              site_id = config$location$site_id,
+                                              use_s3 = TRUE,
+                                              bucket = config$s3$drivers$bucket,
+                                              endpoint = config$s3$drivers$endpoint,
+                                              local_directory = NULL,
+                                              use_forecast = TRUE,
+                                              use_ler_vars = FALSE,
+                                              use_siteid_s3 = TRUE) 
   met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "31")]
   
-  
-  #met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "31")]
-  #Need to remove the 00 ensemble member because it only goes 16-days in the future
-  #met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "ens00")]
-  
-  # if weather UC is off, we want to take an avg across the ensemble, 
-  # and write that as ens_01, rather than depend only on the 1st 
-  # weather ensemble (which could be randomly influencing forecast skill)
-  if(config$uncertainty$weather==FALSE & sims$horizon[i] > 0){
-    og <- read_csv(met_out$filenames[1])
-    met <- read_csv(met_out$filenames)
-    met_mean <- met %>% 
-      group_by(time) %>% 
-      summarise_at(c("AirTemp", "ShortWave", "LongWave",
-                     "RelHum", "WindSpeed"), mean) 
-    met_median <- met %>% 
-      group_by(time) %>% 
-      summarise_at(c("Rain", "Snow"), median)
-    
-    met_agg <- left_join(met_mean, met_median)
-    
-    for(k in 1:length(met_out$filenames)){
-      write.csv(met_agg, met_out$filenames[k], row.names = FALSE, quote = FALSE)
-      
-    }
-  }
   
   pars_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$par_config_file), col_types = readr::cols())
   obs_config <- readr::read_csv(file.path(config$file_path$configuration_directory, config$model_settings$obs_config_file), col_types = readr::cols())
@@ -342,32 +318,31 @@ for(i in starting_index:nrow(sims)){
   message("Generating scores")
   score_file <- FLAREr::generate_forecast_score(targets_file = file.path(config$file_path$qaqc_data_directory, config_set_name, paste0(config$location$site_id, "-targets-insitu.csv")),
                                                 forecast_file =  forecast_file,
-                                                output_directory = file.path(lake_directory, "scores", config$location$site_id, config_set_name, config$run_config$sim_name))
+                                                output_directory = file.path(lake_directory, "scores", config$location$site_id, config_set_name, config$run_config$sim_name),
+                                                variable_types = c("state", "parameter"))
   
   
   
-  rm(da_forecast_output)
-  gc()
   
-  sink(paste0(lake_directory, '/last_completed_index_2021.txt'))
+  sink(paste0(lake_directory, '/last_completed_index.txt'))
   print(i)
   sink()
   
-  #  # calculate and update process uncertainty
-  #  num_files <- list.files(file.path(lake_directory, 'scores/sunp/all_UC'), pattern = "*.parquet")
-  #  print(paste0("number of all_UC score files: ",  length(num_files)))
-  #  source(file.path(lake_directory, "R", "calculate_process_sd.R"))
-  #  
-  #  if(sims$UC_type[i]=='all_UC' & length(num_files) > 10){
-  #  #if(sims$UC_type[i]=='all_UC' & sims$horizon[i] > 1){
-  #    calculate_process_sd(lake_directory = lake_directory,
-  #                         folders = c('all_UC'),
-  #                         horizons = seq(1, 35, by = 1),
-  #                         vars = c('temperature', 'oxygen'),
-  #                         depths = c(1.0, 10.0),
-  #                         config = config)
-  #    
-  #    
-  #  }
+#  # calculate and update process uncertainty
+#  num_files <- list.files(file.path(lake_directory, 'scores/sunp/all_UC'), pattern = "*.parquet")
+#  print(paste0("number of all_UC score files: ",  length(num_files)))
+#  source(file.path(lake_directory, "R", "calculate_process_sd.R"))
+#  
+#  if(sims$UC_type[i]=='all_UC' & length(num_files) > 10){
+#  #if(sims$UC_type[i]=='all_UC' & sims$horizon[i] > 1){
+#    calculate_process_sd(lake_directory = lake_directory,
+#                         folders = c('all_UC'),
+#                         horizons = seq(1, 35, by = 1),
+#                         vars = c('temperature', 'oxygen'),
+#                         depths = c(1.0, 10.0),
+#                         config = config)
+#    
+#    
+#  }
   
 }

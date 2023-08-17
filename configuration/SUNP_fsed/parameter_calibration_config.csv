@@ -3,6 +3,6 @@ sed_temp_mean,zone1temp,glm3.nml,12,5,15,-100,100,1.04,1.2,deg_C
 sed_temp_mean,zone2temp,glm3.nml,15,10,20,-100,100,1.04,1.5,deg_C
 sed_temp_mean,zone3temp,glm3.nml,15,10,20,-100,100,1.04,1.5,deg_C
 lw_factor,lw_factor,glm3.nml,1,0.9,1.1,-10,10,2,0.02,unitless
-Fsed_oxy,Fsed_oxy_zone1,aed2.nml,-40,-40,-10,-1000,1000,1.04,4,mmol_m3_day
-Fsed_oxy,Fsed_oxy_zone2,aed2.nml,-40,-30,-10,-1000,1000,1.04,4,mmol_m3_day
-Fsed_oxy,Fsed_oxy_zone3,aed2.nml,-40,-30,-10,-1000,1000,1.04,4,mmol_m3_day
+Fsed_oxy,Fsed_oxy_zone1,aed2.nml,-40,-40,0,-100,10,1.04,4,mmol_m3_day
+Fsed_oxy,Fsed_oxy_zone2,aed2.nml,-40,-30,0,-100,10,1.04,4,mmol_m3_day
+Fsed_oxy,Fsed_oxy_zone3,aed2.nml,-40,-30,0,-100,10,1.04,4,mmol_m3_day

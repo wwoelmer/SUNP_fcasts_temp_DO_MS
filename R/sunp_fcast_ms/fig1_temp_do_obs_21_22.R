@@ -6,11 +6,14 @@ library(ggpubr)
 
 setwd(here::here())
 
-tgts <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
+tgts <- read.csv('./targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv')
 years <- c('2021', '2022')
+depths <- c(1.0, 10.0)
+
 obs <- tgts %>% 
   mutate(year = year(time)) %>% 
-  filter(year %in% years)
+  filter(year %in% years,
+         depth %in% depths)
 
 obs <- obs %>% 
   select(time, depth, observed, variable) %>% 
@@ -31,7 +34,7 @@ obs_mgL <- obs[obs$variable=='oxygen',]
 
 a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*32/1000, color = as.factor(year))) +
   geom_line() +
-  facet_wrap(~depth, scales = 'free', ncol = 1) +
+  facet_wrap(~depth, ncol = 1) +
   scale_x_date(date_labels = "%b") +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   ylab('DO (mg/L)') +
@@ -39,6 +42,8 @@ a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = obser
   labs(color = 'Year') +
   theme_bw()
 a
+ggsave('./figures/timeseries_obs_oxy.tiff', a, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
+
 b <- ggplot(data = obs_mgL, aes(x = as.factor(year), y = observed*32/1000)) +
   facet_wrap(~depth, ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -60,11 +65,24 @@ summ_o <- obs_mgL %>%
   mutate(obs_mgL = observed*32/1000) %>% 
   group_by(year, depth) %>% 
   dplyr::summarise(mean = mean(obs_mgL, na.rm = TRUE), 
+                   median = median(obs_mgL, na.rm = TRUE),
                    min = min(obs_mgL, na.rm = TRUE),
                    max = max(obs_mgL, na.rm = TRUE),
                    range = abs(min - max))
 
+summ_o
 
+summ_o_depth <- obs_mgL %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  mutate(obs_mgL = observed*32/1000) %>% 
+  group_by(depth) %>% 
+  dplyr::summarise(mean = mean(obs_mgL, na.rm = TRUE), 
+                   median = median(obs_mgL, na.rm = TRUE),
+                   min = min(obs_mgL, na.rm = TRUE),
+                   max = max(obs_mgL, na.rm = TRUE),
+                   range = abs(min - max))
+
+summ_o_depth
 #################################################################################################################
 temp <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
 temp <- temp %>% 
@@ -97,11 +115,13 @@ temp <- temp %>%
 t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~depth, scales = 'free', ncol = 1) +
+  facet_wrap(~depth, ncol = 1) +
   xlab('Date') +
   ylab('Temp (C)') +
   labs(color = 'Year') +
   theme_bw()
+ggsave('./figures/timeseries_obs_temp.tiff', t_a, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
+
 
 t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(year), y = observed)) +
   facet_wrap(~depth, ncol = 1) +
@@ -118,11 +138,14 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
 
 ggarrange(t_a, t_b, common.legend = TRUE)
 
-ggarrange(t_a, t_b, 
+ss <- ggarrange(t_a, t_b, 
           a, b,
           common.legend = TRUE)
+ggsave('./figures/timeseries_violin_obs.tiff', ss, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 250)
+  
+ts <- ggarrange(t_a, a, common.legend = TRUE)
+ggsave('./figures/timeseries_obs.tiff', ts, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 190)
 
-ggarrange(t_a, a, common.legend = TRUE)
 ggarrange(t_b, b, common.legend = TRUE)
 
 # mean, min, max by year
@@ -134,6 +157,14 @@ summ_t <- temp %>%
                    max = max(observed, na.rm = TRUE),
                    range = abs(min - max))
 
+summ_t_depth <- temp %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(depth) %>% 
+  dplyr::summarise(mean = mean(observed, na.rm = TRUE), 
+                   min = min(observed, na.rm = TRUE),
+                   max = max(observed, na.rm = TRUE),
+                   range = abs(min - max))
+summ_t_depth
 
 temp <- temp %>% 
   distinct()

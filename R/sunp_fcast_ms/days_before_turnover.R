@@ -62,37 +62,145 @@ sc <- sc %>%
          mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
          sd = ifelse(variable=='temperature', sd, (sd*32/1000)))
 
-sc$variable <- factor(sc$variable, levels = c('temperature', 'oxygen'), 
-                      ordered = TRUE, labels = c('temperature (C)', 'oxygen (mg/L)'))
-
-### calculate rmse
-sc <- sc %>% 
-  group_by(depth, variable, horizon, datetime) %>% 
-  mutate(rmse = rmse(observation, mean)) 
-
 # add month day
 sc <- sc %>% 
   mutate(mo_day = format(datetime, "%m-%d"))
 
 
-#####
-mtc <- sc %>% 
-  select(reference_datetime:mean, sd, year, rmse)
-
 ################################################3
-# CRPS over time for select horizons
+# read in mixing dates and add to dataframe
 
 md <- read.csv(file.path(lake_directory, 'mixing_dates.csv'))
 md$time <- as.Date(md$time)
-md$crps <- NA
+md$depth <- as.numeric(md$depth)
 md <- md %>% 
-  select(-observed)
+  select(-observed, -mix_day) %>% 
+  rename(mix_day = time)
+
 scjoin <- sc %>% 
   select(datetime, variable, depth, crps, horizon) %>% 
-  mutate(time = as.Date(datetime)) %>% 
+  mutate(time = as.Date(datetime),
+         year = year(datetime)) %>% 
   ungroup() %>% 
-  select(time, depth, horizon, variable, crps)
+  select(time, depth, year, horizon, variable, crps)
 
+df <- left_join(scjoin, md, by = c("variable", "depth", "year"))
+
+#####################################################################################
+### calculate days before turnover to set x-axis
+df <- df %>% 
+  mutate(dbt = time -mix_day)
+
+#####################################################################################
+# plot select horizons
+
+o1 <- df %>% 
+  filter(horizon==1,
+         variable=="oxygen") %>% 
+  ggplot(aes(x = dbt, y = crps, color = as.factor(year), linetype = 'crps')) +
+  geom_line() +
+  geom_vline( aes(xintercept = 0))  +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  labs(color = 'Year') +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (mg/L)') +
+  ggtitle('Oxygen, 1 Day') +
+  xlab('Days Before Turnover') +
+  guides(linetype = "none") +
+  theme_bw()
+o1
+
+t1 <- df %>% 
+  filter(horizon==1,
+         variable=="temperature") %>% 
+  ggplot(aes(x = dbt, y = crps, color = as.factor(year), linetype = 'crps')) +
+  geom_line() +
+  geom_vline( aes(xintercept = 0))  +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  labs(color = 'Year') +
+  ylim(0, 2.2) +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (°C)') +
+  ggtitle('Temperature, 1 Day') +
+  xlab('Days Before Turnover') +
+  guides(linetype = "none") +
+  theme_bw()
+t1
+
+o7 <- df %>% 
+  filter(horizon==7,
+         variable=="oxygen") %>% 
+  ggplot(aes(x = dbt, y = crps, color = as.factor(year), linetype = 'crps')) +
+  geom_line() +
+  geom_vline( aes(xintercept = 0))  +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  ylim(0, 2.3) +
+  labs(color = 'Year') +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (mg/L)') +
+  ggtitle('Oxygen, 7 Days') +
+  xlab('Days Before Turnover') +
+  guides(linetype = "none") +
+  theme_bw()
+o7
+
+t7 <- df %>% 
+  filter(horizon==7,
+         variable=="temperature") %>% 
+  ggplot(aes(x = dbt, y = crps, color = as.factor(year), linetype = 'crps')) +
+  geom_line() +
+  geom_vline( aes(xintercept = 0))  +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  labs(color = 'Year') +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (°C)') +
+  ylim(0, 2.2) +
+  ggtitle('Temperature, 7 Days') +
+  xlab('Days Before Turnover') +
+  guides(linetype = "none") +
+  theme_bw()
+t7
+
+ggarrange(t1, t7, o1, o7, common.legend = TRUE, nrow = 1)
+
+o21 <- df %>% 
+  filter(horizon==21,
+         variable=="oxygen") %>% 
+  ggplot(aes(x = dbt, y = crps, color = as.factor(year), linetype = 'crps')) +
+  geom_line() +
+  geom_vline( aes(xintercept = 0))  +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  ylim(0, 2.3) +
+  labs(color = 'Year') +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (mg/L)') +
+  ggtitle('Oxygen, 21 Days') +
+  xlab('Days Before Turnover') +
+  guides(linetype = "none") +
+  theme_bw()
+o21
+
+t21 <- df %>% 
+  filter(horizon==21,
+         variable=="temperature") %>% 
+  ggplot(aes(x = dbt, y = crps, color = as.factor(year), linetype = 'crps')) +
+  geom_line() +
+  geom_vline( aes(xintercept = 0))  +
+  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
+  labs(color = 'Year') +
+  facet_wrap(~depth, ncol = 1) +
+  ylab('CRPS (°C)') +
+  ylim(0, 2.2) +
+  ggtitle('Temperature, 21 Days') +
+  xlab('Days Before Turnover') +
+  guides(linetype = "none") +
+  theme_bw()
+t21
+
+ggarrange(t1, t7, t21, common.legend = TRUE, nrow = 1, align = "v")
+ggarrange(o1, o7, o21, common.legend = TRUE, nrow = 1, align = "v")
+
+######################################################################################################
 md21 <- scjoin %>% 
   filter(time %in% md$time,
          horizon==21) %>% 
@@ -115,7 +223,6 @@ t21 <- sc %>%
   geom_vline(data = md21[md21$variable=='temperature (C)',],  aes(xintercept = as.Date(mix_day, format = "%m-%d"), color = as.factor(year)))  +
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
   labs(color = 'Year') +
-  ylim(0, 2.2) +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (°C)') +
   ggtitle('Temperature, 21 Days') +
@@ -136,7 +243,6 @@ o21 <- sc %>%
   labs(color = 'Year') +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (mg/L)') +
-  ylim(0, 2.3) +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
   guides(linetype = "none") +
@@ -154,7 +260,7 @@ minmax <-  sc %>%
          change = max(crps) - min(crps)) %>% 
   distinct(variable, depth, year, .keep_all = TRUE)
 
-
+minmax
 
 #########################################################
 md7 <- scjoin %>% 
@@ -176,7 +282,6 @@ t7 <- sc %>%
   #geom_point(data = md7[md7$variable=='temperature (C)',], size = 3, color = 'black', shape = 8, aes(x = as.Date(mix_day, format = "%m-%d"), y = crps))  +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (°C)') +
-  ylim(0, 2.2) +
   ggtitle('Temperature, 7 Days') +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
   xlab('Day of Year') +
@@ -193,7 +298,6 @@ o7 <- sc %>%
   geom_vline(data = md7[md7$variable=='oxygen (mg/L)',],  aes(xintercept = as.Date(mix_day, format = "%m-%d"), color = as.factor(year)))  +
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values =  c('#17BEBB', '#9E2B25')) +
-  ylim(0, 2.3) +
   labs(color = 'Year') +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (mg/L)') +
@@ -226,7 +330,6 @@ t1 <- sc %>%
   #geom_vline(data = md1[md1$variable=='temperature (C)',],  aes(xintercept = as.Date(mix_day, format = "%m-%d"), color = as.factor(year)))  +
   geom_point(data = md1[md1$variable=='temperature (C)',], size = 3, color = 'black', shape = 8, aes(x = as.Date(mix_day, format = "%m-%d"), y = crps))  +
   facet_wrap(~depth, ncol = 1) +
-  ylim(0, 2.2) +
   ylab('CRPS (°C)') +
   ggtitle('Temperature, 1 Day') +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
@@ -244,7 +347,6 @@ o1 <- sc %>%
   scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values =  c('#17BEBB', '#9E2B25')) +
   labs(color = 'Year') +
-  ylim(0, 2.3) +
   facet_wrap(~depth, ncol = 1) +
   ylab('CRPS (mg/L)') +
   scale_x_date(breaks = brks, date_labels = '%b %d') +
@@ -256,9 +358,6 @@ o1
 
 ggarrange(t1, o1, common.legend = TRUE)
 
-# all figs
-ggarrange(t1, t7, t21, common.legend = TRUE, nrow = 1, align = "v")
-ggarrange(o1, o7, o21, common.legend = TRUE, nrow = 1, align = "v")
 ###############################################################################################
 ## misc figs below, not in MS
 #################################################################################################################

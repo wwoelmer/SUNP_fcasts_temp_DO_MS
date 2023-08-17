@@ -37,12 +37,12 @@ FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi
                      lake_directory)
 
 # manually collected data
-if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'))){
-  download.file(url = 'https://zenodo.org/record/4652076/files/Lake-Sunapee-Protective-Association/LMP-v2020.1.zip?download=1',
-                destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
+if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'))){
+  download.file(url = 'https://zenodo.org/record/7559434/files/Lake-Sunapee-Protective-Association/LMP-v2023.1.zip?download=1',
+                destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
                 mode = 'wb')
-  unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2020.1.zip'),
-        files = file.path('Lake-Sunapee-Protective-Association-LMP-271fcb0', 'master files', 'LSPALMP_1986-2020_v2021-03-29.csv'),
+  unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
+        files = file.path('Lake-Sunapee-Protective-Association-LMP-d34c6a0', 'primary files', 'LSPALMP_1986-2022_v2023-01-22.csv'),
         exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
         junkpaths = TRUE)
 }

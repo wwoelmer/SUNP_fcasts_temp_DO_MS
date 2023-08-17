@@ -1,0 +1,1 @@
+This workflow file contains scripts needed to run a simulation of Sunapee forecasts using updated Fsed parameters. Parameter initial upper and lower bounds were set to c(-40, 0), and upper and lower bounds after that were set to (-100, 10). No other changes were made from the previous UC_analysis simulations
