@@ -5,11 +5,12 @@ library(tidyverse)
 library(ggpubr)
 #install.packages('plotly')
 library(plotly)
+library(scales)
 
 
 setwd(here::here())
 
-tgts <- read.csv('./targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv')
+tgts <- read.csv('./targets/sunp/sunp-targets-insitu.csv')
 depths <- c(1.0, 10.0)
 
 oxy <- tgts %>% 
@@ -122,9 +123,22 @@ t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_d
   facet_wrap(~depth, scales = 'free') +
   xlab('Date') +
   ylab('Temp (C)') +
-  labs(color = 'Year')
+  labs(color = 'Year') +
+  theme_bw()
 t_a
-#ggplotly(t_a)
+
+tempfig <- ggplot(data = temp[temp$depth==1,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = cols_temp[,1]) +
+  facet_wrap(~depth, scales = 'free') +
+  xlab('Date') +
+  ylab('Temperature (˚C)') +
+  labs(color = 'Year') +
+  guides(color = 'none') +
+  theme_bw()
+tempfig
+ggsave('./figures/temp_historical.png', tempfig, width = 300, height = 350, 
+       units = "mm", dpi = 300, scale = 0.3)
 
 t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(year), y = observed)) +
   facet_wrap(~depth) +
