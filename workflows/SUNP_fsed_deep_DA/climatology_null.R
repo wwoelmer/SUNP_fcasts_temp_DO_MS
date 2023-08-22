@@ -2,10 +2,11 @@
 
 library(scoringRules)
 library(tidyverse)
+library(ggpubr)
 
 setwd(here::here())
 
-tgts <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
+tgts <- read.csv('./targets/sunp/sunp-targets-insitu.csv')
 
 ggplot(tgts, aes(x = depth)) +
   geom_histogram() +
@@ -27,6 +28,13 @@ tgts <- tgts %>%
   filter(depth %in% depths) %>% 
   mutate(doy = yday(time),
          year = year(time)) 
+
+
+tgts %>% 
+  filter(variable=="temperature",
+         depth==1) %>% 
+ggplot(aes(x = doy, y = observed, color = as.factor(year))) +
+  geom_line()
 
 null <- tgts %>% 
   filter(year < 2021) %>% 
@@ -54,6 +62,20 @@ climfig <- ggplot(null, aes(x = doy, y = mean, color = as.factor(depth))) +
        color = 'Depth') +
   guides(alpha = 'none') +
   theme_bw()
+
+tempfig <- ggplot(null[null$variable=='temperature' & null$depth==1,], aes(x = doy, y = mean, color = as.factor(depth))) +
+  geom_line() +
+  geom_ribbon(aes(ymin = mean-sd, ymax = mean + sd, alpha = 0.3, fill = as.factor(depth))) +
+  facet_grid(depth~fct_rev(variable), scales = 'free') +
+  ylab('Temperature (˚C)') +
+  xlab('Day of Year') +
+  guides(alpha = 'none',
+         fill = 'none',
+         color = 'none') +
+  theme_bw()
+tempfig
+ggsave('./figures/temp_climatology.png', tempfig, width = 300, height = 200, 
+       units = "mm", dpi = 300, scale = 0.4)
 
 ggarrange(histfig, climfig, labels = 'auto')
 
