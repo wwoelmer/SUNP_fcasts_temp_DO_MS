@@ -49,6 +49,36 @@ PE <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
 })
 PE
 
+ggplot(PE, aes(x = as.factor(year), y = pe, color = as.factor(year))) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_grid(depth~fct_rev(variable)) +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Permutation Entropy') +
+  labs(color = 'Variable',
+       shape = 'Depth')
+
+### calculate CV instead of PE
+cv <- plyr::ddply(d, c("depth", "year", "variable"), \(x) {
+  print(head(x))
+  data = x$observed
+  cv = sd(data)/mean(data)
+})
+cv
+
+
+ggplot(cv, aes(x = as.factor(year), y = V1, color = as.factor(year))) +
+  geom_point(size = 3) +
+  #geom_jitter(size = 3) +
+  #ylim(0.5, 0.9) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(depth~fct_rev(variable), scales = 'free') +
+  theme_bw() +
+  xlab('Year') +
+  ylab('Coefficient of Variation') +
+  labs(color = 'Variable',
+       shape = 'Depth')
 
 other_PE <- ggplot(PE, aes(x = as.factor(year), y = pe, shape = as.factor(depth), color = as.factor(variable))) +
   geom_point(size = 3) +
