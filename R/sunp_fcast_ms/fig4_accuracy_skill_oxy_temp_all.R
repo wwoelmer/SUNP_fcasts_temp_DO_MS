@@ -117,6 +117,37 @@ sc_clim <- sc_clim %>%
   mutate(nCRPS = 1 - (crps/crps_clim))
 
 
+###########################################################################################
+## read in persistence
+rw_scores <- read.csv('./scores/sunp/RW_scored.csv')
+rw_scores <- rw_scores %>% 
+  mutate(datetime = as.Date(datetime)) %>% 
+  mutate(crps_rw = ifelse(variable=='temperature', crps, crps*32/1000)) %>% 
+  select(-crps)
+  
+
+sc_rw <- full_join(sc, rw_scores, by = c('datetime', 'depth', 'variable', 'horizon'))
+sc_rw <- sc_rw %>% 
+  mutate(nCRPS = 1 - (crps/crps_rw))
+
+mean_hzon_var_rw <- sc_rw %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(variable, horizon) %>% 
+  mutate(mean_crps = mean(nCRPS, na.rm = TRUE),
+         sd_crps = sd(nCRPS, na.rm = TRUE)) %>% 
+  distinct(variable, horizon, depth, .keep_all = TRUE) %>% 
+  select(variable, horizon, depth, mean_crps:sd_crps)
+
+skill_fig <- ggplot(mean_hzon_var_rw, aes(x = horizon, y = mean_crps, linetype = variable)) +
+  geom_line(size = 1) +
+  geom_hline(aes(yintercept = 0)) +
+  #geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = variable), alpha = 0.2) +
+  ylab("Forecast Skill") +
+  xlab('Forecast Horizon (days)') +
+  theme_bw() 
+skill_fig
+
+
 #### aggregate across horizon
 mean_hzon_var <- sc_clim %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
@@ -126,10 +157,10 @@ mean_hzon_var <- sc_clim %>%
   distinct(variable, horizon, depth, .keep_all = TRUE) %>% 
   select(variable, horizon, depth, mean_crps:sd_crps)
 
-skill_fig <- ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = variable)) +
+skill_fig <- ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = variable, color = 'climatology')) +
   geom_line(size = 1) +
+  geom_line(data = mean_hzon_var_rw, aes(x = horizon, y = mean_crps, linetype = variable, color = 'RW'), size = 1) +
   geom_hline(aes(yintercept = 0)) +
-  #geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = variable), alpha = 0.2) +
   ylab("Forecast Skill") +
   xlab('Forecast Horizon (days)') +
   theme_bw() 
