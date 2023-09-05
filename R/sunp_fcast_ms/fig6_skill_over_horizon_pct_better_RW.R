@@ -75,33 +75,48 @@ sc <- sc %>%
 sc_rw <- full_join(sc, rw_scores, by = c('datetime', 'depth', 'variable', 'horizon'))
 sc_rw <- sc_rw %>% 
   mutate(nCRPS = 1 - (crps/crps_rw),
-         year = year(datetime))
+         year = year(datetime)) %>% 
+  select(datetime, horizon, depth, variable, year, model_id,
+         nCRPS)
+
+##################################################################################################
+### read in climatology 
+clim <- read.csv(file.path(lake_directory, 'scores/sunp/climatology_scores.csv'))
+clim <- clim %>% 
+  select(time, depth, variable, crps) %>% 
+  rename(crps_clim = crps,
+         datetime = time) %>% 
+  mutate(datetime = as.Date(datetime),
+         depth = as.numeric(depth))
+
+sc_clim <- full_join(sc, clim, by = c('datetime', 'depth', 'variable'))
+sc_clim <- sc_clim %>% 
+  mutate(nCRPS = 1 - (crps/crps_clim),
+         model_id = 'clim',
+         year = year(datetime)) %>% 
+  select(-c(crps, crps_clim))
 
 
-mean_hzon_var_depth_year_rw <- sc_rw %>% 
+sc_all <- full_join(sc_rw, sc_clim, by = c('datetime', 'depth', 'variable', 'horizon', 
+                                           'model_id', 'year', 'nCRPS'))
+
+sc_all <- na.omit(sc_all)
+
+mean_skill <- sc_all %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
-  group_by(variable, horizon, depth, year) %>% 
+  group_by(variable, horizon, depth, year, model_id) %>% 
   mutate(mean_crps = mean(nCRPS, na.rm = TRUE),
          sd_crps = sd(nCRPS, na.rm = TRUE)) %>% 
-  distinct(variable, horizon, depth, year, .keep_all = TRUE) %>% 
+  distinct(variable, horizon, depth, year, model_id, .keep_all = TRUE) %>% 
   select(variable, horizon, depth, mean_crps:sd_crps)
 
 
-ggplot(mean_hzon_var_depth_year_rw, aes(x = as.factor(fct_rev(variable)), y = mean_crps, color = as.factor(year))) +
-  geom_boxplot() +
-  facet_wrap(~depth, ncol = 1) +
-  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  ylab("Forecast Skill") +
-  theme_bw()  +
-  xlab('Variable') +
-  labs(color = 'Year')
-
-skill_fig <- ggplot(mean_hzon_var_depth_year_rw, aes(x = horizon, y = mean_crps, linetype = variable, color = as.factor(year))) +
+skill_fig <- ggplot(mean_skill, aes(x = horizon, y = mean_crps, linetype = model_id, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   #facet_wrap(~depth, ncol = 1) +
-  geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = as.factor(year)), alpha = 0.5) +
+  #geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = as.factor(year)), alpha = 0.5) +
   facet_grid(depth~fct_rev(variable)) +
   geom_hline(aes(yintercept = 0)) +
   ylab("Forecast Skill") +
@@ -112,42 +127,28 @@ skill_fig <- ggplot(mean_hzon_var_depth_year_rw, aes(x = horizon, y = mean_crps,
 skill_fig
 
 # look at mean differences across depth for each year
-mean_overall <- sc_rw %>% 
+mean_overall <- sc_all %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
   mutate(year = year(datetime)) %>% 
-  group_by(variable, depth, year) %>% 
+  group_by(variable, depth, year, model_id) %>% 
   mutate(mean_crps = mean(nCRPS, na.rm = TRUE),
          sd_crps = sd(nCRPS, na.rm = TRUE)) %>% 
-  distinct(variable, depth, .keep_all = TRUE) %>% 
-  select(variable, depth, mean_crps:sd_crps)
+  distinct(variable, depth, model_id, .keep_all = TRUE) %>% 
+  select(variable, depth, model_id, mean_crps:sd_crps)
 
-ggplot(mean_overall, aes(x = as.factor(depth), y = mean_crps)) +
+ggplot(mean_overall, aes(x = as.factor(depth), y = mean_crps, shape = model_id)) +
   geom_point() +
-  facet_grid(year~variable)
+  geom_hline(aes(yintercept = 0)) +
+  facet_grid(year~fct_rev(variable)) +
+  ylab('Mean Skill') +
+  theme_bw()
 
-skill_wide <- mean_overall %>% 
-  select(-sd_crps) %>% 
-  pivot_wider(names_from = year, values_from = mean_crps)
-
-ggplot(skill_wide) +
-  geom_segment(aes(x=fct_rev(as.factor(depth)), xend=fct_rev(as.factor(depth)), y=`2021`, yend=`2022`), color="grey") +
-  geom_point(aes(y=`2021`, x=fct_rev(as.factor(depth)), color = '2021'), size=3 ) +
-  geom_point(aes(y=`2022`, x=fct_rev(as.factor(depth)), color = '2022'), size=3 ) +
-  coord_flip()+
-  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~fct_rev(variable), ncol = 1) +
-  theme_bw() +
-  xlab('Depth') +
-  ylab('Skill') +
-  labs(color = 'Year')
-
-skill_wide$metric <- "Skill"
 
 #######################################################################################################################
 ## for each horizon, calculate the percent of forecasts better than null (above 0)
-sc_rw$year <- year(sc_rw$datetime)
-sc_rw <- na.omit(sc_rw)
-pct_null <- plyr::ddply(sc_rw, c("variable", "depth", "year", "horizon"), function(x){
+sc_all$year <- year(sc_all$datetime)
+sc_all <- na.omit(sc_all)
+pct_null <- plyr::ddply(sc_all, c("variable", "depth", "year", "horizon", "model_id"), function(x){
   better <- x %>% 
     filter(x$nCRPS >= 0)
   worse <- x %>% 
@@ -158,7 +159,7 @@ pct_null <- plyr::ddply(sc_rw, c("variable", "depth", "year", "horizon"), functi
 
 pct_null$pct <- round(pct_null$V1, 2)*100
 
-pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = variable, color = as.factor(year))) +
+pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = model_id, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -192,5 +193,4 @@ pct_by_depth <- pct_null %>%
 pct_by_depth
 
 
-plot <- ggarrange(skill_fig, pct_fig, common.legend = TRUE, nrow = 1)
-annotate_figure(plot, top = text_grob('Random Walk Null'))
+ggarrange(skill_fig, pct_fig, common.legend = TRUE, nrow = 1)
