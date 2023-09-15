@@ -14,29 +14,16 @@ vars <- c('temperature', 'oxygen')
 depths <- c(1.0, 10.0)
 horizons <- c(1:35)
 sim_name <- 'SUNP_fsed_deep_DA' 
-folders <- c('all_UC_fsed_deep_DA')
+folder <- c('all_UC_fsed_deep_DA')
 
 ########################################################################
 # read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folders[1]))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", folder))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
          depth %in% depths) %>% 
   collect() 
-
-for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folders[1]))
-  
-  temp <- arrow::open_dataset(score_dir) |> 
-    filter(variable %in% vars,
-           depth %in% depths) %>% 
-    collect() 
-  
-  sc <- rbind(sc, temp)
-  
-}
-
 
 # vector of dates when obs are available (before buoy is taken into harbor)
 ##### make these the same dates for each year for equal comparison
