@@ -29,6 +29,7 @@ scores_dest <- file.path(lake_directory, 'scores', site_id, sim_name, "scores.zi
 download.file(url = scores, destfile = scores_dest,
               method = "curl")
 unzip(scores_dest, exdir = file.path(lake_directory, 'scores', site_id, sim_name))
+unlink(scores_dest)
 
 ##### download forecast files
 ###### NOTE: this takes a long time! #######
@@ -38,4 +39,5 @@ fcast_dest <- file.path(lake_directory, 'forecasts', site_id, sim_name, "fcasts.
 download.file(url = fcasts, destfile = fcast_dest,
               method = "curl")
 unzip(fcast_dest, exdir = file.path(lake_directory, 'forecasts', site_id, sim_name))
+unlink(fcast_dest)
 
