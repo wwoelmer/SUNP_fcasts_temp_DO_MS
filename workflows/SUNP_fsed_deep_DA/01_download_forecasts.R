@@ -1,7 +1,7 @@
 # download forecasts and scores from zenodo
 
 lake_directory <- here::here()
-sim_name <- "all_UC_fsed_deep_DA"
+sim_name <- "SUNP_fcasts_temp_DO"
 site_id <- "sunp"
 
 ##### set up directories
