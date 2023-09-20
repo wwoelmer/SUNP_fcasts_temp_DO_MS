@@ -176,7 +176,7 @@ ggsave('./figures/pct_null.tiff', pct_fig, scale = 0.5, dpi = 300, unit = "mm", 
 pct_null %>% 
   group_by(variable, year, depth) %>% 
   mutate(mean_pct = mean(pct)) %>% 
-  ggplot(aes(x = variable, y = mean_pct, shape = as.factor(depth), color = as.factor(year))) +
+  ggplot(aes(x = fct_rev(variable), y = mean_pct, shape = as.factor(depth), color = as.factor(year))) +
   geom_point(size = 3) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -194,3 +194,70 @@ pct_by_depth
 
 
 ggarrange(skill_fig, pct_fig, common.legend = TRUE, nrow = 1)
+
+##########################################################################
+## calculate the % of time FLARE beat either null
+sc_all <- sc_all %>% 
+  distinct(datetime, horizon, depth, variable, year, model_id, .keep_all = TRUE)
+sc_wide <- sc_all %>% 
+  pivot_wider(names_from = model_id, values_from = nCRPS)
+
+sc_wide <- sc_wide %>% 
+  mutate(classify = 
+           ifelse(RW > 0 & clim < 0,
+                  "RW",
+                  ifelse(RW < 0 & clim > 0,
+                         "clim",
+                         ifelse(RW > 0 & clim > 0,
+                                "both",
+                                ifelse(RW < 0 & clim < 0,
+                                       "neither",
+                                       "ERROR")))))  
+summ_null <- sc_wide %>% 
+  group_by(classify, variable, depth, horizon) %>% 
+  summarise(Percentage = n()/nrow(.)*100)
+
+# some climatology forecasts are NA because observations are not available on those dates--remove these
+summ_null <- na.omit(summ_null)
+
+# set the order of the factor
+summ_null$classify <- factor(summ_null$classify, levels = c('neither', 'clim', 'RW', 'both'))
+
+ggplot(summ_null, aes(x = horizon, y = Percentage, color = classify, fill = classify)) +
+  geom_bar(position = 'fill', stat = 'identity') +
+  facet_grid(depth~fct_rev(variable)) +
+  ylab("% of FLARE Forecasts \n Better than Null") +
+  scale_color_brewer(palette = "Set3") +
+  scale_fill_brewer(palette = 'Set3') +
+  theme_bw() +
+  theme(panel.spacing = unit(0.5, "cm")) +
+  labs(fill = 'Comparison Model') +
+  guides(color = FALSE)
+
+pct_null_any <- plyr::ddply(sc_wide, c("variable", "depth", "year", "horizon"), function(x){
+  better <- x %>% 
+    filter(x$nCRPS >= 0)
+
+  worse <- x %>% 
+    filter(x$nCRPS < 0)
+  pct <- nrow(better)/(nrow(better) + nrow(worse))
+  return(pct)
+})
+
+pct_fig <- ggplot(pct_null_any, aes(x = horizon, y = V1, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  #facet_wrap(~depth, ncol = 1) +
+  facet_grid(depth~fct_rev(variable)) +
+  ylab("% of Forecasts \n Better than Null") +
+  theme_bw() +
+  theme(panel.spacing = unit(0.5, "cm")) +
+  labs(linetype = 'Variable', color = 'Year')
+pct_fig
+
+test <- sc_all %>% 
+  filter(variable=='oxygen', depth==1, year==2021, horizon==1)
+better <- test %>% 
+  filter(test$nCRPS >= 0)
+mods <- unique(better$model_id)
