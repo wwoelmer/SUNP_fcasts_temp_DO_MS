@@ -157,14 +157,18 @@ mean_hzon_var <- sc_clim %>%
   distinct(variable, horizon, depth, .keep_all = TRUE) %>% 
   select(variable, horizon, depth, mean_crps:sd_crps)
 
-skill_fig <- ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = variable, color = 'climatology')) +
+skill_fig <- ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = 'climatology', color = variable)) +
   geom_line(size = 1) +
-  geom_line(data = mean_hzon_var_rw, aes(x = horizon, y = mean_crps, linetype = variable, color = 'RW'), size = 1) +
+  geom_line(data = mean_hzon_var_rw, aes(x = horizon, y = mean_crps, linetype = 'Persistence', color = variable), size = 1) +
   geom_hline(aes(yintercept = 0)) +
+  labs(linetype = 'Null Model',
+       color = 'Variable') +
   ylab("Forecast Skill") +
+  scale_color_brewer(palette = "Dark2") +
   xlab('Forecast Horizon (days)') +
   theme_bw() 
 skill_fig
+plotly(skill_fig)
 
 all_fig <- ggarrange(temp_fig, oxy_fig, skill_fig, labels = 'auto', nrow = 1, widths = c(0.6, 0.6, 1))
 all_fig
