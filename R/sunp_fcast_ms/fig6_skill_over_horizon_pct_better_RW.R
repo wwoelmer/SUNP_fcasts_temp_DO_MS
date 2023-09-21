@@ -18,7 +18,7 @@ folder <- c('all_UC_fsed_deep_DA')
 
 ########################################################################
 # read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", folder))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folder))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
@@ -97,7 +97,10 @@ mean_skill <- sc_all %>%
   distinct(variable, horizon, depth, year, model_id, .keep_all = TRUE) %>% 
   select(variable, horizon, depth, mean_crps:sd_crps)
 
+##########################################################################################################
+#### plot forecast skill
 
+# all together
 skill_fig <- ggplot(mean_skill, aes(x = horizon, y = mean_crps, linetype = model_id, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -112,6 +115,42 @@ skill_fig <- ggplot(mean_skill, aes(x = horizon, y = mean_crps, linetype = model
   labs(color = 'Year', linetype = 'Variable') +
   guides(fill = FALSE)
 skill_fig
+
+
+### persistence
+skill_fig_rw <- ggplot(mean_skill[mean_skill$model_id=='RW',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
+  geom_line(linetype = 'dashed') +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = as.factor(year)), alpha = 0.5,
+              linetype = 'dashed') +
+  facet_grid(depth~fct_rev(variable)) +
+  geom_hline(aes(yintercept = 0)) +
+  ylab("Forecast Skill") +
+  theme_bw() +
+  theme(panel.spacing = unit(0.5, "cm")) +
+  labs(fill = 'Year', linetype = 'Variable') +
+  guides(color = FALSE) +
+  ggtitle('Persistence-based Skill')
+skill_fig_rw
+
+#### climatology
+skill_fig_clim <- ggplot(mean_skill[mean_skill$model_id=='clim',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = as.factor(year)), alpha = 0.5) +
+  facet_grid(depth~fct_rev(variable)) +
+  geom_hline(aes(yintercept = 0)) +
+  ylab("Forecast Skill") +
+  theme_bw() +
+  theme(panel.spacing = unit(0.5, "cm")) +
+  labs(fill = 'Year', linetype = 'Variable') +
+  guides(color = FALSE) +
+  ggtitle('Climatology-based Skill')
+skill_fig_clim
+
+ggarrange(skill_fig_clim, skill_fig_rw, common.legend = TRUE)
 
 # look at mean differences across depth for each year
 mean_overall <- sc_all %>% 
@@ -146,6 +185,11 @@ pct_null <- plyr::ddply(sc_all, c("variable", "depth", "year", "horizon", "model
 
 pct_null$pct <- round(pct_null$V1, 2)*100
 
+
+##################################################################################################################
+## figures of percent better than a null
+
+# first all together
 pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = model_id, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -157,6 +201,38 @@ pct_fig <- ggplot(pct_null, aes(x = horizon, y = pct, linetype = model_id, color
   theme(panel.spacing = unit(0.5, "cm")) +
   labs(linetype = 'Variable', color = 'Year')
 pct_fig
+
+## just persistence
+pct_fig_rw <- ggplot(pct_null[pct_null$model_id=='RW',], aes(x = horizon, linetype = model_id, y = pct, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  scale_linetype_manual(values = c('dashed', 'solid')) +
+  facet_grid(depth~fct_rev(variable)) +
+  ylab("% of Forecasts \n Better than Null") +
+  theme_bw() +
+  theme(panel.spacing = unit(0.5, "cm")) +
+  labs(linetype = 'Null Model', color = 'Year') 
+pct_fig_rw
+
+## just climatology
+pct_fig_clim <- ggplot(pct_null[pct_null$model_id=='clim',], aes(x = horizon, linetype = model_id, y = pct, color = as.factor(year))) +
+  geom_line() +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
+  scale_linetype_manual(values = c('solid', 'dashed')) +
+  facet_grid(depth~fct_rev(variable)) +
+  ylab("% of Forecasts \n Better than Null") +
+  theme_bw() +
+  theme(panel.spacing = unit(0.5, "cm")) +
+  labs(linetype = 'Null Model', color = 'Year') 
+pct_fig_clim
+
+
+ggarrange(skill_fig_clim, pct_fig_clim,
+          skill_fig_rw, pct_fig_rw, 
+          common.legend = TRUE, align = 'v')
+
 ggsave('./figures/pct_null.tiff', pct_fig, scale = 0.5, dpi = 300, unit = "mm", width = 250, height = 150)
 
 
