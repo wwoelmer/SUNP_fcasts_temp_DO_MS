@@ -159,7 +159,7 @@ mean_hzon_var <- sc_clim %>%
 
 skill_fig <- ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = 'climatology', color = variable)) +
   geom_line(size = 1) +
-  geom_line(data = mean_hzon_var_rw, aes(x = horizon, y = mean_crps, linetype = 'Persistence', color = variable), size = 1) +
+  geom_line(data = mean_hzon_var_rw, aes(x = horizon, y = mean_crps, linetype = 'persistence', color = variable), size = 1) +
   geom_hline(aes(yintercept = 0)) +
   labs(linetype = 'Null Model',
        color = 'Variable') +
@@ -173,3 +173,4 @@ plotly(skill_fig)
 all_fig <- ggarrange(temp_fig, oxy_fig, skill_fig, labels = 'auto', nrow = 1, widths = c(0.6, 0.6, 1))
 all_fig
 ggsave('./figures/accuracy_skill_temp_oxy.tiff', all_fig, scale = 0.4, dpi = 300, unit = "mm", width = 525, height = 150)
+ggsave('./figures/accuracy_skill_temp_oxy.jpg', all_fig, scale = 0.4, dpi = 300, unit = "mm", width = 525, height = 150)
