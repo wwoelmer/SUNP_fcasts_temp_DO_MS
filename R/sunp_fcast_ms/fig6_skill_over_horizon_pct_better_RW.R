@@ -97,6 +97,13 @@ mean_skill <- sc_all %>%
   distinct(variable, horizon, depth, year, model_id, .keep_all = TRUE) %>% 
   select(variable, horizon, depth, mean_crps:sd_crps)
 
+mean_skill_no_horizon <- sc_all %>% 
+  filter(depth %in% c(1.0, 10.0)) %>% 
+  group_by(variable, depth, year, model_id) %>% 
+  mutate(mean_crps = mean(nCRPS, na.rm = TRUE),
+         sd_crps = sd(nCRPS, na.rm = TRUE)) %>% 
+  distinct(variable, depth, year, model_id, .keep_all = TRUE) %>% 
+  select(variable, depth, mean_crps:sd_crps)
 ##########################################################################################################
 #### plot forecast skill
 
@@ -250,9 +257,9 @@ pct_null %>%
 
 
 pct_by_depth <- pct_null %>% 
-  group_by(variable, depth, year) %>% 
+  group_by(variable, depth, year, model_id) %>% 
   mutate(mean_pct = mean(pct)) %>% 
-  distinct(variable, depth, year, .keep_all = TRUE)
+  distinct(variable, depth, model_id, year, .keep_all = TRUE)
 pct_by_depth
 
 
@@ -276,17 +283,42 @@ sc_wide <- sc_wide %>%
                                 ifelse(RW < 0 & clim < 0,
                                        "neither",
                                        "ERROR")))))  
+sc_wide <- na.omit(sc_wide)
+
 summ_null <- sc_wide %>% 
+  ungroup() %>% 
   group_by(classify, variable, depth, horizon) %>% 
+  dplyr::summarise(Percentage = n()/nrow(.)*100,
+            .groups = 'drop') %>% 
+  ungroup()
+
+test <- sc_wide %>% 
+  filter(variable=='oxygen',
+         depth==10,
+         horizon==34) %>% 
+  group_by(classify) %>% 
   summarise(Percentage = n()/nrow(.)*100)
+
+out <- plyr::ddply(sc_wide, c("variable", "depth", "horizon"), function(x){
+  print(x$variable, x$depth, x$horizon)
+  x %>% 
+    group_by(classify) %>% 
+    summarise(Percentage = n()/nrow(.)*100)
+})
+
+out$classify <- factor(out$classify, levels = c('neither', 'clim', 'RW', 'both'), 
+                       labels = c('neither', 'climatology', 'persistence', 'both'))
+
 
 # some climatology forecasts are NA because observations are not available on those dates--remove these
 summ_null <- na.omit(summ_null)
+out <- na.omit(out)
 
 # set the order of the factor
-summ_null$classify <- factor(summ_null$classify, levels = c('neither', 'clim', 'RW', 'both'))
+out$classify <- factor(out$classify, levels = c('neither', 'clim', 'RW', 'both'), 
+                             labels = c('neither', 'climatology', 'persistence', 'both'))
 
-ggplot(summ_null, aes(x = horizon, y = Percentage, color = classify, fill = classify)) +
+ggplot(out, aes(x = horizon, y = Percentage, color = classify, fill = classify)) +
   geom_bar(position = 'fill', stat = 'identity') +
   facet_grid(depth~fct_rev(variable)) +
   ylab("% of FLARE Forecasts \n Better than Null") +
