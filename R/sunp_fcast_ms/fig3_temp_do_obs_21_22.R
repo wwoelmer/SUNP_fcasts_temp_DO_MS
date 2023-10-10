@@ -42,7 +42,6 @@ a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = obser
   labs(color = 'Year') +
   theme_bw()
 a
-ggsave('./figures/timeseries_obs_oxy.tiff', a, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
 
 b <- ggplot(data = obs_mgL, aes(x = as.factor(year), y = observed*32/1000)) +
   facet_wrap(~depth, ncol = 1) +
@@ -136,8 +135,14 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
   labs(fill = 'Year') +
   theme_bw()
 
-ggarrange(t_a, t_b, common.legend = TRUE)
 
+fig3 <- ggarrange(t_a, a, t_b, b, 
+                  nrow = 1, common.legend = TRUE)
+ggsave('./figures/fig3_obs.tiff', fig3, scale = 0.5, dpi = 300, unit = "mm", width = 400, height = 150)
+
+
+##############################################################################################################
+## extras
 ss <- ggarrange(t_a, t_b, 
           a, b,
           common.legend = TRUE)
