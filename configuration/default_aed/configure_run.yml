@@ -1,9 +1,0 @@
-restart_file: .na
-start_datetime: 2022-06-20 00:00:00
-end_datetime: .na
-forecast_start_datetime: 2022-06-30 00:00:00
-forecast_horizon: 7
-sim_name: oxy_init_adjust_zone_depths
-configure_flare: configure_flare.yml
-configure_obs: observation_processing.yml
-use_s3: FALSE
