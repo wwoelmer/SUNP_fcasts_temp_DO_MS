@@ -1,9 +1,4 @@
-#print(Sys.getenv())
 
-#remotes::install_github("rqthomas/FLAREr")
-#remotes::install_github("FLARE-forecast/FLAREr", force = TRUE)
-#remotes::install_github("FLARE-forecast/GLM3r")
-#install.packages('gsheet')
 library(tidyverse)
 library(lubridate)
 library(stringr)
@@ -13,7 +8,7 @@ lake_directory <- here::here()
 forecast_site <- "sunp"
 configure_run_file <- "configure_run.yml"
 config_files <- "configure_flare.yml"
-config_set_name <- "SUNP_fsed_deep_DA"
+config_set_name <- "SUNP_fcasts_temp_DO"
 use_archive <- FALSE
 
 if(use_archive){
