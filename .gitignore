@@ -37,6 +37,7 @@ data_processed/*
 flare_tempdir/*
 targets/*
 restart/*
+configuration/ignore_configs/*
 workflows/default/sunp.log
 # sensitive environment variables
 configuration/set_environment_sensitive.R
@@ -48,3 +49,4 @@ last_completed_index_2021.txt
 all_obs_fcasts.csv
 mixing_dates.csv
 figures
+README.md
