@@ -26,8 +26,7 @@ dir.create(dest)
 ##### download scores files
 scores <- "https://zenodo.org/record/8212703/files/scores.zip?download=1"
 scores_dest <- file.path(lake_directory, 'scores', site_id, sim_name, "scores.zip")
-download.file(url = scores, destfile = scores_dest,
-              method = "curl")
+download.file(url = scores, destfile = scores_dest)
 unzip(scores_dest, exdir = file.path(lake_directory, 'scores', site_id, sim_name))
 unlink(scores_dest)
 
