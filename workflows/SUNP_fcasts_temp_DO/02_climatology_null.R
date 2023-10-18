@@ -72,15 +72,7 @@ message("Successfully generated targets")
 
 
 
-tgts <- read.csv('./targets/sunp/sunp-targets-insitu.csv')
-
-ggplot(tgts, aes(x = depth)) +
-  geom_histogram() +
-  facet_wrap(~variable)
-
-ggplot(tgts, aes(x = as.Date(time), y = observed)) +
-  geom_line() +
-  facet_grid(cols = vars(variable), rows = vars(depth), scale = 'free') 
+tgts <- read.csv('./targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv')
 
 # set 1.5m obs of oxygen to 1.0m, convert oxy to mg/L
 tgts <- tgts %>% 
@@ -88,13 +80,11 @@ tgts <- tgts %>%
          observed = ifelse(variable=='oxygen', observed*32/1000, observed),
          depth = ifelse(variable=='temperature' & depth==1.5, 1.0, depth))
 
-
 depths <- c(1.0, 10.0)
 tgts <- tgts %>% 
   filter(depth %in% depths) %>% 
   mutate(doy = yday(time),
          year = year(time)) 
-
 
 tgts %>% 
   filter(variable=="temperature",
@@ -204,9 +194,6 @@ ggplot(scores, aes(x = doy, y = logs, color = as.factor(year))) +
   geom_line() +
   facet_grid(depth~variable)
 
-write.csv(scores, './scores/sunp/climatology_scores.csv', row.names = FALSE)
-
-
 means <- scores %>% 
   group_by(variable, depth, year) %>% 
   mutate(mean_crps = mean(crps),
@@ -214,3 +201,7 @@ means <- scores %>%
   distinct(variable, year, depth, .keep_all = TRUE) %>% 
   dplyr::select(variable, depth, year, mean_crps, mean_log)
 means
+
+write.csv(scores, './scores/sunp/climatology_scores.csv', row.names = FALSE)
+
+
