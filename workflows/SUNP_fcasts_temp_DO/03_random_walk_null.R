@@ -6,8 +6,8 @@ library(scoringRules)
 options(dplyr.summarise.inform = FALSE)
 
 
-##### 1. Random walk function ####
-forecast.RW  <- function(start, h= 35, depth_use) {
+##### 1. Random walk function from FO ####
+forecast.RW  <- function(start, h= 36, depth_use) {
   
   # Work out when the forecast should start
   forecast_starts <- targets %>%
@@ -146,7 +146,6 @@ attr(RW_all$reference_datetime, "tzone") <- "UTC"
 
 write_csv(RW_all, './forecasts/sunp/RW.csv.gz')
 
-ex <- read.csv('./forecasts/sunp/SUNP_fsed_deep_DA/all_UC_fsed_deep_DA/sunp-2021-08-05-all_UC_fsed_deep_DA.csv.gz')
 obs <- read.csv('./targets/sunp/sunp-targets-insitu.csv')
 obs <- obs %>% 
   mutate(time = as.POSIXct(time)) %>% 
@@ -173,12 +172,10 @@ RW_obs_scored <- RW_obs_scored %>%
   mutate(crps = crps.numeric(y = observed, family = "normal", 
                            mean = mean, sd = sd))
 
-write.csv(RW_obs_scored, './scores/sunp/RW_scored.csv')
-
 RW_obs_scored %>% 
   mutate(doy = yday(reference_datetime),
          year = year(reference_datetime)) %>% 
-ggplot(aes(x = doy, y = crps, color = horizon)) +
+  ggplot(aes(x = doy, y = crps, color = horizon)) +
   geom_line() +
   facet_wrap(depth~variable, scales = 'free')
 
@@ -187,7 +184,6 @@ scores_summ <- RW_obs_scored %>%
   mutate(mean_crps = mean(crps),
          mean_crps = ifelse(variable=='temperature', mean_crps, mean_crps*32/1000))
 
-ggplot(scores_summ, aes(x = horizon, y = mean_crps)) +
-  geom_line() +
-  facet_wrap(depth~fct_rev(variable), scales = 'free') +
-  theme_bw()
+write.csv(RW_obs_scored, './scores/sunp/RW_scores.csv')
+
+
