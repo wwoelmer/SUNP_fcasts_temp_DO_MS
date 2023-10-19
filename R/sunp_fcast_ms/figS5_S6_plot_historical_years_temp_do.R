@@ -1,23 +1,27 @@
-# plot all historical buoy data for temperature and oxygen
+# plot all historical buoy data for temperature and oxygen for SI fig
 
 library(lubridate)
 library(tidyverse)
 library(ggpubr)
-#install.packages('plotly')
-library(plotly)
 library(scales)
 
-
 setwd(here::here())
+sim_name <- 'SUNP_fcasts_temp_DO'
 
-tgts <- read.csv('./targets/sunp/sunp-targets-insitu.csv')
+tgts <- read.csv(paste0('./targets/sunp/', sim_name, '/sunp-targets-insitu.csv'))
 depths <- c(1.0, 10.0)
 
 oxy <- tgts %>% 
   select(time, depth, observed, variable) %>% 
   filter(variable=='oxygen',
-         observed > 0,
-         depth %in% depths) 
+         observed > 0)
+
+# round 1.5 data to 1.0m
+oxy <- oxy %>% 
+  mutate(depth_cor = ifelse(depth==1.5, 1.0, depth)) %>% 
+  mutate(depth = depth_cor) %>% 
+  select(-depth_cor) %>% 
+  filter(depth %in% depths) 
 
 oxy <- oxy %>% 
   mutate(year = year(time),
@@ -25,13 +29,7 @@ oxy <- oxy %>%
   filter(mo_day > "06-29" & mo_day < '10-18',
          year > 2006)
 
-# round 1.5 data to 1.0m
-oxy <- oxy %>% 
-  mutate(depth_cor = ifelse(depth==1.5, 1.0, depth)) %>% 
-  mutate(depth = depth_cor) %>% 
-  select(-depth_cor)
-
-# remove years with funky stuff going on
+# remove years with buoy data issues
 weird_years <- c('2007', '2008', '2013', '2014', '2017')
 oxy <- oxy %>% 
   filter(!year %in% weird_years)
@@ -54,7 +52,6 @@ a <- ggplot(data = oxy, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*
   labs(color = 'Year') +
   theme_bw()
 a
-#ggplotly(a)
 
 b <- ggplot(data = oxy, aes(x = as.factor(year), y = observed*32/1000)) +
   facet_wrap(~depth) +
@@ -63,11 +60,15 @@ b <- ggplot(data = oxy, aes(x = as.factor(year), y = observed*32/1000)) +
   ylab('DO (mg/L)') +
   xlab('Year') +
   labs(fill = 'Year') +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
+  theme_bw()
 b
 
-ggarrange(a, b, common.legend = TRUE)
+oxy_hist_fig <- ggarrange(a, b, common.legend = TRUE)
+ggsave('./figures/oxy_historical.png', oxy_hist_fig, width = 500, height = 250, 
+       units = "mm", dpi = 300, scale = 0.5)
 
+## calculate summary statistics
 hist_o <- oxy %>% 
   filter(depth %in% c(1.0, 10.0),
          year < 2021) %>% 
@@ -92,6 +93,7 @@ hist_o_yrly <- oxy %>%
                    range = abs(min - max))
 hist_o_yrly
 #################################################################################################################
+# historical temperature
 temp <- tgts %>% 
   select(time, depth, observed, variable) %>% 
   filter(variable=='temperature') %>% 
@@ -99,11 +101,13 @@ temp <- tgts %>%
   mutate(year = year(time),
          mo_day = format(as.Date(time), "%m-%d"))
 
-# round 1.5 data to 1.0m
+# round 1.5 data to 1.0m, and select only buoy data (after 2007)
 temp <- temp %>% 
   mutate(depth_cor = ifelse(depth==1.5, 1.0, depth)) %>% 
   mutate(depth = depth_cor) %>% 
-  select(-depth_cor)
+  select(-depth_cor) %>% 
+  filter(depth %in% depths,
+         time > '2008-01-01' & time < '2023-01-01')
 
 
 ## limit to the same time duration between years
@@ -137,8 +141,7 @@ tempfig <- ggplot(data = temp[temp$depth==1,], aes(x = as.Date(mo_day, format = 
   guides(color = 'none') +
   theme_bw()
 tempfig
-ggsave('./figures/temp_historical.png', tempfig, width = 300, height = 350, 
-       units = "mm", dpi = 300, scale = 0.3)
+
 
 t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(year), y = observed)) +
   facet_wrap(~depth) +
@@ -147,11 +150,16 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
   ylab('Temp (C)') +
   xlab('Year') +
   labs(fill = 'Year') +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
+  theme_bw()
 t_b
 
-ggarrange(t_a, t_b, common.legend = TRUE)
+temp_hist_fig <- ggarrange(t_a, t_b, common.legend = TRUE)
+ggsave('./figures/temp_historical.png', temp_hist_fig, width = 500, height = 250, 
+       units = "mm", dpi = 300, scale = 0.5)
 
+#################################################################################################
+## summary statistics
 hist_t <- temp %>% 
   filter(depth %in% c(1.0, 10.0),
          year < 2021) %>% 
@@ -162,28 +170,3 @@ hist_t <- temp %>%
                    max = max(observed, na.rm = TRUE),
                    range = abs(min - max))
 hist_t
-
-##################################
-## LSPA POSTER
-a <- ggplot(data = oxy, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*32/1000, color = as.factor(year))) +
-  geom_line() +
-  facet_wrap(~depth, scales = 'free', ncol = 1) +
-  scale_x_date(date_labels = "%b") +
-  scale_color_manual(values = cols_oxy[,1]) +
-  ylab('DO (mg/L)') +
-  xlab('Date') +
-  labs(color = 'Year') +
-  theme_bw()
-a
-
-t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
-  geom_line() +
-  scale_color_manual(values = cols_temp[,1]) +
-  facet_wrap(~depth, scales = 'free', ncol = 1) +
-  xlab('Date') +
-  ylab('Temp (C)') +
-  labs(color = 'Year') +
-  theme_bw()
-t_a
-
-ggarrange(t_a, a, common.legend = TRUE)
