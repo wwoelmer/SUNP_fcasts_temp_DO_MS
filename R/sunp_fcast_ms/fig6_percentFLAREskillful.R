@@ -13,12 +13,11 @@ lake_directory <- here::here()
 vars <- c('temperature', 'oxygen')
 depths <- c(1.0, 10.0)
 horizons <- c(1:35)
-sim_name <- 'SUNP_fsed_deep_DA' 
-folder <- c('all_UC_fsed_deep_DA')
+sim_name <- 'SUNP_fcasts_temp_DO' 
 
 ########################################################################
 # read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folder))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
@@ -49,7 +48,7 @@ sc <- sc %>%
 
 ###############################################################################################
 ## read in RW and calculate mean scores
-rw_scores <- read.csv('./scores/sunp/RW_scored.csv')
+rw_scores <- read.csv('./scores/sunp/RW_scores.csv')
 rw_scores <- rw_scores %>% 
   mutate(datetime = as.Date(datetime)) %>% 
   mutate(crps_rw = ifelse(variable=='temperature', crps, crps*32/1000)) %>% 
@@ -98,7 +97,6 @@ sc_all <- full_join(sc_rw, sc_clim, by = c('datetime', 'depth', 'variable', 'hor
                                            'model_id', 'year', 'nCRPS'))
 
 sc_all <- na.omit(sc_all)
-
 
 #######################################################################################################################
 ## for each horizon, calculate the percent of forecasts better than null (above 0)
