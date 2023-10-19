@@ -7,70 +7,7 @@ library(ggpubr)
 library(FLAREr)
 
 lake_directory <- here::here()
-forecast_site <- "sunp"
-configure_run_file <- "configure_run.yml"
-config_files <- "configure_flare.yml"
-config_set_name <- "SUNP_fcasts_temp_DO"
-use_archive <- FALSE
-
 setwd(lake_directory)
-
-###########################################################
-message("Generating targets")
-source(file.path(lake_directory, "R", "insitu_qaqc_withDO.R"))
-
-#' Generate the `config_obs` object and create directories if necessary
-message('read config')
-config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
-dir.create(file.path(lake_directory, "targets", config_obs$site_id, config_set_name), showWarnings = FALSE)
-
-#' Clone or pull from data repositories
-message('download git')
-FLAREr::get_git_repo(lake_directory,
-                     directory = config_obs$realtime_insitu_location,
-                     git_repo = "https://github.com/FLARE-forecast/SUNP-data.git")
-
-#' Download files from EDI and Zenodo
-dir.create(file.path(config_obs$file_path$data_directory, "hist-data"),showWarnings = FALSE)
-
-# high frequency buoy data
-message('download edi')
-FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/f4d3535cebd96715c872a7d3ca45c196",
-                     file = file.path("hist-data", "hist_buoy_do.csv"),
-                     lake_directory)
-
-FLAREr::get_edi_file(edi_https = "https://pasta.lternet.edu/package/data/eml/edi/499/2/1f903796efc8d79e263a549f8b5aa8a6",
-                     file = file.path("hist-data", "hist_buoy_temp.csv"),
-                     lake_directory)
-
-# manually collected data
-if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'))){
-  download.file(url = 'https://zenodo.org/record/8003784/files/Lake-Sunapee-Protective-Association/LMP-v2023.2.zip?download=1',
-                destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
-                mode = 'wb')
-  unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
-        files = file.path('Lake-Sunapee-Protective-Association-LMP-42d9cc5', 'primary files', 'LSPALMP_1986-2022_v2023-06-04.csv'),
-        exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
-        junkpaths = TRUE)
-}
-
-# QAQC insitu buoy data
-message('run insitu qaqc')
-if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
-  dir.create(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))
-}
-cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
-                                   hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
-                                   hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
-                                   hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
-                                   maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
-                                   variables = c("temperature", "oxygen"),
-                                   cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, paste0(config_obs$site_id,"-targets-insitu.csv")),
-                                   config = config_obs,
-                                   lake_directory = lake_directory)
-message("Successfully generated targets")
-
-
 
 tgts <- read.csv('./targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv')
 
