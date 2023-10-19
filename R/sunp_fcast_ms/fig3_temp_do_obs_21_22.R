@@ -5,8 +5,9 @@ library(lubridate)
 library(ggpubr)
 
 setwd(here::here())
+sim_name <- 'SUNP_fcasts_temp_DO'
 
-tgts <- read.csv('./targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv')
+tgts <- read.csv(paste0('./targets/sunp/', sim_name, '/sunp-targets-insitu.csv'))
 years <- c('2021', '2022')
 depths <- c(1.0, 10.0)
 
@@ -83,7 +84,7 @@ summ_o_depth <- obs_mgL %>%
 
 summ_o_depth
 #################################################################################################################
-temp <- read.csv('./targets/sunp/UC_analysis_2022/sunp-targets-insitu.csv')
+temp <- read.csv(paste0('./targets/sunp/', sim_name, '/sunp-targets-insitu.csv'))
 temp <- temp %>% 
   select(time, depth, observed, variable) %>% 
   filter(variable=='temperature') %>% 
@@ -99,14 +100,6 @@ temp <- temp %>%
   mutate(depth = depth_cor) %>% 
   select(-depth_cor)
 
-ggplot(data = temp[temp$year==2021,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
-  geom_line() +
-  facet_wrap(~depth)
-
-ggplot(data = temp, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
-  geom_line() +
-  facet_wrap(~depth)
-
 ## limit to the same time duration between years
 temp <- temp %>% 
   filter(as.Date(time) %in% buoy_dates) 
@@ -119,7 +112,8 @@ t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_d
   ylab('Temp (C)') +
   labs(color = 'Year') +
   theme_bw()
-ggsave('./figures/timeseries_obs_temp.tiff', t_a, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
+t_a
+#ggsave('./figures/timeseries_obs_temp.tiff', t_a, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 220)
 
 
 t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(year), y = observed)) +
@@ -138,9 +132,10 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
 
 fig3 <- ggarrange(t_a, a, t_b, b, 
                   nrow = 1, common.legend = TRUE)
+fig3
 ggsave('./figures/fig3_obs.tiff', fig3, scale = 0.5, dpi = 300, unit = "mm", width = 400, height = 150)
 
-
+#############################################################################################
 ##############################################################################################################
 ## extras
 ss <- ggarrange(t_a, t_b, 
