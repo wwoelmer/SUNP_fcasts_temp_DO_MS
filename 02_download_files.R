@@ -13,6 +13,10 @@ dir.create(dest, recursive = TRUE)
 dest <- file.path(getwd(), 'forecasts', site_id, sim_name)
 dir.create(dest, recursive = TRUE)
 
+# for targets
+dest <- file.path(getwd(), 'targets', site_id, sim_name)
+dir.create(dest, recursive = TRUE)
+
 
 ##### download scores files
 scores <- "https://zenodo.org/records/10016133/files/scores.zip?download=1"
@@ -33,7 +37,7 @@ download.file(url = scores, destfile = scores_dest)
 
 ##### download target observations
 targets <- "https://zenodo.org/records/10016133/files/sunp-targets-insitu.csv?download=1"
-scores_dest <- file.path(lake_directory, 'targets', site_id, sim_name, "sunp-targets-insitu.csv")
+targets_dest <- file.path(lake_directory, 'targets', site_id, sim_name, "sunp-targets-insitu.csv")
 download.file(url = scores, destfile = scores_dest)
 
 ##### download forecast files
