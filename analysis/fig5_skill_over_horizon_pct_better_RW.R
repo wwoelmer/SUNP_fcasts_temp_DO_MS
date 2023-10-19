@@ -1,5 +1,3 @@
-#install.packages('Metrics')
-
 library(lubridate)
 library(tidyverse)
 library(ggpubr)
@@ -13,12 +11,11 @@ lake_directory <- here::here()
 vars <- c('temperature', 'oxygen')
 depths <- c(1.0, 10.0)
 horizons <- c(1:35)
-sim_name <- 'SUNP_fsed_deep_DA' 
-folder <- c('all_UC_fsed_deep_DA')
+sim_name <- 'SUNP_fcasts_temp_DO' 
 
 ########################################################################
 # read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folder))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
@@ -49,7 +46,7 @@ sc <- sc %>%
 
 ###############################################################################################
 ## read in RW and calculate mean scores
-rw_scores <- read.csv('./scores/sunp/RW_scored.csv')
+rw_scores <- read.csv('./scores/sunp/RW_scores.csv')
 rw_scores <- rw_scores %>% 
   mutate(datetime = as.Date(datetime)) %>% 
   mutate(crps_rw = ifelse(variable=='temperature', crps, crps*32/1000)) %>% 
@@ -157,26 +154,11 @@ skill_fig_clim <- ggplot(mean_skill[mean_skill$model_id=='clim',], aes(x = horiz
 skill_fig_clim
 
 fig5 <- ggarrange(skill_fig_clim, skill_fig_rw, common.legend = TRUE)
+fig5
 ggsave('./figures/fig5_year_depth_variable_skill.tiff', fig5, scale = 0.5, dpi = 300, unit = "mm", width = 335, height = 200)
 
 
-# look at mean differences across depth for each year
-mean_overall <- sc_all %>% 
-  filter(depth %in% c(1.0, 10.0)) %>% 
-  mutate(year = year(datetime)) %>% 
-  group_by(variable, depth, year, model_id) %>% 
-  mutate(mean_crps = mean(nCRPS, na.rm = TRUE),
-         sd_crps = sd(nCRPS, na.rm = TRUE)) %>% 
-  distinct(variable, depth, model_id, .keep_all = TRUE) %>% 
-  select(variable, depth, model_id, mean_crps:sd_crps)
-
-ggplot(mean_overall, aes(x = as.factor(depth), y = mean_crps, shape = model_id)) +
-  geom_point() +
-  geom_hline(aes(yintercept = 0)) +
-  facet_grid(year~fct_rev(variable)) +
-  ylab('Mean Skill') +
-  theme_bw()
-
+#######################################################################################################################
 #######################################################################################################################
 # extra fig
 # all together
@@ -194,6 +176,3 @@ skill_fig <- ggplot(mean_skill, aes(x = horizon, y = mean_crps, linetype = model
   labs(color = 'Year', linetype = 'Variable') +
   guides(fill = FALSE)
 skill_fig
-
-
-
