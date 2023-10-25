@@ -6,11 +6,12 @@ library(ggpubr)
 library(arrow)
 
 lake_directory <- here::here()
+site_id <- 'sunp'
+sim_name <- 'SUNP_fcasts_temp_DO'
 
 # rerun the scoring to save parameters
 # some subsetting variables
 folders <- c('all_UC_fsed_deep_DA')
-site_id <- 'sunp'
 dates <- c("2021-07-12 00:00:00")
 
 buoy_dates <- c(seq.Date(as.Date('2021-08-04'), as.Date('2021-10-17'), by = 'day'),
@@ -29,7 +30,7 @@ buoy_dates <- paste0(buoy_dates, " 00:00:00")
 parms <- c("Fsed_oxy_zone1", "Fsed_oxy_zone2", "Fsed_oxy_zone3",
            "lw_factor", "zone1temp","zone2temp", "zone3temp")
 
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp/SUNP_fsed_deep_DA/all_UC_fsed_deep_DA"))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores", site_id, sim_name))
 
 p <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% parms) %>% 
