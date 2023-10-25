@@ -4,8 +4,9 @@ library(statcomp)
 library(ggpmisc)
 
 lake_directory <- here::here()
+sim_name <- 'SUNP_fcasts_temp_DO'
 
-d <- read.csv(file.path(lake_directory, "targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv"))
+d <- read.csv(file.path(lake_directory, "targets/sunp", sim_name, "sunp-targets-insitu.csv"))
 
 d <- d %>% 
   mutate(doy = yday(time),
