@@ -1,5 +1,3 @@
-#install.packages('Metrics')
-
 library(lubridate)
 library(tidyverse)
 library(ggpubr)
@@ -13,29 +11,16 @@ lake_directory <- here::here()
 vars <- c('temperature', 'oxygen')
 depths <- c(1.0, 10.0)
 horizons <- c(1:35)
-sim_name <- 'SUNP_fsed_deep_DA' # UC_analysis_2021/start_06_30
-folders <- c('all_UC_fsed_deep_DA')
+sim_name <- 'SUNP_fcasts_temp_DO'
 
 ########################################################################
 # read in the scores and calculate variance
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folders[1]))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
          depth %in% depths) %>% 
   collect() 
-
-for(i in 1:length(folders)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name, folders[1]))
-  
-  temp <- arrow::open_dataset(score_dir) |> 
-    filter(variable %in% vars,
-           depth %in% depths) %>% 
-    collect() 
-  
-  sc <- rbind(sc, temp)
-  
-}
 
 
 # vector of dates when obs are available (before buoy is taken into harbor)
@@ -82,21 +67,6 @@ mean_skill_horizon <- sc %>%
   distinct(variable, horizon, .keep_all = TRUE) %>% 
   select(variable, horizon, mean_crps:sd_log)
 
-ggplot(mean_skill_horizon, aes(x = horizon, y = mean_crps, linetype = as.factor(variable))) +
-  geom_line() +
-  #geom_jitter(size = 3) +
-  #ylim(0.5, 0.9) +
-  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  #geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps),
-  #            alpha = 0.5) +facet_wrap(~variable, ncol = 2, scales = 'free') +
-  #theme(legend.position = "none") +
-  facet_wrap(~variable, scales = 'free') +
-  theme_bw() +
-  xlab('Year') +
-  ylab('Forecast Performance (CRPS)') +
-  guides(linetype = "none")
-
-
 mean_skill_year <- sc %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
   group_by(variable, depth, year) %>% 
@@ -106,18 +76,6 @@ mean_skill_year <- sc %>%
          sd_log = sd(logs, na.rm = TRUE)) %>% 
   distinct(variable, depth, .keep_all = TRUE) %>% 
   select(variable, depth, mean_crps)
-
-ggplot(mean_skill_year, aes(x = as.factor(year), y = mean_crps, color = as.factor(year))) +
-  geom_point(size = 3) +
-  #geom_jitter(size = 3) +
-  #ylim(0.5, 0.9) +
-  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  facet_grid(depth~fct_rev(variable)) +
-  theme_bw() +
-  xlab('Year') +
-  ylab('Mean CRPS') +
-  labs(color = 'Variable',
-       shape = 'Depth')
 
 perf_wide <- mean_skill_year %>% 
   pivot_wider(names_from = year, values_from = mean_crps)
