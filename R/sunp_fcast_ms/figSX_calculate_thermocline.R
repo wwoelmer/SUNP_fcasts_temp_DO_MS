@@ -4,8 +4,9 @@ library(rLakeAnalyzer)
 library(patchwork)
 
 lake_directory <- here::here()
+sim_name <- 'SUNP_fcasts_temp_DO'
 
-dat <- read.csv(file.path(lake_directory, "targets/sunp/SUNP_fsed_deep_DA/sunp-targets-insitu.csv"))
+dat <- read.csv(file.path(lake_directory, paste0("targets/sunp/", sim_name, "/sunp-targets-insitu.csv")))
 
 dat <- dat %>% 
   mutate(year = year(time)) %>% 
