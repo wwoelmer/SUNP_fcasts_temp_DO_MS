@@ -6,30 +6,15 @@ library(ggpubr)
 library(arrow)
 
 lake_directory <- here::here()
-
-# rerun the scoring to save parameters
-# some subsetting variables
-folders <- c('all_UC_fsed_deep_DA')
 site_id <- 'sunp'
-dates <- c("2021-07-12 00:00:00")
-
-buoy_dates <- c(seq.Date(as.Date('2021-08-04'), as.Date('2021-10-17'), by = 'day'),
-                seq.Date(as.Date('2022-08-04'), as.Date('2022-10-17'), by = 'day'))
-buoy_dates <- paste0(buoy_dates, " 00:00:00")
-
-
-buoy_dates <- c(seq.Date(as.Date('2021-07-12'), as.Date('2021-08-04'), by = 'day'),
-                seq.Date(as.Date('2022-04-28'), as.Date('2022-08-04'), by = 'day'))
-buoy_dates <- paste0(buoy_dates, " 00:00:00")
-
-
+sim_name <- 'SUNP_fcasts_temp_DO'
 
 #######################################################################################
 # read in the files
 parms <- c("Fsed_oxy_zone1", "Fsed_oxy_zone2", "Fsed_oxy_zone3",
            "lw_factor", "zone1temp","zone2temp", "zone3temp")
 
-score_dir <- file.path(lake_directory,"scores/sunp/SUNP_fsed_deep_DA/all_UC_fsed_deep_DA")
+score_dir <- file.path(lake_directory,"scores", site_id, sim_name)
 fils <- list.files(score_dir, pattern = "all_UC_fsed_deep_DA_H")
 
 df1 <- read_parquet(file.path(score_dir, fils[1]))
@@ -79,6 +64,7 @@ fsed <- df %>%
   ggtitle('Fsed at 3 zones') +
   labs(color = 'Zone',
        fill = 'Zone')
+fsed
 
 sedt <- df %>% 
   filter(variable %in% c("zone1temp",
@@ -111,4 +97,6 @@ lw <-
   xlab('Day of Year') +
   ggtitle('LongWave Factor')
 
-ggarrange(fsed, sedt, lw, common.legend = TRUE)
+fig <- ggarrange(fsed, sedt, lw, common.legend = TRUE)
+fig
+ggsave('./figures/figS2_spinup_params.tiff', fig, dpi = 300, unit = "mm", width = 200, height = 150)
