@@ -66,46 +66,41 @@ mean_crps_horizon_depth_year <- sc %>%
 
 #################################################################################
 # plot rmse over horizon
-o_r <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
+o_crps <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$variable=='oxygen (mg/L)',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
   geom_line() +
-  geom_ribbon(aes(ymax = mean_rmse + sd_rmse, ymin = mean_rmse - sd_rmse, 
+  geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, 
                   col = as.factor(year),
                   fill = as.factor(year)),
               alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   xlab('horizon (days into future)') +
-  ylab('AE (mg/L)') +
+  ylab('CRPS (mg/L)') +
   ggtitle('Oxygen') +
   labs(color = 'Year',
        fill = 'Year') +
-  #geom_hline(data = means[means$variable=='oxygen (mg/L)',], 
-  #           aes(yintercept = mean_log, color = as.factor(year)),
-  #           linetype = 'dashed') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black"))
-o_r
+  theme_bw()
+o_crps
 
-t_r <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$variable=='temperature (C)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
+t_crps <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$variable=='temperature (C)',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
   geom_line() +
-  geom_ribbon(aes(ymax = mean_rmse + sd_rmse, ymin = mean_rmse - sd_rmse, 
+  geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, 
                   col = as.factor(year),
                   fill = as.factor(year)),
               alpha = 0.5) +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~depth) +
+  facet_wrap(~depth, ncol = 1) +
   xlab('horizon (days into future)') +
-  ylab('AE (°C)') +
+  ylab('CRPS (°C)') +
   ggtitle('Temperature') +
   labs(color = 'Year',
        fill = 'Year') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = NA, color = "black"))
-t_r
+  theme_bw()
+t_crps
 
-AE <- ggarrange(t_r, o_r, common.legend = TRUE)
-AE
-ggsave('./figures/figS4_AE.png', AE, width = 300, height = 150, 
+crps_all <- ggarrange(t_crps, o_crps, common.legend = TRUE)
+crps_all
+ggsave('./figures/figSX_CRPS.png', crps_all, width = 300, height = 150, 
        units = "mm", dpi = 300, scale = 1)
