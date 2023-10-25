@@ -1,4 +1,4 @@
-### extract example forecasts of each archetype (accuracy and precision axes)
+### extract example forecast for figure 1
 library(Metrics)
 library(tidyverse)
 
@@ -8,30 +8,18 @@ lake_directory <- here::here()
 vars <- c('temperature', 'oxygen')
 depths <- c(1.0, 10.0)
 horizons <- c(1:35)
-folder <- 'SUNP_fsed_deep_DA'
-sim_name <- 'all_UC_fsed_deep_DA'
+sim_name <- 'SUNP_fcasts_temp_DO'
 site_id <- 'sunp'
 
 ########################################################################
 # read in the scores 
-score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", folder, sim_name))
+score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", sim_name))
 
 sc <- arrow::open_dataset(score_dir) |> 
   filter(variable %in% vars,
          depth %in% depths) %>% 
   collect() 
 
-for(i in 1:length(folder)){
-  score_dir <- arrow::SubTreeFileSystem$create(file.path(lake_directory,"scores/sunp", folder, sim_name))
-  
-  temp <- arrow::open_dataset(score_dir) |> 
-    filter(variable %in% vars,
-           depth %in% depths) %>% 
-    collect() 
-  
-  sc <- rbind(sc, temp)
-  
-}
 
 # vector of dates when obs are available (before buoy is taken into harbor)
 ##### make these the same dates for each year for equal comparison
@@ -53,7 +41,6 @@ sc <- sc %>%
          mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
          sd = ifelse(variable=='temperature', sd, (sd*32/1000)))
 
-
 ### calculate rmse
 sc <- sc %>% 
   group_by(depth, variable, horizon, datetime) %>% 
@@ -68,7 +55,7 @@ sc2 <- sc %>%
 
 ####################################################################################
 density_fcast <- function(fdate, fhorizon, fdepth, fvariable, scores_df, title = NULL){
-  fcast <- read.csv(file.path(lake_directory, 'forecasts/sunp', folder, sim_name, paste0('sunp-', fdate, "-", sim_name, '.csv.gz')))
+  fcast <- read.csv(file.path(lake_directory, 'forecasts/sunp', sim_name, paste0('sunp-', fdate, "-", sim_name, '.csv.gz')))
   
   fcast <- fcast %>% 
     mutate(horizon = difftime(as.POSIXct(datetime), as.POSIXct(reference_datetime), units = 'days')) %>% 
