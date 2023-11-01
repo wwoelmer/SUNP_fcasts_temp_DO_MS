@@ -102,5 +102,5 @@ t_crps
 
 crps_all <- ggarrange(t_crps, o_crps, common.legend = TRUE)
 crps_all
-ggsave('./figures/figSX_CRPS.png', crps_all, width = 300, height = 150, 
+ggsave('./figures/figS7_CRPS.png', crps_all, width = 300, height = 150, 
        units = "mm", dpi = 300, scale = 1)

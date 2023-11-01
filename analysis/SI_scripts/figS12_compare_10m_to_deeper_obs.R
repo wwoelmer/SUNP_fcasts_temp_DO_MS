@@ -62,4 +62,4 @@ b <- ggplot(lmp_wide, aes(x = d_10, y = d_15, color = '15 and 10')) +
 b  
 
 fig <- ggarrange(a, b)
-ggsave('./figures/fig_S11_buoy_manual_deepwater_comparison.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 475, height = 220)
+ggsave('./figures/fig_S12_buoy_manual_deepwater_comparison.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 475, height = 220)

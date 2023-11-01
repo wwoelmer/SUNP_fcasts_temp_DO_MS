@@ -113,4 +113,4 @@ d <- ggplot(data = sat, aes(x = as.factor(year), y = obs_mgL)) +
 
 
 dofig <- ggarrange(a, b, c, d, common.legend = TRUE)
-ggsave('./figures/fig_S6_do_mgL_psat.png', dofig, scale = 0.7, dpi = 300, unit = "mm", width = 325, height = 220)
+ggsave('./figures/fig_S5_do_mgL_psat.png', dofig, scale = 0.7, dpi = 300, unit = "mm", width = 325, height = 220)
