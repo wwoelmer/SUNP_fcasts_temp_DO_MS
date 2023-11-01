@@ -138,15 +138,6 @@ ggsave('./figures/fig3_obs.tiff', fig3, scale = 0.5, dpi = 300, unit = "mm", wid
 #############################################################################################
 ##############################################################################################################
 ## extras
-ss <- ggarrange(t_a, t_b, 
-          a, b,
-          common.legend = TRUE)
-ggsave('./figures/timeseries_violin_obs.tiff', ss, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 250)
-  
-ts <- ggarrange(t_a, a, common.legend = TRUE)
-ggsave('./figures/timeseries_obs.tiff', ts, scale = 0.5, dpi = 300, unit = "mm", width = 225, height = 190)
-
-ggarrange(t_b, b, common.legend = TRUE)
 
 # mean, min, max by year
 summ_t <- temp %>% 
