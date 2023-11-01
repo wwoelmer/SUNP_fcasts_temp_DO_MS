@@ -94,7 +94,7 @@ message("Generating targets")
   
   # manually collected data
   if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'))){
-    download.file(url = 'https://zenodo.org/record/8003784/files/Lake-Sunapee-Protective-Association/LMP-v2023.2.zip?download=1',
+    download.file(url = 'https://zenodo.org/records/8003784/files/Lake-Sunapee-Protective-Association/LMP-v2023.2.zip?download=1',
                   destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
                   mode = 'wb')
     unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
