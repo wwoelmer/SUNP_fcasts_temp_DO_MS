@@ -2,7 +2,7 @@
 
 library(tidyverse)
 
-lake_directory <- getwd()
+lake_directory <- here::here()
 
 dat <- ncdf4::nc_open(file.path(lake_directory, "drivers/noaa/NOAAGEFS_1hr_stacked_average/sunp/observed-met-noaa_sunp.nc"))
 cf_met_vars <- c("air_temperature",
