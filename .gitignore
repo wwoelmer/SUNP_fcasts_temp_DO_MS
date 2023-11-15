@@ -38,6 +38,7 @@ flare_tempdir/*
 targets/*
 restart/*
 configuration/ignore_configs/*
+workflows/ignore*
 workflows/default/sunp.log
 # sensitive environment variables
 configuration/set_environment_sensitive.R
