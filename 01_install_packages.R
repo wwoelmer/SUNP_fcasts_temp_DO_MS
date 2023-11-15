@@ -20,3 +20,6 @@ install.packages('rMR')
 install.packages('RcppRoll')
 install.packages('ggpmisc')
 remotes::install_github('wwoelmer/FLAREr', ref = 'SUNP_MS_2023', force = TRUE)
+install.packages('stringr', version = '1.4.0')
+install.packages('vctrs')
+

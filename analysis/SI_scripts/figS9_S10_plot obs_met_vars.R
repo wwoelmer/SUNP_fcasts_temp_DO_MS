@@ -4,6 +4,10 @@ library(tidyverse)
 
 lake_directory <- here::here()
 
+# download stacked met from bucket or add to zenodo for initial download?
+#FLAREr::get_stacked_noaa(lake_directory, config, averaged = TRUE)
+#file was downloaded in `02_download_files.R`
+
 dat <- ncdf4::nc_open(file.path(lake_directory, "drivers/noaa/NOAAGEFS_1hr_stacked_average/sunp/observed-met-noaa_sunp.nc"))
 cf_met_vars <- c("air_temperature",
                  "surface_downwelling_shortwave_flux_in_air",
@@ -81,4 +85,5 @@ b <- ggplot(met_long, aes(x = value, fill = as.factor(year))) +
   facet_wrap(~variable, scales = 'free') +
   theme_bw()
 
-ggarrange(a, b, common.legend = TRUE)
+fig <- ggarrange(a, b, common.legend = TRUE)
+ggsave('./figures/figS9_s10_met.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 625, height = 220)

@@ -59,7 +59,7 @@ forecast.RW  <- function(start, h= 36, depth_use) {
 depths <- c(1, 10)
 
 ###### first run temperature
-targets <- read_csv('https://s3.flare-forecast.org/targets/sunp/sunp-targets-insitu.csv') %>%
+targets <- read_csv('./targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv') %>%
   filter(variable == 'temperature',
          depth %in% depths) 
 
