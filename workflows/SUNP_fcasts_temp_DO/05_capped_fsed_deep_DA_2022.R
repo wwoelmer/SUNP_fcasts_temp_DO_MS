@@ -229,8 +229,7 @@ for(i in starting_index:nrow(sims)){
   
   # if stacked met file is not downloaded, download it from bucket
   if(!file.exists(file.path(lake_directory, 'drivers/noaa/NOAAGEFS_1hr_stacked_average/sunp/observed-met-noaa_sunp.nc'))){
-    source(file.path(lake_directory, 'R/get_stacked_noaa.R'))
-    get_stacked_noaa(lake_directory, config, averaged = TRUE)
+    FLAREr::get_stacked_noaa(lake_directory, config, averaged = TRUE)
   }
   
   source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
