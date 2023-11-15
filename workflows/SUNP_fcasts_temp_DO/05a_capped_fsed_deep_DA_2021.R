@@ -41,7 +41,7 @@ for(i in 2:(num_forecasts+1)){
 
 
 # UC analysis vectors
-UC_names <- c('all_UC_fsed_deep_DA')
+UC_names <- c('SUNP_fcasts_temp_DO')
 
 # create dataframe with both
 sims <- expand.grid(paste0(start_dates,"_",end_dates,"_", forecast_horizon), UC_names)
@@ -123,12 +123,10 @@ message("Generating targets")
 
 
 # create directories with the config set name
-dir.create(file.path(lake_directory, 'restart'))
-dir.create(file.path(lake_directory, 'restart', forecast_site))
-dir.create(file.path(lake_directory, 'restart', forecast_site, config_set_name))
-dir.create(file.path(lake_directory, 'flare_tempdir', forecast_site, config_set_name))
-dir.create(file.path(lake_directory, 'forecasts', forecast_site, config_set_name))
-dir.create(file.path(lake_directory, 'scores', forecast_site, config_set_name))
+dir.create(file.path(lake_directory, 'restart', forecast_site, config_set_name), recursive = TRUE)
+dir.create(file.path(lake_directory, 'flare_tempdir', forecast_site, config_set_name), recursive = TRUE)
+dir.create(file.path(lake_directory, 'forecasts', forecast_site, config_set_name), recursive = TRUE)
+dir.create(file.path(lake_directory, 'scores', forecast_site, config_set_name), recursive = TRUE)
 
 
 for(i in 1:length(UC_names)){
