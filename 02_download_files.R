@@ -40,6 +40,14 @@ targets <- "https://zenodo.org/records/10016133/files/sunp-targets-insitu.csv?do
 targets_dest <- file.path(lake_directory, 'targets', site_id, sim_name, "sunp-targets-insitu.csv")
 download.file(url = targets, destfile = targets_dest)
 
+##### download met driver data
+met <- "https://zenodo.org/records/10127798/files/drivers.zip?download=1"
+met_dest <- file.path(lake_directory, "drivers.zip")
+download.file(url = met, destfile = met_dest)
+unzip(met_dest)
+unlink(met_dest)
+
+
 ##### download forecast files
 ###### NOTE: this takes a long time! #######
 
