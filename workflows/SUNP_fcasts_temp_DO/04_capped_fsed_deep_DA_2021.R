@@ -108,15 +108,20 @@ message("Generating targets")
   if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
     dir.create(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))
   }
-  cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
-                                     hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
-                                     hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
-                                     hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
-                                     maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
-                                     variables = c("temperature", "oxygen"),
-                                     cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, paste0(config_obs$site_id,"-targets-insitu.csv")),
-                                     config = config_obs,
-                                     lake_directory = lake_directory)
+  
+  # if the targets file is not there, run QAQC function to create it
+  if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
+    cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
+                                       hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
+                                       hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
+                                       hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
+                                       maintenance_url = "https://docs.google.com/spreadsheets/d/1IfVUlxOjG85S55vhmrorzF5FQfpmCN2MROA_ttEEiws/edit?usp=sharing",
+                                       variables = c("temperature", "oxygen"),
+                                       cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, paste0(config_obs$site_id,"-targets-insitu.csv")),
+                                       config = config_obs,
+                                       lake_directory = lake_directory)
+    
+    }
   message("Successfully generated targets")
   
 
@@ -214,8 +219,14 @@ for(i in starting_index:nrow(sims)){
     forecast_dir <- NULL
   }
   
-  FLAREr::get_stacked_noaa(lake_directory, config, averaged = TRUE)
   
+  # if stacked met file is not downloaded, download it from bucket
+  if(!file.exists(file.path(lake_directory, 'drivers/noaa/NOAAGEFS_1hr_stacked_average/sunp/observed-met-noaa_sunp.nc'))){
+    source(file.path(lake_directory, 'R/get_stacked_noaa.R'))
+    get_stacked_noaa(lake_directory, config, averaged = TRUE)
+  }
+  
+
   source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
   met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
                 output_dir = file.path(config$file_path$qaqc_data_directory, config_set_name),
@@ -342,22 +353,5 @@ for(i in starting_index:nrow(sims)){
   sink(paste0(lake_directory, '/last_completed_index_2021.txt'))
   print(i)
   sink()
-  
-  #  # calculate and update process uncertainty
-  #  num_files <- list.files(file.path(lake_directory, 'scores/sunp/all_UC'), pattern = "*.parquet")
-  #  print(paste0("number of all_UC score files: ",  length(num_files)))
-  #  source(file.path(lake_directory, "R", "calculate_process_sd.R"))
-  #  
-  #  if(sims$UC_type[i]=='all_UC' & length(num_files) > 10){
-  #  #if(sims$UC_type[i]=='all_UC' & sims$horizon[i] > 1){
-  #    calculate_process_sd(lake_directory = lake_directory,
-  #                         folders = c('all_UC'),
-  #                         horizons = seq(1, 35, by = 1),
-  #                         vars = c('temperature', 'oxygen'),
-  #                         depths = c(1.0, 10.0),
-  #                         config = config)
-  #    
-  #    
-  #  }
-  
+
 }
