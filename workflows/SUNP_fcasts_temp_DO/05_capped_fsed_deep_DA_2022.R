@@ -1,9 +1,3 @@
-#print(Sys.getenv())
-
-#remotes::install_github("rqthomas/FLAREr")
-#remotes::install_github("FLARE-forecast/FLAREr", force = TRUE)
-#remotes::install_github("FLARE-forecast/GLM3r", force = TRUE)
-#install.packages('gsheet')
 library(tidyverse)
 library(lubridate)
 library(stringr)
@@ -13,7 +7,7 @@ lake_directory <- here::here()
 forecast_site <- "sunp"
 configure_run_file <- "configure_run.yml"
 config_files <- "configure_flare.yml"
-config_set_name <- "SUNP_fsed_deep_DA"
+config_set_name <- "SUNP_fcasts_temp_DO"
 use_archive <- FALSE
 
 if(use_archive){
@@ -46,7 +40,7 @@ for(i in 2:(num_forecasts+1)){
 
 
 # UC analysis vectors
-UC_names <- c('all_UC_fsed_deep_DA')
+UC_names <- c('SUNP_fcasts_temp_DO')
 
 
 # create dataframe with both
@@ -117,7 +111,9 @@ message('run insitu qaqc')
 if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
   dir.create(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))
 }
-cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
+
+if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
+  cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
                                    hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
                                    hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
                                    hist_all_file =  file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[4]),
@@ -126,7 +122,8 @@ cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_pat
                                    cleaned_insitu_file = file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, paste0(config_obs$site_id,"-targets-insitu.csv")),
                                    config = config_obs,
                                    lake_directory = lake_directory)
-message("Successfully generated targets")
+}
+  message("Successfully generated targets")
 
 
 # create directories with the UC sim name
@@ -227,7 +224,11 @@ for(i in starting_index:nrow(sims)){
     forecast_dir <- NULL
   }
   
-  FLAREr::get_stacked_noaa(lake_directory, config, averaged = TRUE)
+  # if stacked met file is not downloaded, download it from bucket
+  if(!file.exists(file.path(lake_directory, 'drivers/noaa/NOAAGEFS_1hr_stacked_average/sunp/observed-met-noaa_sunp.nc'))){
+    source(file.path(lake_directory, 'R/get_stacked_noaa.R'))
+    get_stacked_noaa(lake_directory, config, averaged = TRUE)
+  }
   
   source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
   met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
