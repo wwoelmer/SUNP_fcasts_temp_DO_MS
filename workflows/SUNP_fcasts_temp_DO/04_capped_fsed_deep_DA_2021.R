@@ -110,7 +110,7 @@ message("Generating targets")
   }
   
   # if the targets file is not there, run QAQC function to create it
-  if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name))){
+  if(!file.exists(file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, 'sunp-targets-insitu.csv'))){
     cleaned_insitu_file <- insitu_qaqc(realtime_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[1]),
                                        hist_buoy_file = c(file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[2]), file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[5])),
                                        hist_manual_file = file.path(config_obs$file_path$data_directory, config_obs$insitu_obs_fname[3]),
@@ -121,7 +121,9 @@ message("Generating targets")
                                        config = config_obs,
                                        lake_directory = lake_directory)
     
-    }
+  }else{
+    cleaned_insitu_file <- file.path(config_obs$file_path$targets_directory, config_obs$site_id, config_set_name, 'sunp-targets-insitu.csv')
+  }
   message("Successfully generated targets")
   
 
