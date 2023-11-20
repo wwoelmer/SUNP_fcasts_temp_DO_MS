@@ -1,6 +1,7 @@
 # look at observed weather over study period
 
 library(tidyverse)
+library(ggpubr)
 
 lake_directory <- here::here()
 
@@ -53,19 +54,6 @@ met <- met %>%
 
 met_long <- met %>% pivot_longer(cols = glm_met_vars, names_to = 'variable', values_to = 'value')
 
-mix_21 <- "10-04 00:00:00"
-mix_22 <- "09-23 00:00:00"
-ggplot(met_long, aes(x = as.POSIXct(mo_day_time, format = "%m-%d %H:%M:%S"), y = value, color = as.factor(year))) +
-  geom_line() +
-  scale_x_datetime(date_labels = "%b") +
-  #xlim(as.Date('08-04', format = "%m-%d"), as.Date('08-20', format = "%m-%d")) +
-  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~variable, scales = 'free') +
-  theme_bw() +
-  geom_vline(aes(xintercept = as.POSIXct(mix_21, format = "%m-%d %H:%M:%S"), linetype = '2021')) +
-  geom_vline(aes(xintercept = as.POSIXct(mix_22, format = "%m-%d %H:%M:%S"), linetype = '2022')) +
-  labs(color = 'Year') +
-  xlab("Date")
 
 
 ###################################################################################
@@ -85,5 +73,25 @@ b <- ggplot(met_long, aes(x = value, fill = as.factor(year))) +
   facet_wrap(~variable, scales = 'free') +
   theme_bw()
 
-fig <- ggarrange(a, b, common.legend = TRUE)
-ggsave('./figures/figS9_s10_met.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 625, height = 220)
+fig_s9 <- ggarrange(a, b, common.legend = TRUE)
+ggsave('./figures/figS9.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 625, height = 220)
+
+#####
+mix_21 <- "10-04 00:00:00"
+mix_22 <- "09-23 00:00:00"
+fig_s10 <-
+  ggplot(met_long, aes(x = as.POSIXct(mo_day_time, format = "%m-%d %H:%M:%S"), y = value, color = as.factor(year))) +
+  geom_line() +
+  scale_x_datetime(date_labels = "%b") +
+  #xlim(as.Date('08-04', format = "%m-%d"), as.Date('08-20', format = "%m-%d")) +
+  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
+  facet_wrap(~variable, scales = 'free') +
+  theme_bw() +
+  geom_vline(aes(xintercept = as.POSIXct(mix_21, format = "%m-%d %H:%M:%S"), linetype = '2021')) +
+  geom_vline(aes(xintercept = as.POSIXct(mix_22, format = "%m-%d %H:%M:%S"), linetype = '2022')) +
+  labs(color = 'Year') +
+  xlab("Date")
+
+ggsave('./figures/figs10.png', fig_s10, scale = 0.5, dpi = 300, unit = "mm", width = 500, height = 220)
+
+  
