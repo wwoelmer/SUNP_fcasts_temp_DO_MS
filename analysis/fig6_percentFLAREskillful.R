@@ -154,8 +154,8 @@ fig6 <- ggplot(out, aes(x = horizon, y = Percentage, color = classify, fill = cl
   scale_fill_brewer(palette = 'Set3') +
   theme_bw() +
   theme(panel.spacing = unit(0.5, "cm")) +
-  labs(fill = 'Comparison Model') +
+  labs(fill = 'Comparison Model', x = 'Horizon (days)') +
   guides(color = FALSE)
-fig6
 
-ggsave('./figures/fig6_percentskillful.tiff', fig6, scale = 0.5, dpi = 300, unit = "mm", width = 335, height = 200)
+
+ggsave('./figures/fig6.tiff', fig6, scale = 0.5, dpi = 300, unit = "mm", width = 335, height = 200)

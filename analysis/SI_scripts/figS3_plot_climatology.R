@@ -2,7 +2,6 @@
 library(scoringRules)
 library(tidyverse)
 library(ggpubr)
-library(FLAREr)
 
 lake_directory <- here::here()
 setwd(lake_directory)
@@ -20,12 +19,6 @@ tgts <- tgts %>%
   filter(depth %in% depths) %>% 
   mutate(doy = yday(time),
          year = year(time)) 
-
-tgts %>% 
-  filter(variable=="temperature",
-         depth==1) %>% 
-  ggplot(aes(x = doy, y = observed, color = as.factor(year))) +
-  geom_line()
 
 null <- tgts %>% 
   filter(year < 2021) %>% 
@@ -64,9 +57,9 @@ tempfig <- ggplot(null[null$variable=='temperature' & null$depth==1,], aes(x = d
          fill = 'none',
          color = 'none') +
   theme_bw()
-tempfig
+
 
 
 all_clim <- ggarrange(histfig, climfig, labels = 'auto')
-ggsave('./figures/figS3_climatology.png', all_clim, width = 300, height = 150, 
+ggsave('./figures/figS3.png', all_clim, width = 300, height = 150, 
        units = "mm", dpi = 300, scale = 1)

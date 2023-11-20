@@ -69,10 +69,12 @@ sat <- sat %>%
                 'mean_mgL' = "mean_oxygen (mg/L)",
                 'sd_mgL' = "sd_oxygen (mg/L)",
                 'temp_C' = "temperature (C)") 
+
+sunp_elev <- 333 #m (1093 feet)
 sat <- sat %>% 
-  mutate(obs_sat = DO.saturation(obs_mgL, temp_C, elevation.m = 1093)*100,
-         mean_sat = DO.saturation(mean_mgL, temp_C, elevation.m = 1093)*100,
-         sd_sat = DO.saturation(sd_mgL, temp_C, elevation.m = 1093)*100,
+  mutate(obs_sat = DO.saturation(obs_mgL, temp_C, elevation.m = sunp_elev)*100,
+         mean_sat = DO.saturation(mean_mgL, temp_C, elevation.m = sunp_elev)*100,
+         sd_sat = DO.saturation(sd_mgL, temp_C, elevation.m = sunp_elev)*100,
          year = year(datetime),
          doy = yday(datetime),
          mo_day = format(as.Date(datetime), "%m-%d"))
@@ -82,15 +84,15 @@ a <- ggplot(data = sat, aes(x = as.Date(mo_day, format = "%m-%d"), y = obs_sat, 
   facet_wrap(~depth, scales = 'free') +
   scale_x_date(date_labels = "%b") +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  ylab('DO (% Sat)') +
+  ylab('DO (% Saturation)') +
   xlab('Date') +
   labs(color = 'Year')
-a
+
 b <- ggplot(data = sat, aes(x = as.factor(year), y = obs_sat)) +
   facet_wrap(~depth) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   geom_boxplot(aes(group = year, fill = as.factor(year))) +
-  ylab('DO (% Sat)') +
+  ylab('DO (% Saturation)') +
   xlab('Year') +
   labs(fill = 'Year')
 
@@ -102,7 +104,7 @@ c <- ggplot(data = sat, aes(x = as.Date(mo_day, format = "%m-%d"), y = obs_mgL, 
   ylab('DO (mg/L)') +
   xlab('Date') +
   labs(color = 'Year')
-c
+
 d <- ggplot(data = sat, aes(x = as.factor(year), y = obs_mgL)) +
   facet_wrap(~depth) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
@@ -113,4 +115,4 @@ d <- ggplot(data = sat, aes(x = as.factor(year), y = obs_mgL)) +
 
 
 dofig <- ggarrange(a, b, c, d, common.legend = TRUE)
-ggsave('./figures/fig_S5_do_mgL_psat.png', dofig, scale = 0.7, dpi = 300, unit = "mm", width = 325, height = 220)
+ggsave('./figures/fig_S5.png', dofig, scale = 0.7, dpi = 300, unit = "mm", width = 325, height = 220)

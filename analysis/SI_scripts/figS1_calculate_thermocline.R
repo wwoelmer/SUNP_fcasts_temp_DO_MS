@@ -2,6 +2,7 @@ library(lubridate)
 library(tidyverse)
 library(rLakeAnalyzer)
 library(patchwork)
+library(ggpubr)
 
 lake_directory <- here::here()
 sim_name <- 'SUNP_fcasts_temp_DO'
@@ -29,7 +30,7 @@ ts <- ggplot(dat[dat$depth < 10.5,], aes(x = as.Date(time), y = observed, color 
   ylab('Temperature (°C)') +
   labs(color = 'Depth (m)') +
   theme_bw()
-ts
+
 
 dat <- dat %>% 
   group_by(time, year) %>% 
@@ -41,7 +42,7 @@ td <- ggplot(dat, aes(x = as.Date(time), y = therm)) +
   xlab('Date') +
   ylab('Thermocline Depth (m)') +
   theme_bw()
-td
+
 
 tfig <- ggarrange(ts, td, labels = 'auto')
-ggsave('./figures/thermo_depth.tiff', tfig, scale = 0.5, dpi = 300, unit = "mm", width = 625, height = 220)
+ggsave('./figures/fig_s1.tiff', tfig, scale = 0.5, dpi = 300, unit = "mm", width = 625, height = 220)

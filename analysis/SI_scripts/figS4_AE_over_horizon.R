@@ -85,7 +85,6 @@ o_r <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$variable
   #           linetype = 'dashed') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
-o_r
 
 t_r <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$variable=='temperature (C)',], aes(x = horizon, y = mean_rmse, color = as.factor(year))) +
   geom_line() +
@@ -103,9 +102,9 @@ t_r <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$variable
        fill = 'Year') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = NA, color = "black"))
-t_r
+
 
 AE <- ggarrange(t_r, o_r, common.legend = TRUE)
-AE
-ggsave('./figures/figS4_AE.png', AE, width = 300, height = 150, 
+
+ggsave('./figures/figS4.png', AE, width = 300, height = 150, 
        units = "mm", dpi = 300, scale = 1)
