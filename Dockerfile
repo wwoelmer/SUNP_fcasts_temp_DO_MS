@@ -1,20 +1,9 @@
-FROM flareforecast/flare
+FROM rocker/geospatial:4.1.2
 
-ENV NB_USER=rstudio
+RUN apt-get update && apt-get -y install libgd-dev libnetcdf-dev git
 
-RUN apt-get update && \
-    apt-get -y install libzmq5 && \
-    apt-get purge && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+USER rstudio
 
-RUN /rocker_scripts/install_python.sh
-RUN /rocker_scripts/install_binder.sh
+RUN git clone https://github.com/wwoelmer/SUNP-forecast-code.git /home/rstudio/SUNP-forecast-code
 
-EXPOSE 8888
-
-CMD jupyter notebook --ip 0.0.0.0
-
-USER ${NB_USER}
-
-WORKDIR /home/${NB_USER}
+RUN Rscript /home/rstudio/SUNP-forecast-code/01_install_packages.R
