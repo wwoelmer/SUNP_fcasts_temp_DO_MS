@@ -2,6 +2,7 @@ library(tidyverse)
 library(lubridate)
 library(fable)
 library(scoringRules)
+library(arrow)
 
 options(dplyr.summarise.inform = FALSE)
 
@@ -63,14 +64,14 @@ targets <- read_csv('./targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv'
   filter(variable == 'temperature',
          depth %in% depths) 
 
-## for 2021
+## for 2021 forecast period Aug 3 to Oct 17
 forecast_dates <- seq(ymd('2021-08-03'), ymd('2021-10-17'), 1)
 
 forecast_vars <- expand.grid(start = forecast_dates, depth_use = unique(targets$depth)) %>%
   mutate(#targets = 'targets',
     h = 35)
 forecast_vars
-### first for temperature
+### first for temperature 2021
 RW_21_t <- purrr::pmap_dfr(forecast_vars, forecast.RW) %>%
   mutate(site_id = 'sunp',
          variable = 'temperature',
@@ -78,7 +79,7 @@ RW_21_t <- purrr::pmap_dfr(forecast_vars, forecast.RW) %>%
          variable_type = 'state')
 
 
-### now for 2022 temperature
+### now for 2022 temperature period Aug 3 to Oct 17
 forecast_dates <- seq(ymd('2022-08-03'), ymd('2022-10-17'), 1)
 forecast_vars <- expand.grid(start = forecast_dates, depth_use = unique(targets$depth)) %>%
   mutate(#targets = 'targets',
@@ -99,7 +100,7 @@ targets <- read_csv('https://s3.flare-forecast.org/targets/sunp/sunp-targets-ins
   filter(variable == 'oxygen',
          depth %in% depths) 
 
-## for 2021
+## for 2021 oxygen forecast period Aug 3 to Oct 17
 forecast_dates <- seq(ymd('2021-08-03'), ymd('2021-10-17'), 1)
 
 forecast_vars <- expand.grid(start = forecast_dates, depth_use = unique(targets$depth)) %>%
@@ -112,7 +113,7 @@ RW_21_o <- purrr::pmap_dfr(forecast_vars, forecast.RW) %>%
          forecast = 0,
          variable_type = 'state')
 
-## for 2022 oxygen
+## for 2022 oxygenforecast period Aug 3 to Oct 17
 forecast_dates <- seq(ymd('2022-08-03'), ymd('2022-10-17'), 1)
 
 forecast_vars <- expand.grid(start = forecast_dates, depth_use = unique(targets$depth)) %>%
@@ -125,8 +126,10 @@ RW_22_o <- purrr::pmap_dfr(forecast_vars, forecast.RW) %>%
          forecast = 0,
          variable_type = 'state')
 
+# combine oxygen forecasts
 RW_oxy <- rbind(RW_21_o, RW_22_o)
 
+# Combine temperature and oxygen forecasts
 RW_all <- rbind(RW_temp, RW_oxy)
 
 # format for FLARE scoring function
@@ -140,29 +143,31 @@ RW_all <- RW_all %>%
          prediction = predicted) %>% 
   select(reference_datetime, pub_time, model_id, site_id, depth, datetime,
          family, parameter, variable, prediction, forecast, variable_type) %>% 
-  mutate(reference_datetime = as.character(as.POSIXct(reference_datetime) + 4*60*60))
+  mutate(reference_datetime = as.character(as.POSIXct(reference_datetime) + 4*60*60)) # update TZ
 
 attr(RW_all$reference_datetime, "tzone") <- "UTC"
 
 write_csv(RW_all, './forecasts/sunp/RW.csv.gz')
 
-obs <- read.csv('./targets/sunp/sunp-targets-insitu.csv')
+
+
+########## score forecasts
+obs <- read.csv('./targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv')
 obs <- obs %>% 
   mutate(time = as.POSIXct(time)) %>% 
   rename(reference_datetime = time)
 
-########## score forecasts
 score_file_RW <- FLAREr::generate_forecast_score(
-  targets_file = './targets/sunp/sunp-targets-insitu.csv',
+  targets_file = './targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv',
   forecast_file = './forecasts/sunp/RW.csv.gz',
   output_directory = './scores')
 
 scored_RW <- read_parquet(score_file_RW)
 scored_RW$reference_datetime <- as.POSIXct(scored_RW$reference_datetime)
 
-RW_obs <- left_join(scored_RW, obs, by = c("reference_datetime", "depth", "variable"))
-RW_obs_scored <- RW_obs %>% 
-  select(model_id, reference_datetime, datetime, variable, depth, mean, sd, horizon, observed) %>% 
+# RW_obs <- left_join(scored_RW, obs, by = c("reference_datetime", "depth", "variable"))
+RW_obs_scored <- scored_RW %>% 
+  select(model_id, reference_datetime, datetime, variable, depth, mean, sd, horizon, observation) %>% 
   ungroup()
 
 RW_obs_scored <- na.omit(RW_obs_scored)
