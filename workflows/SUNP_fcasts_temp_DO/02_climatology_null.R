@@ -14,7 +14,7 @@ tgts <- read.csv('./targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv')
 # set 1.5m obs of oxygen to 1.0m, convert oxy to mg/L
 tgts <- tgts %>% 
   mutate(depth = ifelse(variable=='oxygen' & depth==1.5, 1.0, depth),
-         observed = ifelse(variable=='oxygen', observed*32/1000, observed),
+         observed = ifelse(variable=='oxygen', observed*32/1000, observed), # convert from mmol/m3 to mg/L
          depth = ifelse(variable=='temperature' & depth==1.5, 1.0, depth))
 
 depths <- c(1.0, 10.0)
@@ -23,55 +23,18 @@ tgts <- tgts %>%
   mutate(doy = yday(time),
          year = year(time)) 
 
-tgts %>% 
-  filter(variable=="temperature",
-         depth==1) %>% 
-ggplot(aes(x = doy, y = observed, color = as.factor(year))) +
-  geom_line()
-
 null <- tgts %>% 
-  filter(year < 2021) %>% 
+  filter(year < 2021) %>% # only use observations before forecast period
   group_by(depth, variable, doy) %>% 
   mutate(mean = mean(observed, na.rm = TRUE),
          sd = sd(observed, na.rm = TRUE),
          n = n()) %>% 
-  filter(n > 2) %>% 
+  filter(n > 2) %>% # requireds more than two observations to calculate a mean/sd
   distinct(depth, variable, doy, .keep_all = TRUE) %>% 
   dplyr::select(doy, variable, depth, mean, sd, n)
 
-histfig <- ggplot(null, aes(as.factor(n))) +
-  geom_histogram(stat = 'count') +
-  facet_grid(depth~fct_rev(variable)) +
-  xlab('N (obs) across all DOYs') +
-  theme_bw()
 
-climfig <- ggplot(null, aes(x = doy, y = mean, color = as.factor(depth))) +
-  geom_line() +
-  geom_ribbon(aes(ymin = mean-sd, ymax = mean + sd, alpha = 0.3, fill = as.factor(depth))) +
-  facet_grid(depth~fct_rev(variable), scales = 'free') +
-  ylab('Climatology Prediction') +
-  xlab('Day of Year') +
-  labs(fill = 'Depth', 
-       color = 'Depth') +
-  guides(alpha = 'none') +
-  theme_bw()
-
-tempfig <- ggplot(null[null$variable=='temperature' & null$depth==1,], aes(x = doy, y = mean, color = as.factor(depth))) +
-  geom_line() +
-  geom_ribbon(aes(ymin = mean-sd, ymax = mean + sd, alpha = 0.3, fill = as.factor(depth))) +
-  facet_grid(depth~fct_rev(variable), scales = 'free') +
-  ylab('Temperature (˚C)') +
-  xlab('Day of Year') +
-  guides(alpha = 'none',
-         fill = 'none',
-         color = 'none') +
-  theme_bw()
-tempfig
-ggsave('./figures/temp_climatology.png', tempfig, width = 300, height = 200, 
-       units = "mm", dpi = 300, scale = 0.4)
-
-ggarrange(histfig, climfig, labels = 'auto')
-
+# calculate scores for 2021
 t_2021 <- tgts %>% 
   filter(year==2021,
          time > as.Date('2021-06-07')) #doy > 218 & doy < 292
@@ -82,26 +45,10 @@ t_2021 <- t_2021 %>%
   group_by(depth, variable, doy) %>% 
   mutate(crps = crps.numeric(y = observed, family = "normal", 
                               mean = mean, sd = sd),
-         logs = logs.numeric(y = observed, family = "normal", 
-                             mean = mean, sd = sd),
          rmse = Metrics::rmse(observed, mean))
 
-ggplot(t_2021[t_2021$variable=='oxygen',], aes(x = doy, y = crps)) +
-  geom_line() +
-  facet_wrap(~depth, scales = 'free') +
-  ggtitle('oxygen')
-
-ggplot(t_2021[t_2021$variable=='temperature',], aes(x = doy, y = crps)) +
-  geom_line() +
-  facet_wrap(~depth, scales = 'free') +
-  ggtitle('temperature')
-
-ggplot(t_2021, aes(x = doy, y = logs)) +
-  geom_line() +
-  facet_grid(depth~variable, scales = 'free') 
-
 #######################
-# 2022 only
+# calculate scores for 2022
 t_2022 <- tgts %>% 
   filter(year==2022) # doy > 154 & doy < 290
 t_2022 <- full_join(t_2022, null)
@@ -111,33 +58,10 @@ t_2022 <- t_2022 %>%
   group_by(depth, variable, doy) %>% 
   mutate(crps = crps.numeric(y = observed, family = "normal", 
                              mean = mean, sd = sd),
-         logs = logs.numeric(y = observed, family = "normal", 
-                             mean = mean, sd = sd),
          rmse = Metrics::rmse(observed, mean))
 
-ggplot(t_2022[t_2022$variable=='oxygen',], aes(x = doy, y = logs)) +
-  geom_line() +
-  facet_wrap(~depth, scales = 'free') +
-  ggtitle('oxygen')
-
-ggplot(t_2022[t_2022$variable=='temperature',], aes(x = doy, y = logs)) +
-  geom_line() +
-  facet_wrap(~depth, scales = 'free') +
-  ggtitle('temperature')
-
-
+# combine scores
 scores <- full_join(t_2021, t_2022)
-ggplot(scores, aes(x = doy, y = logs, color = as.factor(year))) +
-  geom_line() +
-  facet_grid(depth~variable)
-
-means <- scores %>% 
-  group_by(variable, depth, year) %>% 
-  mutate(mean_crps = mean(crps),
-         mean_log = mean(logs)) %>% 
-  distinct(variable, year, depth, .keep_all = TRUE) %>% 
-  dplyr::select(variable, depth, year, mean_crps, mean_log)
-means
 
 write.csv(scores, './scores/sunp/climatology_scores.csv', row.names = FALSE)
 
