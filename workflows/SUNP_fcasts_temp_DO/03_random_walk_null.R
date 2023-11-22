@@ -149,7 +149,7 @@ attr(RW_all$reference_datetime, "tzone") <- "UTC"
 
 write_csv(RW_all, './forecasts/sunp/RW.csv.gz')
 
-
+RW_all <- read.csv('./forecasts/sunp/RW.csv.gz')
 
 ########## score forecasts
 obs <- read.csv('./targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv')
@@ -174,13 +174,13 @@ RW_obs_scored <- na.omit(RW_obs_scored)
 
 RW_obs_scored <- RW_obs_scored %>% 
   group_by(depth, variable, reference_datetime) %>% 
-  mutate(crps = crps.numeric(y = observed, family = "normal", 
+  mutate(crps = crps.numeric(y = observation, family = "normal", 
                            mean = mean, sd = sd))
 
 RW_obs_scored %>% 
   mutate(doy = yday(reference_datetime),
          year = year(reference_datetime)) %>% 
-  ggplot(aes(x = doy, y = crps, color = horizon)) +
+  ggplot(aes(x = doy, y = crps, color = as.factor(horizon))) +
   geom_line() +
   facet_wrap(depth~variable, scales = 'free')
 
@@ -188,6 +188,7 @@ scores_summ <- RW_obs_scored %>%
   group_by(horizon, variable, depth) %>% 
   mutate(mean_crps = mean(crps),
          mean_crps = ifelse(variable=='temperature', mean_crps, mean_crps*32/1000))
+scores_summ
 
 write.csv(RW_obs_scored, './scores/sunp/RW_scores.csv')
 
