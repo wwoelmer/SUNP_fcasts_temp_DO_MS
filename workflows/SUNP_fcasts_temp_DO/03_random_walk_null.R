@@ -149,7 +149,7 @@ attr(RW_all$reference_datetime, "tzone") <- "UTC"
 
 write_csv(RW_all, './forecasts/sunp/RW.csv.gz')
 
-RW_all <- read.csv('./forecasts/sunp/RW.csv.gz')
+#RW_all <- read.csv('./forecasts/sunp/RW.csv.gz')
 
 ########## score forecasts
 obs <- read.csv('./targets/sunp/SUNP_fcasts_temp_DO/sunp-targets-insitu.csv')
