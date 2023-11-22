@@ -35,7 +35,7 @@ sc <- sc %>%
          as.Date(reference_datetime) %in% buoy_dates) %>% 
   select(model_id, reference_datetime, datetime, horizon, depth, variable, everything()) 
 
-# convert oxy crps and obs to mg/L
+# convert oxy crps and obs to from mmol/m3 to mg/L
 sc <- sc %>% 
   mutate(crps = ifelse(variable=='temperature', crps, (crps*32/1000)),
          mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
@@ -78,9 +78,6 @@ clim <- clim %>%
   mutate(datetime = as.Date(datetime),
          depth = as.numeric(depth))
 
-ggplot(clim, aes(x = datetime, y = crps_clim)) +
-  geom_line() +
-  facet_wrap(depth~variable, scales = 'free')
 
 mean_clim_skill <- clim %>% 
   group_by(variable, depth) %>% 
@@ -131,10 +128,10 @@ skill_fig_rw <- ggplot(mean_skill[mean_skill$model_id=='RW',], aes(x = horizon, 
   ylab("Forecast Skill") +
   theme_bw() +
   theme(panel.spacing = unit(0.5, "cm")) +
-  labs(fill = 'Year', linetype = 'Variable') +
+  labs(fill = 'Year', linetype = 'Variable', x= 'Horizon (days)') +
   guides(color = FALSE) +
   ggtitle(rw_title)
-skill_fig_rw
+
 
 #### climatology
 clim_title <- expression(Skill[Climatology])
@@ -148,31 +145,10 @@ skill_fig_clim <- ggplot(mean_skill[mean_skill$model_id=='clim',], aes(x = horiz
   ylab("Forecast Skill") +
   theme_bw() +
   theme(panel.spacing = unit(0.5, "cm")) +
-  labs(fill = 'Year', linetype = 'Variable') +
+  labs(fill = 'Year', linetype = 'Variable', x= 'Horizon (days)') +
   guides(color = FALSE) +
   ggtitle(clim_title)
-skill_fig_clim
 
 fig5 <- ggarrange(skill_fig_clim, skill_fig_rw, common.legend = TRUE)
-fig5
-ggsave('./figures/fig5_year_depth_variable_skill.tiff', fig5, scale = 0.5, dpi = 300, unit = "mm", width = 335, height = 200)
 
-
-#######################################################################################################################
-#######################################################################################################################
-# extra fig
-# all together
-skill_fig <- ggplot(mean_skill, aes(x = horizon, y = mean_crps, linetype = model_id, color = as.factor(year))) +
-  geom_line() +
-  scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
-  #facet_wrap(~depth, ncol = 1) +
-  #geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = as.factor(year)), alpha = 0.5) +
-  facet_grid(depth~fct_rev(variable)) +
-  geom_hline(aes(yintercept = 0)) +
-  ylab("Forecast Skill") +
-  theme_bw() +
-  theme(panel.spacing = unit(0.5, "cm")) +
-  labs(color = 'Year', linetype = 'Variable') +
-  guides(fill = FALSE)
-skill_fig
+ggsave('./figures/fig5.tiff', fig5, scale = 0.5, dpi = 300, unit = "mm", width = 335, height = 200)

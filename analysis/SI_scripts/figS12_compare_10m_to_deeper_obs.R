@@ -1,6 +1,7 @@
 
 library(tidyverse)
 library(ggpmisc)
+library(ggpubr)
 
 lake_directory <- here::here()
 
@@ -17,9 +18,7 @@ if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.
 }
 
 # read in deep site data
-lmp <- read.csv('./data_raw/hist-data/LSPA_LMP/LSPALMP_1986-2022_v2023-06-04.csv')
-
-lmp <- lmp %>% 
+lmp <- read.csv('./data_raw/hist-data/LSPA_LMP/LSPALMP_1986-2022_v2023-06-04.csv') %>% 
   dplyr::filter(parameter %in% c("waterTemperature_degC", "oxygenDissolved_mgl", "oxygenDissolvedPercentOfSaturation_pct")) %>% 
   dplyr::mutate(date = as.Date(date)) %>% 
   dplyr::select(date, depth_m, parameter, value, station) %>% 
@@ -33,7 +32,7 @@ lmp <- lmp %>%
 
 a <- lmp %>% 
   filter(depth %in% c(10, 15, 20, 30)) %>% 
-ggplot(aes(x = date, y = DO_mgl, color = as.factor(depth))) +
+  ggplot(aes(x = date, y = DO_mgl, color = as.factor(depth))) +
   geom_line() +
   theme_bw() +
   labs(color = 'Depth')
@@ -58,8 +57,8 @@ b <- ggplot(lmp_wide, aes(x = d_10, y = d_15, color = '15 and 10')) +
   ylab('Deeper observations') +
   xlab('10 m observations') +
   theme_bw() +
-  labs(color = 'Depths')
-b  
+  labs(color = 'Depths (m)')
+  
 
 fig <- ggarrange(a, b)
-ggsave('./figures/fig_S12_buoy_manual_deepwater_comparison.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 475, height = 220)
+ggsave('./figures/fig_S12.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 475, height = 220)

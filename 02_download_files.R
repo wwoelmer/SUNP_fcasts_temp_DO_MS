@@ -18,7 +18,7 @@ dest <- file.path(getwd(), 'targets', site_id, sim_name)
 dir.create(dest, recursive = TRUE)
 
 
-##### download scores files
+##### download FLARE score files
 scores <- "https://zenodo.org/records/10016133/files/scores.zip?download=1"
 scores_dest <- file.path(lake_directory, 'scores', site_id, sim_name, "scores.zip")
 download.file(url = scores, destfile = scores_dest)
@@ -49,12 +49,17 @@ unlink(met_dest)
 
 
 ##### download forecast files
-###### NOTE: this takes a long time! #######
+###### NOTE: this takes a long time! and is not needed to reproduce manuscript plots#######
 
-fcasts <- "https://zenodo.org/records/10016133/files/forecasts.zip?download=1"
-fcast_dest <- file.path(lake_directory, 'forecasts', site_id, sim_name, "fcasts.zip")
-download.file(url = fcasts, destfile = fcast_dest,
-              method = "curl")
-unzip(fcast_dest, exdir = file.path(lake_directory, 'forecasts', site_id, sim_name))
-unlink(fcast_dest)
+get_forecasts <- FALSE
+
+if (get_forecasts == T) {
+  fcasts <- "https://zenodo.org/records/10016133/files/forecasts.zip?download=1"
+  fcast_dest <- file.path(lake_directory, 'forecasts', site_id, sim_name, "fcasts.zip")
+  download.file(url = fcasts, destfile = fcast_dest,
+                method = "curl")
+  unzip(fcast_dest, exdir = file.path(lake_directory, 'forecasts', site_id, sim_name))
+  unlink(fcast_dest)  
+}
+
 

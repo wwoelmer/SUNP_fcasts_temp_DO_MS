@@ -39,14 +39,6 @@ df$variable <-
                     "zone3temp",
                     "lw_factor")) 
 
-df %>% 
-  ggplot(aes(x = doy, y = mean, color = as.factor(year))) +
-  geom_line() +
-  geom_ribbon(aes(ymin = mean - sd, ymax = mean + sd, fill = as.factor(year)), alpha = 0.3) +
-  scale_color_manual(values =  c('#17BEBB', '#9E2B25')) +
-  scale_fill_manual(values =  c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~variable, scales = 'free') +
-  theme_bw()
 
 fsed <- df %>% 
   filter(variable %in% c("Fsed_oxy_zone1",
@@ -64,7 +56,7 @@ fsed <- df %>%
   ggtitle('Fsed at 3 zones') +
   labs(color = 'Zone',
        fill = 'Zone')
-fsed
+
 
 sedt <- df %>% 
   filter(variable %in% c("zone1temp",
@@ -79,10 +71,10 @@ sedt <- df %>%
   theme_bw() +
   ylab('Parameter Value') +
   xlab('Day of Year') +
-  ggtitle('Sed Temp at 3 zones') +
+  ggtitle('Sediment Temperature at 3 zones') +
   labs(color = 'Zone',
        fill = 'Zone')
-sedt
+
 
 lw <- 
   df %>% 
@@ -98,5 +90,5 @@ lw <-
   ggtitle('LongWave Factor')
 
 fig <- ggarrange(fsed, sedt, lw, common.legend = TRUE)
-fig
-ggsave('./figures/figS2_spinup_params.tiff', fig, dpi = 300, unit = "mm", width = 200, height = 150)
+
+ggsave('./figures/figS2.tiff', fig, dpi = 300, unit = "mm", width = 200, height = 150)

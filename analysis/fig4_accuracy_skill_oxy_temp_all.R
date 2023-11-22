@@ -68,7 +68,6 @@ temp_fig <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='temperature'
   xlab('Forecast Horizon (days)') +
   ylab('CRPS (°C)') +
   guides(linetype = "none")
-temp_fig
 
 oxy_fig <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen',], 
                    aes(x = horizon, y = mean_crps, linetype = as.factor(variable))) +
@@ -78,9 +77,7 @@ oxy_fig <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen',],
   xlab('Forecast Horizon (days)') +
   ylab('CRPS (mg/L)') +
   guides(linetype = "none")
-oxy_fig
 
-ggarrange(temp_fig, oxy_fig, labels = 'auto')
 
 ###############################################################################################
 # calculate skill for climatology and persistence (aka random walk)
@@ -142,9 +139,9 @@ skill_fig <- ggplot(mean_hzon_var, aes(x = horizon, y = mean_crps, linetype = 'c
   scale_color_brewer(palette = "Dark2") +
   xlab('Forecast Horizon (days)') +
   theme_bw() 
-skill_fig
+
 
 all_fig <- ggarrange(temp_fig, oxy_fig, skill_fig, labels = 'auto', nrow = 1, widths = c(0.6, 0.6, 1))
-all_fig
-ggsave('./figures/accuracy_skill_temp_oxy.tiff', all_fig, scale = 0.4, dpi = 300, unit = "mm", width = 525, height = 150)
-ggsave('./figures/accuracy_skill_temp_oxy.jpg', all_fig, scale = 0.4, dpi = 300, unit = "mm", width = 525, height = 150)
+
+ggsave('./figures/fig4', all_fig, scale = 0.4, dpi = 300, unit = "mm", width = 525, height = 150)
+ggsave('./figures/fig4.jpg', all_fig, scale = 0.4, dpi = 300, unit = "mm", width = 525, height = 150)

@@ -40,10 +40,11 @@ sc <- sc %>%
 sc <- sc %>% 
   mutate(crps = ifelse(variable=='temperature', crps, (crps*32/1000)),
          mean = ifelse(variable=='temperature', mean, (mean*32/1000)),
-         observation = ifelse(variable=='temperature', observation, (observation*32/1000)))
-
-sc$variable <- factor(sc$variable, levels = c('temperature', 'oxygen'), 
-                      ordered = TRUE, labels = c('temperature (C)', 'oxygen (mg/L)'))
+         observation = ifelse(variable=='temperature', observation, (observation*32/1000)),
+         variable = factor(variable,
+                           levels = c('temperature', 'oxygen'), 
+                           ordered = TRUE,
+                           labels = c('temperature (C)', 'oxygen (mg/L)')))
 
 ### calculate rmse
 sc <- sc %>% 
@@ -81,7 +82,7 @@ o_crps <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$varia
   labs(color = 'Year',
        fill = 'Year') +
   theme_bw()
-o_crps
+
 
 t_crps <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$variable=='temperature (C)',], aes(x = horizon, y = mean_crps, color = as.factor(year))) +
   geom_line() +
@@ -98,9 +99,9 @@ t_crps <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$varia
   labs(color = 'Year',
        fill = 'Year') +
   theme_bw()
-t_crps
+
 
 crps_all <- ggarrange(t_crps, o_crps, common.legend = TRUE)
-crps_all
-ggsave('./figures/figS7_CRPS.png', crps_all, width = 300, height = 150, 
+
+ggsave('./figures/figS7.png', crps_all, width = 300, height = 150, 
        units = "mm", dpi = 300, scale = 1)
