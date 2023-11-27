@@ -1,6 +1,6 @@
 # FLARE forecasts at Lake Sunapee, NH, USA
 
-Repo for downloading, running, and analyzing forecasts of water temperature and dissolved oxygen at Lake Sunapee, NH, USA for TITLE MANUSCRIPT submitted to JOURNAL on DATE.
+This repository contains code for downloading, running, and analyzing forecasts of water temperature and dissolved oxygen at Lake Sunapee, NH, USA for TITLE MANUSCRIPT submitted to JOURNAL on DATE. Forecasts are run using the FLARE (Forecasting Lake and Reservoir Ecosystem) framework. Contact Whitney Woelmer (wwoelmer@vt.edu) with any questions.
 
 ## Reproduce manuscript figures
 
@@ -28,6 +28,16 @@ Repo for downloading, running, and analyzing forecasts of water temperature and 
 
 7. Run the files within the `analysis` folder to produce the manuscript and Supplementary Information figures.
 
-# 
+## Instructions for reproducing using Docker
+Download and install Docker to your computer (https://www.docker.com)
 
+At the command line, run docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 olssonf/olsson_et_al:latest UPDATE THIS TO WWOELMER
+
+Open a webbrowser and enter http://localhost:8787. You will see an Rstudio login screen. The user name is rstudio and the password is yourpassword
+
+In the Rstudio session: File -> Open project -> select FCRE-forecast-code/FCRE-forecast-code.Rproj UPDATE THIS
+
+Follow the instructions above for reproducing the figures or the forecasts (note: the R packages are already installed in the Docker container so 01_install_packages.R does not need to be run)
+
+# 
 Woelmer WM, Thomas RQ, Olsson F, et al (2023) Forecasts, score summary files, target observational data, and meteorological driver files to accompany the manuscript "Skill of process-based forecasts relative to null models varies across time and depth for water temperature and dissolved oxygen" (1.3) [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.10127798>
