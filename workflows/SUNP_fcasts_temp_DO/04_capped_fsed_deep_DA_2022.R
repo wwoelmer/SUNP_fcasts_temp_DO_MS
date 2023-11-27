@@ -243,7 +243,7 @@ for(i in starting_index:nrow(sims)){
                                               forecast_start_datetime = config$run_config$forecast_start_datetime,
                                               forecast_horizon =  config$run_config$forecast_horizon,
                                               site_id = config$location$site_id,
-                                              use_s3 = TRUE,
+                                              use_s3 = use_s3,
                                               bucket = config$s3$drivers$bucket,
                                               endpoint = config$s3$drivers$endpoint,
                                               local_directory = NULL,

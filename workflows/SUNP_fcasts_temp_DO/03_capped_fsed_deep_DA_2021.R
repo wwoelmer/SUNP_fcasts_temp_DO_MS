@@ -17,11 +17,10 @@ if(use_archive){
   Sys.setenv('AWS_DEFAULT_REGION' = 's3',
              'AWS_S3_ENDPOINT' = 'flare-forecast.org',
              'USE_HTTPS' = TRUE)
-  use_s3 <- TRUE
+  use_s3 <- FALSE
 }
 
 # set up date vectors for each year # 2021-06-30 is first day EXO had DO sensor
-# includes forecast period and spin up time
 days_21 <- seq.Date(as.Date('2021-06-30'), as.Date('2021-11-20'), by = 1) 
 num_forecasts <- c(length(days_21)) 
 days_between_forecasts <- 1
@@ -60,7 +59,10 @@ sims <- sims |>
   dplyr::arrange(start_dates)
 
 
-sims$horizon[1:length(UC_names)] <- 0 # first one is spinup only, no forecast
+#spin_length <- length(UC_names)*length(spin_up)
+#sims$horizon[1:spin_length] <- 1
+sims$horizon[1:length(UC_names)] <- 0
+head(sims)
 
 ###########################################################
 message("Generating targets")
@@ -68,9 +70,7 @@ message("Generating targets")
   
   #' Generate the `config_obs` object and create directories if necessary
   message('read config')
-  config_obs <- FLAREr::initialize_obs_processing(lake_directory,
-                                                  observation_yml = "observation_processing.yml", 
-                                                  config_set_name = config_set_name)
+  config_obs <- FLAREr::initialize_obs_processing(lake_directory, observation_yml = "observation_processing.yml", config_set_name = config_set_name)
   dir.create(file.path(lake_directory, "targets", config_obs$site_id, config_set_name), showWarnings = FALSE)
   
   #' Clone or pull from data repositories
@@ -248,6 +248,11 @@ for(i in starting_index:nrow(sims)){
                                               use_siteid_s3 = TRUE)
   met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "31")]
   
+  
+  #met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "31")]
+  #Need to remove the 00 ensemble member because it only goes 16-days in the future
+  #met_out$filenames <- met_out$filenames[!stringr::str_detect(met_out$filenames, "ens00")]
+  
   # if weather UC is off, we want to take an avg across the ensemble, 
   # and write that as ens_01, rather than depend only on the 1st 
   # weather ensemble (which could be randomly influencing forecast skill)
@@ -294,7 +299,7 @@ for(i in starting_index:nrow(sims)){
                                               obs,
                                               config,
                                               historical_met_error = met_out$historical_met_error)
-  
+  config
   #Run EnKF
   da_forecast_output <- FLAREr::run_da_forecast(states_init = init$states,
                                                 pars_init = init$pars,
