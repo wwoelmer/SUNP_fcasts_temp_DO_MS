@@ -331,6 +331,21 @@ for(i in starting_index:nrow(sims)){
   print(i)
   sink()
   
-
+#  # calculate and update process uncertainty
+#  num_files <- list.files(file.path(lake_directory, 'scores/sunp/all_UC'), pattern = "*.parquet")
+#  print(paste0("number of all_UC score files: ",  length(num_files)))
+#  source(file.path(lake_directory, "R", "calculate_process_sd.R"))
+#  
+#  if(sims$UC_type[i]=='all_UC' & length(num_files) > 10){
+#  #if(sims$UC_type[i]=='all_UC' & sims$horizon[i] > 1){
+#    calculate_process_sd(lake_directory = lake_directory,
+#                         folders = c('all_UC'),
+#                         horizons = seq(1, 35, by = 1),
+#                         vars = c('temperature', 'oxygen'),
+#                         depths = c(1.0, 10.0),
+#                         config = config)
+#    
+#    
+#  }
   
 }
