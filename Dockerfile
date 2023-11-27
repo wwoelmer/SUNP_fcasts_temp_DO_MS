@@ -6,6 +6,6 @@ USER rstudio
 
 RUN git clone https://github.com/wwoelmer/SUNP-forecast-code.git /home/rstudio/SUNP-forecast-code
 
-RUN Rscript 01_install_packages.R
+RUN Rscript /home/rstudio/SUNP-forecast-code/01_install_packages.R
 
 USER root
