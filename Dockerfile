@@ -4,7 +4,7 @@ RUN apt-get update && apt-get -y install libgd-dev libnetcdf-dev git
 
 USER rstudio
 
-RUN git clone https://github.com/wwoelmer/SUNP_fcasts_temp_DO_MS.git /home/rstudio/SUNP_fcasts_temp_DO_MS
+RUN git clone https://github.com/wwoelmer/SUNP_fcasts_temp_DO_MS.git#main /home/rstudio/SUNP_fcasts_temp_DO_MS
 
 RUN Rscript /home/rstudio/SUNP-forecast-code/01_install_packages.R
 
