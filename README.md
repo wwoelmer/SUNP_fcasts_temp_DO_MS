@@ -31,13 +31,13 @@ This repository contains code for downloading, running, and analyzing forecasts 
 ## Instructions for reproducing using Docker
 Download and install Docker to your computer (https://www.docker.com)
 
-At the command line, run docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 olssonf/olsson_et_al:latest UPDATE THIS TO WWOELMER
+1. At the command line in Rstudio, run `docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 wwoelmer/wwoelmer_et_al:latest`
 
-Open a webbrowser and enter http://localhost:8787. You will see an Rstudio login screen. The user name is rstudio and the password is yourpassword
+2. Open a webbrowser and enter http://localhost:8787. You will see an Rstudio login screen. The user name is `rstudio` and the password is `yourpassword`
 
-In the Rstudio session: File -> Open project -> select FCRE-forecast-code/FCRE-forecast-code.Rproj UPDATE THIS
+3. In the Rstudio session: File -> Open project -> select SUNP_fcasts_temp_DO_MS/SUNP_fcasts_temp_DO_MS.Rproj UPDATE THIS
 
-Follow the instructions above for reproducing the figures or the forecasts (note: the R packages are already installed in the Docker container so 01_install_packages.R does not need to be run)
+4. Follow the instructions above for reproducing the figures or the forecasts (note: the R packages are already installed in the Docker container so 01_install_packages.R does not need to be run)
 
 # 
 Woelmer WM, Thomas RQ, Olsson F, et al (2023) Forecasts, score summary files, target observational data, and meteorological driver files to accompany the manuscript "Skill of process-based forecasts relative to null models varies across time and depth for water temperature and dissolved oxygen" (1.3) [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.10127798>
