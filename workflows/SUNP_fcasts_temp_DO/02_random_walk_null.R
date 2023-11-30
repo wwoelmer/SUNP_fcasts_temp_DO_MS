@@ -142,8 +142,8 @@ RW_all <- RW_all %>%
          parameter = ensemble,
          prediction = predicted) %>% 
   select(reference_datetime, pub_time, model_id, site_id, depth, datetime,
-         family, parameter, variable, prediction, forecast, variable_type) %>% 
-  mutate(reference_datetime = as.character(as.POSIXct(reference_datetime) + 4*60*60)) # update TZ
+         family, parameter, variable, prediction, forecast, variable_type) #%>% 
+  #mutate(reference_datetime = as.character(as.POSIXct(reference_datetime) + 4*60*60)) # update TZ
 
 attr(RW_all$reference_datetime, "tzone") <- "UTC"
 
