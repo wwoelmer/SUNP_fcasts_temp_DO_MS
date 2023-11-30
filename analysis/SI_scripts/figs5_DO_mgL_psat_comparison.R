@@ -68,7 +68,8 @@ sat <- sat %>%
   dplyr::rename('obs_mgL' = "observation_oxygen (mg/L)",
                 'mean_mgL' = "mean_oxygen (mg/L)",
                 'sd_mgL' = "sd_oxygen (mg/L)",
-                'temp_C' = "temperature (C)") 
+                'temp_C' = "temperature (C)") %>% 
+  mutate(label = ifelse(depth==1, "1.0 m", "10.0 m"))
 
 sunp_elev <- 333 #m (1093 feet)
 sat <- sat %>% 
@@ -81,38 +82,43 @@ sat <- sat %>%
 
 a <- ggplot(data = sat, aes(x = as.Date(mo_day, format = "%m-%d"), y = obs_sat, color = as.factor(year))) +
   geom_line() +
-  facet_wrap(~depth, scales = 'free') +
+  facet_wrap(~label, scales = 'free') +
   scale_x_date(date_labels = "%b") +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  ylab('DO (% Saturation)') +
+  ylab('Oxygen (% Saturation)') +
   xlab('Date') +
-  labs(color = 'Year')
+  labs(color = 'Year') +
+  theme_bw()
 
 b <- ggplot(data = sat, aes(x = as.factor(year), y = obs_sat)) +
-  facet_wrap(~depth) +
+  facet_wrap(~label) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   geom_boxplot(aes(group = year, fill = as.factor(year))) +
-  ylab('DO (% Saturation)') +
+  ylab('Oxygen (% Saturation)') +
   xlab('Year') +
-  labs(fill = 'Year')
+  labs(fill = 'Year') +
+  theme_bw()
 
 c <- ggplot(data = sat, aes(x = as.Date(mo_day, format = "%m-%d"), y = obs_mgL, color = as.factor(year))) +
   geom_line() +
-  facet_wrap(~depth, scales = 'free') +
+  facet_wrap(~label, scales = 'free') +
   scale_x_date(date_labels = "%b") +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  ylab('DO (mg/L)') +
+  ylab('Oxygen (mg/L)') +
   xlab('Date') +
-  labs(color = 'Year')
+  labs(color = 'Year') +
+  theme_bw()
 
 d <- ggplot(data = sat, aes(x = as.factor(year), y = obs_mgL)) +
-  facet_wrap(~depth) +
+  facet_wrap(~label) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   geom_boxplot(aes(group = year, fill = as.factor(year))) +
-  ylab('DO (mg/L)') +
+  ylab('Oxygen (mg/L)') +
   xlab('Year') +
-  labs(fill = 'Year')
+  labs(fill = 'Year') +
+  theme_bw()
 
 
 dofig <- ggarrange(a, b, c, d, common.legend = TRUE)
-ggsave('./figures/fig_S5.png', dofig, scale = 0.7, dpi = 300, unit = "mm", width = 325, height = 220)
+dofig
+ggsave('./figures/fig_S5.png', dofig, scale = 0.7, dpi = 300, unit = "mm", width = 325, height = 180)

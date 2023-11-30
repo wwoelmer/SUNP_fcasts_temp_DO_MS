@@ -145,10 +145,12 @@ out$classify <- factor(out$classify, levels = c('neither', 'clim', 'RW', 'both')
 
 # some climatology forecasts are NA because observations are not available on those dates--remove these
 out <- na.omit(out)
+out <- out %>% 
+  mutate(label = ifelse(depth==1, "1.0 m", "10.0 m"))
 
 fig6 <- ggplot(out, aes(x = horizon, y = Percentage, color = classify, fill = classify)) +
   geom_bar(position = 'fill', stat = 'identity') +
-  facet_grid(depth~fct_rev(variable)) +
+  facet_grid(label~fct_rev(variable)) +
   ylab("% of FLARE Forecasts \n Better than Null") +
   scale_color_brewer(palette = "Set3") +
   scale_fill_brewer(palette = 'Set3') +
@@ -156,6 +158,6 @@ fig6 <- ggplot(out, aes(x = horizon, y = Percentage, color = classify, fill = cl
   theme(panel.spacing = unit(0.5, "cm")) +
   labs(fill = 'Comparison Model', x = 'Horizon (days)') +
   guides(color = FALSE)
-
+fig6
 
 ggsave('./figures/fig6.tiff', fig6, scale = 0.5, dpi = 300, unit = "mm", width = 335, height = 200)

@@ -1,7 +1,7 @@
 # script to produce figures of observations during focal forecast years
 
-library(tidyverse)
 library(lubridate)
+library(tidyverse)
 library(ggpubr)
 
 setwd(here::here())
@@ -29,13 +29,14 @@ obs <- obs %>%
   filter(as.Date(time) %in% buoy_dates) %>% 
   mutate(year = year(time),
          mo_day = format(as.Date(time), "%m-%d")) %>% 
-  filter(mo_day > "06-29" & mo_day < '10-18')
+  filter(mo_day > "06-29" & mo_day < '10-18') %>% 
+  mutate(label = ifelse(depth==1, "1.0 m", "10.0 m"))
 
 obs_mgL <- obs[obs$variable=='oxygen',]
 
 a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*32/1000, color = as.factor(year))) +
   geom_line() +
-  facet_wrap(~depth, ncol = 1) +
+  facet_wrap(~label, ncol = 1) +
   scale_x_date(date_labels = "%b") +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   ylab('Dissolved oxygen (mg/L)') +
@@ -44,7 +45,7 @@ a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = obser
   theme_bw()
 
 b <- ggplot(data = obs_mgL, aes(x = as.factor(year), y = observed*32/1000)) +
-  facet_wrap(~depth, ncol = 1) +
+  facet_wrap(~label, ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   geom_violin(aes(group = year, fill = as.factor(year))) +
   stat_summary(fun = "median",
@@ -98,12 +99,14 @@ temp <- temp %>%
 
 ## limit to the same time duration between years
 temp <- temp %>% 
-  filter(as.Date(time) %in% buoy_dates) 
+  filter(as.Date(time) %in% buoy_dates) %>% 
+  mutate(label = ifelse(depth==1, "1.0 m", "10.0 m"))
+
   
 t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
-  facet_wrap(~depth, ncol = 1) +
+  facet_wrap(~label, ncol = 1) +
   xlab('Date') +
   ylab('Temperature (°C)') +
   labs(color = 'Year') +
@@ -111,7 +114,7 @@ t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_d
 
 
 t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(year), y = observed)) +
-  facet_wrap(~depth, ncol = 1) +
+  facet_wrap(~label, ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   geom_violin(aes(group = year, fill = as.factor(year))) +
   stat_summary(fun = "median",

@@ -34,9 +34,9 @@ This repository contains code for downloading, running, and analyzing forecasts 
 
 2. At the command line in Rstudio, run `docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 wwoelmer/wwoelmer_et_al:latest`
 
-3. Open a webbrowser and enter http://localhost:8787. You will see an Rstudio login screen. The user name is `rstudio` and the password is `yourpassword`
+3. Open a webbrowser and enter http://localhost:8787. You will see an Rstudio login screen. The user name is rstudio and the password is yourpassword
 
-4. In the Rstudio session: File -> Open project -> select SUNP_fcasts_temp_DO_MS/SUNP_fcasts_temp_DO_MS.Rproj UPDATE THIS
+4. In the Rstudio session: File -> Open project -> select SUNP_fcasts_temp_DO_MS/SUNP_fcasts_temp_DO_MS.Rproj
 
 5. Follow the instructions above for reproducing the figures or the forecasts (note: the R packages are already installed in the Docker container so 01_install_packages.R does not need to be run)
 

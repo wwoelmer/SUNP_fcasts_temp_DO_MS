@@ -47,7 +47,7 @@ a <- ggplot(data = oxy, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*
   facet_wrap(~depth, scales = 'free') +
   scale_x_date(date_labels = "%b") +
   scale_color_manual(values = cols_oxy[,1]) +
-  ylab('DO (mg/L)') +
+  ylab('Oxygen (mg/L)') +
   xlab('Date') +
   labs(color = 'Year') +
   theme_bw()
@@ -56,7 +56,7 @@ b <- ggplot(data = oxy, aes(x = as.factor(year), y = observed*32/1000)) +
   facet_wrap(~depth) +
   geom_boxplot(aes(group = year, fill = as.factor(year))) +
   scale_fill_manual(values = cols_oxy[,1]) +
-  ylab('DO (mg/L)') +
+  ylab('Oxygen (mg/L)') +
   xlab('Year') +
   labs(fill = 'Year') +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
@@ -64,6 +64,7 @@ b <- ggplot(data = oxy, aes(x = as.factor(year), y = observed*32/1000)) +
 
 
 oxy_hist_fig <- ggarrange(a, b, common.legend = TRUE)
+oxy_hist_fig
 ggsave('./figures/fig_S8.png', oxy_hist_fig, width = 500, height = 250, 
        units = "mm", dpi = 300, scale = 0.5)
 
@@ -142,6 +143,7 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
   
 
 temp_hist_fig <- ggarrange(t_a, t_b, common.legend = TRUE)
+temp_hist_fig
 ggsave('./figures/fig_s13.png', temp_hist_fig, width = 500, height = 250, 
        units = "mm", dpi = 300, scale = 0.5)
 
