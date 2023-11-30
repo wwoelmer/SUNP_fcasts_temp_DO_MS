@@ -242,7 +242,7 @@ for(i in starting_index:nrow(sims)){
                                               use_s3 = use_s3,
                                               bucket = config$s3$drivers$bucket,
                                               endpoint = config$s3$drivers$endpoint,
-                                              local_directory = NULL,
+                                              local_directory = file.path(config$file_path$noaa_directory, 'noaa/gefs-v12-reprocess'),
                                               use_forecast = TRUE,
                                               use_ler_vars = FALSE,
                                               use_siteid_s3 = TRUE)
