@@ -50,7 +50,7 @@ unzip(met_dest)
 unlink(met_dest)
 
 # move folder to follow file structure expected by FLARE
-dir.create(file.path(lake_directory, 'drivers/noaa/gefs-v12-reprocess/stage3/parquet/sunp'))
+dir.create(file.path(lake_directory, 'drivers/noaa/gefs-v12-reprocess/stage3/parquet/sunp'), recursive = T)
 file.copy(from = file.path(lake_directory, 'drivers/noaa/gefs-v12-reprocess/stage3/sunp/part-0.parquet'),
           to = file.path(lake_directory, 'drivers/noaa/gefs-v12-reprocess/stage3/parquet/sunp/part-0.parquet'),
           overwrite = TRUE, recursive = FALSE, copy.mode = TRUE)
