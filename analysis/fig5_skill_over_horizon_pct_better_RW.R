@@ -114,6 +114,8 @@ mean_skill_no_horizon <- sc_all %>%
   select(variable, depth, mean_crps:sd_crps)
 ##########################################################################################################
 #### plot forecast skill
+mean_skill <- mean_skill %>% 
+  mutate(label = ifelse(depth==1, "1.0 m", "10.0 m"))
 
 ### persistence
 rw_title <- expression(Skill[Persistence])
@@ -123,7 +125,7 @@ skill_fig_rw <- ggplot(mean_skill[mean_skill$model_id=='RW',], aes(x = horizon, 
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = as.factor(year)), alpha = 0.5,
               linetype = 'dashed') +
-  facet_grid(depth~fct_rev(variable)) +
+  facet_grid(label~fct_rev(variable)) +
   geom_hline(aes(yintercept = 0)) +
   ylab("Forecast Skill") +
   theme_bw() +
@@ -140,7 +142,7 @@ skill_fig_clim <- ggplot(mean_skill[mean_skill$model_id=='clim',], aes(x = horiz
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   geom_ribbon(aes(ymax = mean_crps + sd_crps, ymin = mean_crps - sd_crps, fill = as.factor(year)), alpha = 0.5) +
-  facet_grid(depth~fct_rev(variable)) +
+  facet_grid(label~fct_rev(variable)) +
   geom_hline(aes(yintercept = 0)) +
   ylab("Forecast Skill") +
   theme_bw() +
@@ -150,5 +152,5 @@ skill_fig_clim <- ggplot(mean_skill[mean_skill$model_id=='clim',], aes(x = horiz
   ggtitle(clim_title)
 
 fig5 <- ggarrange(skill_fig_clim, skill_fig_rw, common.legend = TRUE)
-
+fig5
 ggsave('./figures/fig5.tiff', fig5, scale = 0.5, dpi = 300, unit = "mm", width = 335, height = 200)

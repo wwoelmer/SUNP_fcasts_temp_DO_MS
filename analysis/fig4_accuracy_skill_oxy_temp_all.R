@@ -77,7 +77,7 @@ oxy_fig <- ggplot(mean_skill_horizon[mean_skill_horizon$variable=='oxygen',],
   xlab('Forecast Horizon (days)') +
   ylab('CRPS (mg/L)') +
   guides(linetype = "none")
-
+oxy_fig
 
 ###############################################################################################
 # calculate skill for climatology and persistence (aka random walk)
