@@ -87,7 +87,8 @@ a <- ggplot(data = sat, aes(x = as.Date(mo_day, format = "%m-%d"), y = obs_sat, 
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   ylab('Oxygen (% Saturation)') +
   xlab('Date') +
-  labs(color = 'Year')
+  labs(color = 'Year') +
+  theme_bw()
 
 b <- ggplot(data = sat, aes(x = as.factor(year), y = obs_sat)) +
   facet_wrap(~label) +
@@ -95,7 +96,8 @@ b <- ggplot(data = sat, aes(x = as.factor(year), y = obs_sat)) +
   geom_boxplot(aes(group = year, fill = as.factor(year))) +
   ylab('Oxygen (% Saturation)') +
   xlab('Year') +
-  labs(fill = 'Year')
+  labs(fill = 'Year') +
+  theme_bw()
 
 c <- ggplot(data = sat, aes(x = as.Date(mo_day, format = "%m-%d"), y = obs_mgL, color = as.factor(year))) +
   geom_line() +
@@ -104,7 +106,8 @@ c <- ggplot(data = sat, aes(x = as.Date(mo_day, format = "%m-%d"), y = obs_mgL, 
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   ylab('Oxygen (mg/L)') +
   xlab('Date') +
-  labs(color = 'Year')
+  labs(color = 'Year') +
+  theme_bw()
 
 d <- ggplot(data = sat, aes(x = as.factor(year), y = obs_mgL)) +
   facet_wrap(~label) +
@@ -112,9 +115,10 @@ d <- ggplot(data = sat, aes(x = as.factor(year), y = obs_mgL)) +
   geom_boxplot(aes(group = year, fill = as.factor(year))) +
   ylab('Oxygen (mg/L)') +
   xlab('Year') +
-  labs(fill = 'Year')
+  labs(fill = 'Year') +
+  theme_bw()
 
 
 dofig <- ggarrange(a, b, c, d, common.legend = TRUE)
 dofig
-ggsave('./figures/fig_S5.png', dofig, scale = 0.7, dpi = 300, unit = "mm", width = 325, height = 220)
+ggsave('./figures/fig_S5.png', dofig, scale = 0.7, dpi = 300, unit = "mm", width = 325, height = 180)
