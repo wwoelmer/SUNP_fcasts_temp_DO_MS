@@ -35,6 +35,7 @@ a <- lmp %>%
   ggplot(aes(x = date, y = DO_mgl, color = as.factor(depth))) +
   geom_line() +
   theme_bw() +
+  ylab('Oxygen (mg/L') +
   labs(color = 'Depth')
 
 lmp_wide <-  lmp %>%  
@@ -61,4 +62,5 @@ b <- ggplot(lmp_wide, aes(x = d_10, y = d_15, color = '15 and 10')) +
   
 
 fig <- ggarrange(a, b)
+fig
 ggsave('./figures/fig_S12.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 475, height = 220)
