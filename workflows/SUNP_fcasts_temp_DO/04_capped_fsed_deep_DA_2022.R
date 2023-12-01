@@ -230,12 +230,12 @@ for(i in starting_index:nrow(sims)){
   # if stacked met file is not downloaded, download it from bucket
   if(!file.exists(file.path(lake_directory, 'drivers/noaa/NOAAGEFS_1hr_stacked_average/sunp/observed-met-noaa_sunp.nc'))){
     FLAREr::get_stacked_noaa(lake_directory, config, averaged = TRUE)
+  } else {
+    source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
+    met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
+                  output_dir = file.path(config$file_path$qaqc_data_directory, config_set_name),
+                  config = config)
   }
-  
-  source(file.path(lake_directory, "R", "met_nc_to_csv.R"))
-  met_nc_to_csv(input_met_nc = file.path(config$file_path$noaa_directory, "noaa", "NOAAGEFS_1hr_stacked_average", config$location$site_id, paste0("observed-met-noaa_",config$location$site_id,".nc")),
-                output_dir = file.path(config$file_path$qaqc_data_directory, config_set_name),
-                config = config)
   met_out <- FLAREr::generate_met_files_arrow(obs_met_file = NULL,
                                               out_dir = config$file_path$execute_directory,
                                               start_datetime = config$run_config$start_datetime,
