@@ -1,6 +1,6 @@
 # FLARE forecasts at Lake Sunapee, NH, USA
 
-This repository contains code for downloading, running, and analyzing forecasts of water temperature and dissolved oxygen at Lake Sunapee, NH, USA for TITLE MANUSCRIPT submitted to JOURNAL on DATE. Forecasts are run using the FLARE (Forecasting Lake and Reservoir Ecosystem) framework. Contact Whitney Woelmer (wwoelmer@vt.edu) with any questions.
+This repository contains code for downloading, running, and analyzing forecasts of water temperature and dissolved oxygen at Lake Sunapee, NH, USA for the manuscript Process-based forecasts of lake water temperature and dissolved oxygen outperform null models, with variability over time and depth. Forecasts are run using the FLARE (Forecasting Lake and Reservoir Ecosystem) framework. Contact Whitney Woelmer (wwoelmer@vt.edu) with any questions.
 
 ## Reproduce manuscript figures
 
