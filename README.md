@@ -41,4 +41,4 @@ This repository contains code for downloading, running, and analyzing forecasts 
 5. Follow the instructions above for reproducing the figures or the forecasts (note: the R packages are already installed in the Docker container so 01_install_packages.R does not need to be run)
 
 # 
-Woelmer WM, Thomas RQ, Olsson F, et al (2023) Forecasts, score summary files, target observational data, and meteorological driver files to accompany the manuscript "Skill of process-based forecasts relative to null models varies across time and depth for water temperature and dissolved oxygen" (1.3) [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.10127798>
+Woelmer WM, Thomas RQ, Olsson F, et al (2023) Forecasts, score summary files, target observational data, and meteorological driver files to accompany the manuscript "Process-based forecasts of lake water temperature and dissolved oxygen outperform null models, with variability over time and depth" [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.10127798>
