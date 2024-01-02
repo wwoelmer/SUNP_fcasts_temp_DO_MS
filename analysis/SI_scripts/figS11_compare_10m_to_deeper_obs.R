@@ -7,11 +7,11 @@ lake_directory <- here::here()
 
 # download data
 # manually collected data
-if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'))){
+if(!file.exists(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.2.zip'))){
   download.file(url = 'https://zenodo.org/records/8003784/files/Lake-Sunapee-Protective-Association/LMP-v2023.2.zip?download=1',
-                destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
+                destfile = file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.2.zip'),
                 mode = 'wb')
-  unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.1.zip'),
+  unzip(file.path(lake_directory, 'data_raw', 'hist-data', 'LMP-v2023.2.zip'),
         files = file.path('Lake-Sunapee-Protective-Association-LMP-42d9cc5', 'primary files', 'LSPALMP_1986-2022_v2023-06-04.csv'),
         exdir = file.path(lake_directory, 'data_raw', 'hist-data', 'LSPA_LMP'),
         junkpaths = TRUE)
@@ -60,6 +60,11 @@ b <- ggplot(lmp_wide, aes(x = d_10, y = d_15, color = '15 and 10')) +
   theme_bw() +
   labs(color = 'Depths (m)')
   
+lmp_wide <- na.omit(lmp_wide)
+cor(lmp_wide$d_10, lmp_wide$d_15, method = 'pearson')
+cor(lmp_wide$d_10, lmp_wide$d_20, method = 'pearson')
+cor(lmp_wide$d_10, lmp_wide$d_30, method = 'pearson')
+
 
 fig <- ggarrange(a, b)
 fig
