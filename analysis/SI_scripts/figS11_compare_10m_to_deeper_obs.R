@@ -63,4 +63,4 @@ b <- ggplot(lmp_wide, aes(x = d_10, y = d_15, color = '15 and 10')) +
 
 fig <- ggarrange(a, b)
 fig
-ggsave('./figures/fig_S12.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 475, height = 220)
+ggsave('./figures/fig_S11.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 475, height = 220)

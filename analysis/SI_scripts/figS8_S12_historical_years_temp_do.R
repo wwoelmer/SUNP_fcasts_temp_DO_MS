@@ -144,7 +144,7 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
 
 temp_hist_fig <- ggarrange(t_a, t_b, common.legend = TRUE)
 temp_hist_fig
-ggsave('./figures/fig_s13.png', temp_hist_fig, width = 500, height = 250, 
+ggsave('./figures/fig_s12.png', temp_hist_fig, width = 500, height = 250, 
        units = "mm", dpi = 300, scale = 0.5)
 
 #################################################################################################
