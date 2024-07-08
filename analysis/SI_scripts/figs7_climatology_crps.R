@@ -32,4 +32,4 @@ f <- ggplot(means, aes(x = as.factor(year), y = mean_crps, color = as.factor(yea
   labs(color = 'Year') +
   theme_bw()
 
-ggsave('./figures/fig_S6.png', f, dpi = 300, unit = "mm", width = 225, height = 120)
+ggsave('./figures/fig_S7.png', f, dpi = 300, unit = "mm", width = 225, height = 120)

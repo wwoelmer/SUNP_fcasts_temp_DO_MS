@@ -103,5 +103,5 @@ t_crps <- ggplot(mean_crps_horizon_depth_year[mean_crps_horizon_depth_year$varia
 
 crps_all <- ggarrange(t_crps, o_crps, common.legend = TRUE)
 
-ggsave('./figures/figS7.png', crps_all, width = 300, height = 150, 
+ggsave('./figures/figS8.png', crps_all, width = 300, height = 150, 
        units = "mm", dpi = 300, scale = 1)

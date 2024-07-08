@@ -65,7 +65,7 @@ b <- ggplot(data = oxy, aes(x = as.factor(year), y = observed*32/1000)) +
 
 oxy_hist_fig <- ggarrange(a, b, common.legend = TRUE)
 oxy_hist_fig
-ggsave('./figures/fig_S8.png', oxy_hist_fig, width = 500, height = 250, 
+ggsave('./figures/fig_S11.png', oxy_hist_fig, width = 500, height = 250, 
        units = "mm", dpi = 300, scale = 0.5)
 
 ## calculate summary statistics
@@ -144,7 +144,7 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
 
 temp_hist_fig <- ggarrange(t_a, t_b, common.legend = TRUE)
 temp_hist_fig
-ggsave('./figures/fig_s12.png', temp_hist_fig, width = 500, height = 250, 
+ggsave('./figures/fig_s15.png', temp_hist_fig, width = 500, height = 250, 
        units = "mm", dpi = 300, scale = 0.5)
 
 #################################################################################################

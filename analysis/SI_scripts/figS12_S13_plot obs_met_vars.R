@@ -74,7 +74,7 @@ b <- ggplot(met_long, aes(x = value, fill = as.factor(year))) +
   theme_bw()
 
 fig_s9 <- ggarrange(a, b, common.legend = TRUE)
-ggsave('./figures/figS9.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 625, height = 220)
+ggsave('./figures/figS12.png', fig, scale = 0.5, dpi = 300, unit = "mm", width = 625, height = 220)
 
 #####
 mix_21 <- "10-04 00:00:00"
@@ -92,6 +92,6 @@ fig_s10 <-
   labs(color = 'Year') +
   xlab("Date")
 
-ggsave('./figures/figs10.png', fig_s10, scale = 0.5, dpi = 300, unit = "mm", width = 500, height = 220)
+ggsave('./figures/figs13.png', fig_s10, scale = 0.5, dpi = 300, unit = "mm", width = 500, height = 220)
 
   
