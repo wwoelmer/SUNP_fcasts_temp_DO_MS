@@ -139,9 +139,12 @@ out <- plyr::ddply(sc_wide, c("variable", "depth", "horizon"), function(x){
     summarise(Percentage = n()/nrow(.)*100)
 })
 
-out$classify <- factor(out$classify, levels = c('neither', 'clim', 'RW', 'both'), 
-                       labels = c('neither', 'climatology', 'persistence', 'both'))
+out$classify <- factor(out$classify, levels = c('both', 'clim', 'RW', 'neither'), 
+                       labels = c('both', 'climatology', 'persistence', 'neither'))
 
+
+v_colors <- viridis::viridis(300)
+all_colors <- c(v_colors[300], v_colors[250], v_colors[200], v_colors[10])
 
 # some climatology forecasts are NA because observations are not available on those dates--remove these
 out <- na.omit(out)
@@ -152,8 +155,8 @@ fig6 <- ggplot(out, aes(x = horizon, y = Percentage, color = classify, fill = cl
   geom_bar(position = 'fill', stat = 'identity') +
   facet_grid(label~fct_rev(variable)) +
   ylab("% of FLARE Forecasts \n Better than Null") +
-  scale_color_brewer(palette = "Set3") +
-  scale_fill_brewer(palette = 'Set3') +
+  scale_fill_manual(values = all_colors) +
+  scale_color_manual(values = all_colors) +
   theme_bw() +
   theme(panel.spacing = unit(0.5, "cm")) +
   labs(fill = 'Comparison Model', x = 'Horizon (days)') +
