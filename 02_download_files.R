@@ -8,6 +8,7 @@ site_id <- "sunp"
 # for scores
 dest <- file.path(lake_directory, 'scores', site_id, sim_name)
 dir.create(dest, recursive = TRUE)
+options(timeout = 60*20) # set longer timeout to five minutes so the download can complete
 
 # for forecasts
 dest <- file.path(getwd(), 'forecasts', site_id, sim_name)
@@ -20,9 +21,9 @@ dir.create(dest, recursive = TRUE)
 
 ##### download FLARE score files
 # published on Zenodo at Woelmer WM, Thomas RQ, Olsson F, et al (2023) https://doi.org/10.5281/zenodo.8212702
-scores <- "https://zenodo.org/records/10223812/files/forecasts.zip?download=1"
+scores <- "https://zenodo.org/records/10223812/files/scores.zip?download=1"
 scores_dest <- file.path(lake_directory, 'scores', site_id, sim_name, "scores.zip")
-download.file(url = scores, destfile = scores_dest)
+download.file(url = scores, destfile = scores_dest, mode = 'wb')
 unzip(scores_dest, exdir = file.path(lake_directory, 'scores', site_id, sim_name))
 unlink(scores_dest)
 
@@ -45,7 +46,7 @@ download.file(url = targets, destfile = targets_dest)
 options(timeout = 60*5) # set longer timeout to five minutes so the download can complete
 met <- "https://zenodo.org/records/10223812/files/drivers.zip?download=1"
 met_dest <- file.path(lake_directory, "drivers.zip")
-download.file(url = met, destfile = met_dest)
+download.file(url = met, destfile = met_dest, mode = 'wb)
 unzip(met_dest)
 unlink(met_dest)
 
