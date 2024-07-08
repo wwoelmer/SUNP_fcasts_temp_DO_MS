@@ -18,31 +18,48 @@ obs <- tgts %>%
 
 obs <- obs %>% 
   select(time, depth, observed, variable) %>% 
-  filter(variable=='oxygen',
-         observed > 0) 
+  filter(#variable=='oxygen',
+    observed > 0) 
 
 # limit to the days that we will analyze for forecasts (i.e., when we have NOAA forecasts for)
 buoy_dates <- c(seq.Date(as.Date('2021-08-04'), as.Date('2021-10-17'), by = 'day'),
                 seq.Date(as.Date('2022-08-04'), as.Date('2022-10-17'), by = 'day'))
+
+mix_21 <- "10-04"
+mix_22 <- "09-23"
+
 
 obs <- obs %>% 
   filter(as.Date(time) %in% buoy_dates) %>% 
   mutate(year = year(time),
          mo_day = format(as.Date(time), "%m-%d")) %>% 
   filter(mo_day > "06-29" & mo_day < '10-18') %>% 
-  mutate(label = ifelse(depth==1, "1.0 m", "10.0 m"))
+  mutate(label = ifelse(depth==1, "1.0 m", "10.0 m")) %>% 
+  mutate(mix_date = ifelse(year=='2021', '10-04', '09-23')) %>% 
+  group_by(depth, variable, year) %>% 
+  mutate(mix_val = observed[mo_day==mix_date])
+
 
 obs_mgL <- obs[obs$variable=='oxygen',]
+temp_C <- obs[obs$variable=='temperature',]
 
-a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*32/1000, color = as.factor(year))) +
+##################################################################################################
+# oxygen plots
+
+a <- ggplot(data = obs_mgL, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed*32/1000, 
+                                color = as.factor(year))) +
   geom_line() +
   facet_wrap(~label, ncol = 1) +
   scale_x_date(date_labels = "%b") +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   ylab('Dissolved oxygen (mg/L)') +
   xlab('Date') +
-  labs(color = 'Year') +
-  theme_bw()
+  geom_point(aes(y = mix_val*32/1000, x = as.Date(mix_date, format = "%m-%d")), shape = 15, size = 2) +
+  labs(color = 'Year',
+       shape = 'Turnover') +
+  theme_bw() +
+  guides(size = 'none')
+a
 
 b <- ggplot(data = obs_mgL, aes(x = as.factor(year), y = observed*32/1000)) +
   facet_wrap(~label, ncol = 1) +
@@ -55,6 +72,7 @@ b <- ggplot(data = obs_mgL, aes(x = as.factor(year), y = observed*32/1000)) +
   xlab('Year') +
   labs(fill = 'Year') +
   theme_bw()
+b
 
 # mean, min, max by year
 summ_o <- obs_mgL %>% 
@@ -81,39 +99,23 @@ summ_o_depth <- obs_mgL %>%
 
 summ_o_depth
 #################################################################################################################
-temp <- read.csv(paste0('./targets/sunp/', sim_name, '/sunp-targets-insitu.csv'))
-temp <- temp %>% 
-  select(time, depth, observed, variable) %>% 
-  filter(variable=='temperature') %>% 
-  filter(as.Date(time) %in% buoy_dates) %>% 
-  mutate(year = year(time),
-         mo_day = format(as.Date(time), "%m-%d")) %>% 
-  filter(year %in% years,
-         as.Date(time) > as.Date('2021-06-08'))
+# temperature plots
 
-# round 1.5 data to 1.0m
-temp <- temp %>% 
-  mutate(depth_cor = ifelse(depth==1.5, 1.0, depth)) %>% 
-  mutate(depth = depth_cor) %>% 
-  select(-depth_cor)
-
-## limit to the same time duration between years
-temp <- temp %>% 
-  filter(as.Date(time) %in% buoy_dates) %>% 
-  mutate(label = ifelse(depth==1, "1.0 m", "10.0 m"))
-
-  
-t_a <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
+t_a <- ggplot(data = temp_C, aes(x = as.Date(mo_day, format = "%m-%d"), y = observed, color = as.factor(year))) +
   geom_line() +
   scale_color_manual(values = c('#17BEBB', '#9E2B25')) +
   facet_wrap(~label, ncol = 1) +
+  geom_point(aes(y = mix_val, x = as.Date(mix_date, format = "%m-%d"), 
+  ), shape = 15, size = 2) +
   xlab('Date') +
   ylab('Temperature (°C)') +
-  labs(color = 'Year') +
-  theme_bw()
+  labs(color = 'Year',
+       shape = 'Turnover') +
+  theme_bw() +
+  guides(size = 'none')
+t_a
 
-
-t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(year), y = observed)) +
+t_b <- ggplot(data = temp_C, aes(x = as.factor(year), y = observed)) +
   facet_wrap(~label, ncol = 1) +
   scale_fill_manual(values = c('#17BEBB', '#9E2B25')) +
   geom_violin(aes(group = year, fill = as.factor(year))) +
@@ -124,7 +126,7 @@ t_b <- ggplot(data = temp[temp$depth==1 | temp$depth==10,], aes(x = as.factor(ye
   xlab('Year') +
   labs(fill = 'Year') +
   theme_bw()
-
+t_b
 
 fig3 <- ggarrange(t_a, a, t_b, b, 
                   nrow = 1, common.legend = TRUE)
@@ -132,7 +134,7 @@ fig3
 ggsave('./figures/fig3.tiff', fig3, scale = 0.5, dpi = 300, unit = "mm", width = 400, height = 150)
 
 # mean, min, max by year
-summ_t <- temp %>% 
+summ_t <- temp_C %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
   group_by(year, depth) %>% 
   dplyr::summarise(mean = mean(observed, na.rm = TRUE), 
@@ -140,7 +142,7 @@ summ_t <- temp %>%
                    max = max(observed, na.rm = TRUE),
                    range = abs(min - max))
 
-summ_t_depth <- temp %>% 
+summ_t_depth <- temp_C %>% 
   filter(depth %in% c(1.0, 10.0)) %>% 
   group_by(depth) %>% 
   dplyr::summarise(mean = mean(observed, na.rm = TRUE), 
